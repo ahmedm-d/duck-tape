@@ -36,6 +36,42 @@ class ChatTrajectoryRow(BaseModel):
                 raise ValueError(f"chat[{index}].role must be a non-empty string")
             if not isinstance(content, str) or not content.strip():
                 raise ValueError(f"chat[{index}].content must be a non-empty string")
+            tool_calls = message.get("tool_calls")
+            if tool_calls is not None:
+                if not isinstance(tool_calls, list):
+                    raise ValueError(f"chat[{index}].tool_calls must be a list when present")
+                for tc_idx, tc in enumerate(tool_calls):
+                    if not isinstance(tc, dict):
+                        raise ValueError(f"chat[{index}].tool_calls[{tc_idx}] must be a dict")
+                    fn = tc.get("function")
+                    if not isinstance(fn, dict):
+                        raise ValueError(f"chat[{index}].tool_calls[{tc_idx}].function must be a dict")
+                    fn_name = fn.get("name")
+                    if not isinstance(fn_name, str) or not fn_name.strip():
+                        raise ValueError(f"chat[{index}].tool_calls[{tc_idx}].function.name must be a non-empty string")
+                    args = fn.get("arguments")
+                    if isinstance(args, dict):
+                        continue
+                    if isinstance(args, str):
+                        try:
+                            parsed = json.loads(args)
+                        except json.JSONDecodeError as exc:
+                            raise ValueError(
+                                f"chat[{index}].tool_calls[{tc_idx}].function.arguments is malformed JSON"
+                            ) from exc
+                        if not isinstance(parsed, dict):
+                            raise ValueError(
+                                f"chat[{index}].tool_calls[{tc_idx}].function.arguments JSON must decode to a dict"
+                            )
+                        canonical = json.dumps(parsed, sort_keys=True, ensure_ascii=False)
+                        if args != canonical:
+                            raise ValueError(
+                                f"chat[{index}].tool_calls[{tc_idx}].function.arguments must be normalized as a dict or canonical JSON string"
+                            )
+                    else:
+                        raise ValueError(
+                            f"chat[{index}].tool_calls[{tc_idx}].function.arguments must be a dict or canonical JSON string"
+                        )
         return value
 
 
@@ -141,6 +177,22 @@ def _summarize_lengths(counts: list[int]) -> dict[str, float | int]:
     }
 
 
+def count_chat_tokens(chat: list[dict[str, Any]], encoding_name: str = "cl100k_base") -> tuple[int, int]:
+    """Return (prompt_tokens, completion_tokens) for a normalized chat trajectory."""
+    enc = tiktoken.get_encoding(encoding_name)
+    prompt_toks = 0
+    completion_toks = 0
+    for msg in chat:
+        toks = len(enc.encode(str(msg.get("content") or ""), disallowed_special=()))
+        if msg.get("tool_calls"):
+            toks += len(enc.encode(json.dumps(msg["tool_calls"], ensure_ascii=False), disallowed_special=()))
+        if msg.get("role") == "assistant":
+            completion_toks += toks
+        else:
+            prompt_toks += toks
+    return prompt_toks, completion_toks
+
+
 def compute_jsonl_token_stats(path: Path, encoding_name: str = "cl100k_base") -> dict[str, Any]:
     """Compute row count and tiktoken token distribution statistics for a JSONL file."""
     enc = tiktoken.get_encoding(encoding_name)
@@ -155,9 +207,19 @@ def compute_jsonl_token_stats(path: Path, encoding_name: str = "cl100k_base") ->
             if not raw:
                 continue
             record = json.loads(raw)
-            validated = InstructionRow.model_validate(record)
-            p_len = len(enc.encode(validated.prompt, disallowed_special=()))
-            c_len = len(enc.encode(validated.completion, disallowed_special=()))
+            if "chat" in record:
+                validated_chat = ChatTrajectoryRow.model_validate(record)
+                p_len, c_len = count_chat_tokens(validated_chat.chat, encoding_name=encoding_name)
+            elif "chosen" in record and "rejected" in record:
+                validated_pref = PreferenceRow.model_validate(record)
+                p_len = len(enc.encode(validated_pref.prompt, disallowed_special=()))
+                c_len = len(enc.encode(validated_pref.chosen, disallowed_special=())) + len(
+                    enc.encode(validated_pref.rejected, disallowed_special=())
+                )
+            else:
+                validated = InstructionRow.model_validate(record)
+                p_len = len(enc.encode(validated.prompt, disallowed_special=()))
+                c_len = len(enc.encode(validated.completion, disallowed_special=()))
             prompt_tokens.append(p_len)
             completion_tokens.append(c_len)
             total_tokens.append(p_len + c_len)

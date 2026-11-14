@@ -22,7 +22,7 @@ from training.utils import (
     write_instruction_jsonl,
 )
 
-TRAIN_TARGET = 2000
+TRAIN_TARGET = 5000
 EVAL_TARGET = 200
 TOTAL_TARGET = TRAIN_TARGET + EVAL_TARGET
 
@@ -171,7 +171,7 @@ def _collect_loghub(quota: int) -> tuple[list[InstructionRow], int]:
     rows: list[InstructionRow] = []
     seen: set[str] = set()
     redactions = 0
-    per_system = max(80, (quota // len(LOGHUB_FILES)) + 20)
+    per_system = max(150, (quota // len(LOGHUB_FILES)) + 30)
     pbar = tqdm(total=quota, desc="log_classifier <- logpai/loghub", unit="rows")
 
     for system_name, url in LOGHUB_FILES:
@@ -208,7 +208,7 @@ def _collect_loghub(quota: int) -> tuple[list[InstructionRow], int]:
                     "corrupt",
                 )
             )
-            if len(buffer) >= 6 and (is_signal or len(buffer) == 10 and sys_count < 15):
+            if len(buffer) >= 6 and (is_signal or len(buffer) == 10 and sys_count < 30):
                 cat, exit_code, cause, action = _classify_loghub_window(system_name, buffer)
                 log_text = f"Runner: {system_name} service/check log\n" + "\n".join(buffer)
                 sig = log_text[:200]
@@ -227,7 +227,7 @@ def _collect_loghub(quota: int) -> tuple[list[InstructionRow], int]:
                     redactions += red
                     sys_count += 1
                     pbar.update(1)
-                    buffer = buffer[-3:]
+                    buffer = buffer[-2:]
                     if len(rows) >= quota or sys_count >= per_system:
                         break
     pbar.close()
@@ -323,117 +323,126 @@ def _collect_swe_gym(quota: int) -> tuple[list[InstructionRow], int]:
     rows: list[InstructionRow] = []
     seen: set[str] = set()
     redactions = 0
-    ds = load_dataset("SWE-Gym/SWE-Gym", split="train", streaming=True)
-    pbar = tqdm(total=quota, desc="log_classifier <- SWE-Gym", unit="rows")
+    pbar = tqdm(total=quota, desc="log_classifier <- SWE-Gym / SWE-smith", unit="rows")
 
-    for idx, rec in enumerate(ds):
+    sources = (
+        ("SWE-Gym/SWE-Gym", "train"),
+        ("SWE-bench/SWE-smith", "train"),
+    )
+    global_idx = 0
+    for ds_name, split_name in sources:
         if len(rows) >= quota:
             break
-        instance_id = str(rec.get("instance_id") or "")
-        if not instance_id or instance_id in seen:
-            continue
-        repo = str(rec.get("repo") or "unknown/repo")
-        problem = str(rec.get("problem_statement") or "")
-        fail_tests = _parse_test_list(str(rec.get("FAIL_TO_PASS") or ""))
-        pass_tests = _parse_test_list(str(rec.get("PASS_TO_PASS") or ""))
-        test_patch = str(rec.get("test_patch") or "")
-        if not fail_tests and not pass_tests:
-            continue
-        seen.add(instance_id)
+        ds = load_dataset(ds_name, split=split_name, streaming=True)
+        for rec in ds:
+            if len(rows) >= quota:
+                break
+            instance_id = str(rec.get("instance_id") or "")
+            if not instance_id or instance_id in seen:
+                continue
+            repo = str(rec.get("repo") or "unknown/repo")
+            problem = str(rec.get("problem_statement") or "")
+            fail_tests = _parse_test_list(str(rec.get("FAIL_TO_PASS") or ""))
+            pass_tests = _parse_test_list(str(rec.get("PASS_TO_PASS") or ""))
+            test_patch = str(rec.get("test_patch") or "")
+            if not fail_tests and not pass_tests:
+                continue
+            seen.add(instance_id)
 
-        prob_low = problem.lower()
-        # Construct realistic bounded pytest traces tied to the actual repository tests
-        mode = idx % 5
-        if mode == 0 or any(kw in prob_low for kw in ("importerror", "modulenotfound", "no module named", "dependency")):
-            category = "missing_dependency"
-            exit_code = 2
-            target = fail_tests[:2] or pass_tests[:2]
-            log_body = (
-                f"$ pytest -v {' '.join(target[:2])}\n"
-                f"Repository: {repo} ({instance_id})\n"
-                "ERROR collecting test module\n"
-                f"E   ModuleNotFoundError: missing optional or pinned package required by {target[0]}\n"
-                "!!! Interrupted: 1 error during collection !!!"
-            )
-            cause = f"Pytest collection aborted in {repo} due to an unresolved import or missing environment dependency."
-            action = "Verify dependency installation and virtual environment/sandbox image packages before running tests."
-        elif mode == 1 or any(kw in prob_low for kw in ("syntaxerror", "indentationerror", "invalid syntax")):
-            category = "syntax_error"
-            exit_code = 2
-            target = fail_tests[:2] or pass_tests[:2]
-            log_body = (
-                f"$ pytest -v {target[0]}\n"
-                f"Repository: {repo} ({instance_id})\n"
-                "ERROR collecting test module\n"
-                f"    def patched_handler(:\n"
-                "                       ^\n"
-                "SyntaxError: invalid syntax\n"
-                "!!! Interrupted: 1 error during collection !!!"
-            )
-            cause = f"Python parser rejected invalid syntax while importing modules referenced by `{target[0]}`."
-            action = "Fix the syntax or AST structure error in the modified source/test file and re-run collection."
-        elif mode == 2 or any(kw in prob_low for kw in ("permission", "timeout", "network", "sandbox", "socket")):
-            category = "sandbox_blocked"
-            exit_code = 126
-            target = fail_tests[:2] or pass_tests[:2]
-            log_body = (
-                f"$ pytest -v {target[0]}\n"
-                f"Repository: {repo} ({instance_id})\n"
-                f"FAILED {target[0]} - PermissionError / ConnectionRefusedError: outbound network and host writes disabled in sandbox\n"
-                "=== 1 failed in 0.85s ==="
-            )
-            cause = f"Test `{target[0]}` attempted restricted network or filesystem access blocked by sandbox policy."
-            action = "Mock external I/O or run within approved deterministic fixtures without outbound network calls."
-        elif mode == 3 and pass_tests:
-            category = "regression"
-            exit_code = 1
-            target = pass_tests[:3]
-            failures = "\n".join(f"FAILED {t} - AssertionError: unexpected post-patch behavior change" for t in target)
-            log_body = (
-                f"$ pytest -v {' '.join(target)}\n"
-                f"Repository: {repo} ({instance_id})\n"
-                f"{failures}\n"
-                f"=== {len(target)} failed in 2.14s ==="
-            )
-            cause = f"Candidate patch broke {len(target)} previously passing test(s) in {repo}, indicating a regression."
-            action = "Revise the candidate patch to preserve existing contract invariants and re-run the regression suite."
-        else:
-            category = "baseline_failure"
-            exit_code = 1
-            target = fail_tests[:4] or pass_tests[:2]
-            failures = "\n".join(f"FAILED {t} - AssertionError: baseline defect reproduced prior to patch" for t in target)
-            patch_hint = truncate_bounded(test_patch, 450) if test_patch else ""
-            log_body = (
-                f"$ pytest -v {' '.join(target[:2])}\n"
-                f"Repository: {repo} ({instance_id})\n"
-                f"{failures}\n"
-                + (f"Test excerpt:\n{patch_hint}\n" if patch_hint else "")
-                + f"=== {len(target)} failed in 1.73s ==="
-            )
-            cause = f"Baseline failing test(s) reproduce the reported issue in {repo} prior to applying the repair patch."
-            action = "Confirm the failing-before test matches the target bug, then proceed to patch implementation."
+            prob_low = problem.lower()
+            # Construct realistic bounded pytest traces tied to the actual repository tests
+            mode = global_idx % 5
+            global_idx += 1
+            if mode == 0 or any(kw in prob_low for kw in ("importerror", "modulenotfound", "no module named", "dependency")):
+                category = "missing_dependency"
+                exit_code = 2
+                target = fail_tests[:2] or pass_tests[:2]
+                log_body = (
+                    f"$ pytest -v {' '.join(target[:2])}\n"
+                    f"Repository: {repo} ({instance_id})\n"
+                    "ERROR collecting test module\n"
+                    f"E   ModuleNotFoundError: missing optional or pinned package required by {target[0]}\n"
+                    "!!! Interrupted: 1 error during collection !!!"
+                )
+                cause = f"Pytest collection aborted in {repo} due to an unresolved import or missing environment dependency."
+                action = "Verify dependency installation and virtual environment/sandbox image packages before running tests."
+            elif mode == 1 or any(kw in prob_low for kw in ("syntaxerror", "indentationerror", "invalid syntax")):
+                category = "syntax_error"
+                exit_code = 2
+                target = fail_tests[:2] or pass_tests[:2]
+                log_body = (
+                    f"$ pytest -v {target[0]}\n"
+                    f"Repository: {repo} ({instance_id})\n"
+                    "ERROR collecting test module\n"
+                    f"    def patched_handler(:\n"
+                    "                       ^\n"
+                    "SyntaxError: invalid syntax\n"
+                    "!!! Interrupted: 1 error during collection !!!"
+                )
+                cause = f"Python parser rejected invalid syntax while importing modules referenced by `{target[0]}`."
+                action = "Fix the syntax or AST structure error in the modified source/test file and re-run collection."
+            elif mode == 2 or any(kw in prob_low for kw in ("permission", "timeout", "network", "sandbox", "socket")):
+                category = "sandbox_blocked"
+                exit_code = 126
+                target = fail_tests[:2] or pass_tests[:2]
+                log_body = (
+                    f"$ pytest -v {target[0]}\n"
+                    f"Repository: {repo} ({instance_id})\n"
+                    f"FAILED {target[0]} - PermissionError / ConnectionRefusedError: outbound network and host writes disabled in sandbox\n"
+                    "=== 1 failed in 0.85s ==="
+                )
+                cause = f"Test `{target[0]}` attempted restricted network or filesystem access blocked by sandbox policy."
+                action = "Mock external I/O or run within approved deterministic fixtures without outbound network calls."
+            elif mode == 3 and pass_tests:
+                category = "regression"
+                exit_code = 1
+                target = pass_tests[:3]
+                failures = "\n".join(f"FAILED {t} - AssertionError: unexpected post-patch behavior change" for t in target)
+                log_body = (
+                    f"$ pytest -v {' '.join(target)}\n"
+                    f"Repository: {repo} ({instance_id})\n"
+                    f"{failures}\n"
+                    f"=== {len(target)} failed in 2.14s ==="
+                )
+                cause = f"Candidate patch broke {len(target)} previously passing test(s) in {repo}, indicating a regression."
+                action = "Revise the candidate patch to preserve existing contract invariants and re-run the regression suite."
+            else:
+                category = "baseline_failure"
+                exit_code = 1
+                target = fail_tests[:4] or pass_tests[:2]
+                failures = "\n".join(f"FAILED {t} - AssertionError: baseline defect reproduced prior to patch" for t in target)
+                patch_hint = truncate_bounded(test_patch, 450) if test_patch else ""
+                log_body = (
+                    f"$ pytest -v {' '.join(target[:2])}\n"
+                    f"Repository: {repo} ({instance_id})\n"
+                    f"{failures}\n"
+                    + (f"Test excerpt:\n{patch_hint}\n" if patch_hint else "")
+                    + f"=== {len(target)} failed in 1.73s ==="
+                )
+                cause = f"Baseline failing test(s) reproduce the reported issue in {repo} prior to applying the repair patch."
+                action = "Confirm the failing-before test matches the target bug, then proceed to patch implementation."
 
-        row, red = _make_row(
-            "SWE-Gym/SWE-Gym",
-            log_body,
-            exit_code,
-            category,
-            target,
-            cause,
-            action,
-        )
-        rows.append(row)
-        redactions += red
-        pbar.update(1)
+            row, red = _make_row(
+                ds_name,
+                log_body,
+                exit_code,
+                category,
+                target,
+                cause,
+                action,
+            )
+            rows.append(row)
+            redactions += red
+            pbar.update(1)
 
     pbar.close()
     return rows, redactions
 
 
 def collect_rows() -> tuple[list[InstructionRow], dict[str, int], int]:
-    """Stream loghub, idoft, and SWE-Gym failure records up to TOTAL_TARGET."""
-    loghub_rows, r1 = _collect_loghub(750)
-    idoft_rows, r2 = _collect_idoft(700)
+    """Stream loghub, idoft, and SWE-Gym/SWE-smith failure records up to TOTAL_TARGET."""
+    loghub_rows, r1 = _collect_loghub(1200)
+    idoft_rows, r2 = _collect_idoft(1800)
     remaining = TOTAL_TARGET - len(loghub_rows) - len(idoft_rows)
     swegym_rows, r3 = _collect_swe_gym(remaining)
 
@@ -441,7 +450,7 @@ def collect_rows() -> tuple[list[InstructionRow], dict[str, int], int]:
     source_counts = {
         "logpai/loghub": len(loghub_rows),
         "TestingResearchIllinois/idoft": len(idoft_rows),
-        "SWE-Gym/SWE-Gym": len(swegym_rows),
+        "SWE-Gym+SWE-smith": len(swegym_rows),
     }
     return all_rows, source_counts, (r1 + r2 + r3)
 

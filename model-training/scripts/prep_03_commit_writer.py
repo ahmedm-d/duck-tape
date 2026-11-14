@@ -23,7 +23,7 @@ from training.utils import (
     write_instruction_jsonl,
 )
 
-TRAIN_TARGET = 2500
+TRAIN_TARGET = 5000
 EVAL_TARGET = 200
 TOTAL_TARGET = TRAIN_TARGET + EVAL_TARGET
 
@@ -171,7 +171,7 @@ def collect_rows() -> tuple[list[InstructionRow], dict[str, int], int]:
         return True
 
     # 1. bigcode/commitpackft (Python & TypeScript via json builder)
-    for lang, quota in (("python", 950), ("typescript", 950)):
+    for lang, quota in (("python", 1900), ("typescript", 1900)):
         ds_cp = load_dataset(
             "json",
             data_files=f"hf://datasets/bigcode/commitpackft/data/{lang}/data.jsonl",

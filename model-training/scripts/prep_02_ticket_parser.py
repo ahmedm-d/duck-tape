@@ -23,7 +23,7 @@ from training.utils import (
     write_instruction_jsonl,
 )
 
-TRAIN_TARGET = 2500
+TRAIN_TARGET = 5000
 EVAL_TARGET = 200
 TOTAL_TARGET = TRAIN_TARGET + EVAL_TARGET
 
@@ -231,9 +231,9 @@ def collect_rows() -> tuple[list[InstructionRow], dict[str, int], int]:
 
     # 2. SWE-Gym/SWE-Gym
     ds_gym = load_dataset("SWE-Gym/SWE-Gym", split="train", streaming=True)
-    pbar = tqdm(total=1220, desc="ticket_parser <- SWE-Gym", unit="rows")
+    pbar = tqdm(total=2200, desc="ticket_parser <- SWE-Gym", unit="rows")
     for rec in ds_gym:
-        if source_counts.get("SWE-Gym", 0) >= 1220:
+        if source_counts.get("SWE-Gym", 0) >= 2200:
             break
         body = str(rec.get("problem_statement") or "").strip()
         if len(body) < 40:

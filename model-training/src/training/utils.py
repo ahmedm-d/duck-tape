@@ -5,11 +5,13 @@ import os
 import random
 import re
 from pathlib import Path
-from typing import Sequence
+from typing import Sequence, TypeVar
 
 from dotenv import load_dotenv
 
-from .schemas import InstructionRow
+from .schemas import ChatTrajectoryRow, InstructionRow, PreferenceRow
+
+T = TypeVar("T")
 
 MODEL_TRAINING_ROOT = Path(__file__).resolve().parents[2]
 REPO_ROOT = MODEL_TRAINING_ROOT.parent
@@ -49,12 +51,30 @@ def write_instruction_jsonl(rows: Sequence[InstructionRow], output_path: Path) -
     return output_path
 
 
+def write_chat_jsonl(rows: Sequence[ChatTrajectoryRow], output_path: Path) -> Path:
+    """Write validated ChatTrajectoryRow objects as UTF-8 LF JSONL."""
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with output_path.open("w", encoding="utf-8", newline="\n") as handle:
+        for row in rows:
+            handle.write(row.model_dump_json() + "\n")
+    return output_path
+
+
+def write_preference_jsonl(rows: Sequence[PreferenceRow], output_path: Path) -> Path:
+    """Write validated PreferenceRow objects as UTF-8 LF JSONL."""
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with output_path.open("w", encoding="utf-8", newline="\n") as handle:
+        for row in rows:
+            handle.write(row.model_dump_json() + "\n")
+    return output_path
+
+
 def split_train_eval(
-    rows: list[InstructionRow],
+    rows: Sequence[T],
     train_count: int,
     eval_count: int,
     seed: int = 42,
-) -> tuple[list[InstructionRow], list[InstructionRow]]:
+) -> tuple[list[T], list[T]]:
     """Deterministically shuffle and split rows into disjoint train and eval subsets."""
     required = train_count + eval_count
     if len(rows) < required:

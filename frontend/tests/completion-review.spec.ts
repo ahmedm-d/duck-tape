@@ -25,10 +25,10 @@ test('actual imported source, graph, themes, widths and unchanged provider setti
  const detail=await (await page.request.get('/api/repositories/'+imported.id)).json();
  await page.goto('/#/repositories/'+imported.id+'/repository');
  await expect(page.getByText('File coverage describes indexing, not semantic understanding. Dynamic relationships may be incomplete.')).toBeVisible();
- await page.getByRole('button',{name:'calc.py Python',exact:true}).click();
+ await page.getByRole('button',{name:'Files',exact:true}).click();await page.getByRole('button',{name:'calc.py Python',exact:true}).click();
  await expect(page.locator('.source-code')).toContainText('def');
  await expect(page.locator('.edges')).toContainText(detail.index.edges[0].source);
- await expect(page.getByRole('heading',{name:'Evidence-linked summaries'})).toBeVisible();
+ await page.getByRole('button',{name:'Understanding',exact:true}).click();await expect(page.getByRole('heading',{name:'Evidence-linked summaries'})).toBeVisible();
  for(const theme of ['light','dark']){
   if(await page.locator('html').getAttribute('data-theme')!==theme)await page.getByRole('button',{name:'Toggle theme'}).click();
   for(const width of [1440,1100,390]){
@@ -60,7 +60,7 @@ test('fresh sample: real checks, exports, revision, note isolation, approval and
  await page.getByLabel('Search jobs').fill(bug.title);await expect(page.locator('.job-row')).toHaveCount(1);
  await page.locator('.job-row').click();await expect(page).toHaveURL(new RegExp(bug.id+'$'));await page.reload();
  await expect(page.getByRole('heading',{name:bug.title})).toBeVisible();
- await page.getByRole('button',{name:'Approve preparation'}).click();await page.getByRole('button',{name:'Approve revision 1'}).waitFor({timeout:60000});
+ await page.getByRole('button',{name:'Approve plan'}).click();await page.getByRole('button',{name:'Approve revision 1'}).waitFor({timeout:60000});
  const prepared=await (await page.request.get('/api/jobs/'+bug.id)).json();
  expect(prepared.revisions[0].diff).toContain('diff --git');expect(prepared.revisions[0].provider).toBeTruthy();
  expect(prepared.checks.some((check:any)=>check.phase==='regression-before'&&check.exit_code!==0)).toBeTruthy();
@@ -85,7 +85,7 @@ test('fresh sample: real checks, exports, revision, note isolation, approval and
  await expect(page.locator('.job-summary')).toContainText('Revision 2 approved');
  await capture(page,'approved-revision-label');
  await page.getByLabel('Patch revision').selectOption(revised.revisions[1].id);
- await page.getByRole('button',{name:'Apply to managed branch'}).click();await expect(page.locator('.heading-line .status')).toHaveText('Completed');
+ await page.getByRole('button',{name:'Approve & apply'}).click();await expect(page.locator('.heading-line .status')).toHaveText('Completed');
  await capture(page,'sample-completed');
  const completed=await (await page.request.get('/api/jobs/'+bug.id)).json();expect(completed.status).toBe('Completed');
  fs.writeFileSync(path.join(output,'sample-results.json'),JSON.stringify({repo:sample.id,job:bug.id,revision:completed.current_revision,approval:completed.approval,provider:completed.revisions.at(-1).provider,checks:completed.checks.map((check:any)=>({phase:check.phase,status:check.status,exit:check.exit_code}))},null,2));
@@ -96,13 +96,13 @@ test('fresh sample product decision and versioned knowledge approval',async({pag
  test.setTimeout(120000);expect(sample).toBeTruthy();
  await page.goto('/#/repositories/'+sample.id+'/jobs/'+feature.id);
  if(feature.status==='Awaiting approval'){
-  await page.getByRole('button',{name:'Approve preparation'}).click();
+  await page.getByRole('button',{name:'Approve plan'}).click();
   await expect(page.getByText('YOUR DECISION IS NEEDED',{exact:true})).toBeVisible({timeout:60000});
-  await page.locator('.decision-options button').first().click();
+  await page.locator('.decision-options button').first().click();await page.getByRole('button',{name:'Confirm choice'}).click();
  }
  await page.getByRole('button',{name:'Approve revision 1'}).waitFor({timeout:60000});
  await capture(page,'sample-decision-prepared');
- await page.getByRole('button',{name:'Knowledge',exact:true}).click();await page.getByRole('button',{name:'New entry'}).click();
+ await page.getByRole('button',{name:'Codebase',exact:true}).click();await page.getByRole('button',{name:'Knowledge',exact:true}).click();await page.getByRole('button',{name:'New entry'}).click();
  await page.getByLabel('Title',{exact:true}).fill('Completion review rule');await page.getByLabel('Knowledge or decision').fill('Preserve quantity validation.');await page.getByLabel('Evidence / source').fill('tests/test_quote.py');await page.getByRole('button',{name:'Save knowledge'}).click();
  const card=page.locator('.knowledge-card').filter({hasText:'Completion review rule'});await expect(card).toContainText('Version 1');
  await card.getByRole('button',{name:'Approve version 1'}).click();await expect(card).toContainText('team-approved');
@@ -146,8 +146,8 @@ test('activity links preserve the job repository context',async({page})=>{
  const event=page.locator('.activity-timeline>div').nth(eventIndex);
  await event.getByRole('button',{name:'Open job'}).click();await expect(page.getByRole('heading',{name:bug.title})).toBeVisible();
  await capture(page,'activity-repository-context');
- await expect(page).toHaveURL(new RegExp(sample.id+'/jobs/'+bug.id+'$'));
- await expect(page.getByRole('combobox',{name:'Repository',exact:true})).toHaveValue(sample.id);
+ await expect(page).toHaveURL(new RegExp('/'+sample.route_owner+'/'+sample.route_name+'/jobs/'+bug.id+'$'));
+ await expect(page.locator('.sidebar button.selected')).toContainText(sample.route_owner+'/'+sample.route_name);
 });
 
 test('fixture import rejection stays visible and accepted progress can be cancelled',async({page})=>{

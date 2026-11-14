@@ -14,18 +14,16 @@ test('global catalogue route survives reload and repository changes', async ({pa
     expect(params.has('repo_id')).toBe(false);
     return route.fulfill({json: {ecosystem: 'PyPI', package: 'unknown-example', coverage: 'unknown', entries: [], limitations: [], truncated: false, source_status: []}});
   });
-  await page.goto('/');
+  await page.goto('/dashboard');
   await page.getByRole('button', {name: 'Global catalogue', exact: true}).click();
-  await expect(page).toHaveURL(/#\/global-catalogue$/);
-  await page.getByRole('combobox', {name: 'Repository', exact: true}).selectOption('repo-two');
-  await expect(page).toHaveURL(/#\/global-catalogue$/);
+  await expect(page).toHaveURL(/\/global-catalogue$/);
   await page.reload();
   await expect(page.getByRole('heading', {name: 'Global catalogue', exact: true})).toBeVisible();
   await page.getByLabel('Ecosystem', {exact: true}).fill('PyPI');
   await page.getByLabel('Package', {exact: true}).fill('unknown-example');
   await page.getByRole('button', {name: 'Search catalogue'}).click();
   await expect(page.getByText('No catalogue entries found. This is not a clean scan.')).toBeVisible();
-  await page.getByRole('button', {name: 'Jobs', exact: true}).click();
+  await page.getByRole('button', {name: 'Dashboard', exact: true}).click();
   await page.goBack();
   await expect(page.getByRole('heading', {name: 'Global catalogue', exact: true})).toBeVisible();
 });
@@ -33,9 +31,9 @@ test('global catalogue route survives reload and repository changes', async ({pa
 test('global catalogue opens without an imported repository', async ({page}) => {
   await fixture(page);
   await page.route('**/api/repositories?summary=true', route => route.fulfill({json: []}));
-  await page.goto('/#/global-catalogue');
+  await page.goto('/global-catalogue');
   await expect(page.getByRole('heading', {name: 'Global catalogue', exact: true})).toBeVisible();
-  await expect(page).toHaveURL(/#\/global-catalogue$/);
+  await expect(page).toHaveURL(/\/global-catalogue$/);
   await page.setViewportSize({width: 390, height: 844});
   await page.getByRole('button', {name: 'Toggle theme'}).click();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -59,7 +57,7 @@ test('relationship graph exposes newer withdrawn and failed-source evidence', as
     edges: [{id: 'edge', source: 'entry', target: 'package', type: 'affects',
       canonical_id: advisory.canonical_id, material_revision: 2, applicability: 'unknown'}],
   }}));
-  await page.goto('/#/global-catalogue');
+  await page.goto('/global-catalogue');
   await page.getByLabel('Ecosystem', {exact: true}).fill('PyPI');
   await page.getByLabel('Package', {exact: true}).fill('duck-tape-fixture');
   await page.getByRole('button', {name: 'Search catalogue'}).click();

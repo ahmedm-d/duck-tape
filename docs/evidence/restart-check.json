@@ -3,20 +3,20 @@
   "fixture_provider": true,
   "method": "Abrupt worker kill, automatic supervisor restart, then full API restart using the same SQLite directory",
   "port": 8766,
-  "first_api_pid": 28412,
-  "second_api_pid": 44276,
-  "first_worker_pid": 13624,
-  "replacement_worker_pid": 43104,
+  "first_api_pid": 43852,
+  "second_api_pid": 30712,
+  "first_worker_pid": 47764,
+  "replacement_worker_pid": 27608,
   "persisted_status_at_kill": "Investigating",
   "final_status": "Ready for review",
   "revision_count": 1,
-  "job_id": "46d271e77313b8db426145e3a1b2925547e6be90b7c8413e5f5b08a202611f24",
+  "job_id": "b739867e6c0255541343a53e6038864e8e05134c1b76669c1b1338ace6aae27f",
   "base_snapshot": "927e0480861eab284fe2e6f8f79cd85d0b3539296b273a4d34e9678882ac81b6",
   "patch_hash": "09764e43ed6a145900e27013c52d82bbea02a5f452daa2ecfa81f4c04e199795",
-  "duration_seconds": 207.965,
+  "duration_seconds": 193.337,
   "approved_knowledge": {
-    "id": "6167e7bc-95e8-4943-b097-73eb3cbdcdf7-integer-cents",
-    "repo_id": "6167e7bc-95e8-4943-b097-73eb3cbdcdf7",
+    "id": "3bf7eb22-b033-45e1-8485-2af6b8ccb300-integer-cents",
+    "repo_id": "3bf7eb22-b033-45e1-8485-2af6b8ccb300",
     "title": "Money uses integer cents",
     "content": "Use integer cents; never floating-point money. Empty orders return zero.",
     "scope": "*",
@@ -34,92 +34,79 @@
     "last_validated_snapshot": "927e0480861eab284fe2e6f8f79cd85d0b3539296b273a4d34e9678882ac81b6",
     "version": 2,
     "author": "Alex \u00b7 demo member",
-    "created_at": "2026-11-14T12:36:50.899510+00:00",
-    "updated_at": "2026-11-14T12:37:05.862394+00:00",
+    "created_at": "2026-11-14T15:52:41.208699+00:00",
+    "updated_at": "2026-11-14T15:52:45.275656+00:00",
     "record_version": 3,
     "approval_state": "approved"
   },
   "used_knowledge": [
     {
-      "id": "6167e7bc-95e8-4943-b097-73eb3cbdcdf7-integer-cents",
+      "id": "3bf7eb22-b033-45e1-8485-2af6b8ccb300-integer-cents",
       "title": "Money uses integer cents",
       "content": "Use integer cents; never floating-point money. Empty orders return zero.",
       "scope": "*",
       "version": 2,
-      "updated_at": "2026-11-14T12:37:05.862394+00:00"
+      "updated_at": "2026-11-14T15:52:45.275656+00:00"
     }
   ],
   "checks": [
     {
-      "id": "a4713724-6061-4f31-850d-1b7874bf1b62",
-      "job_id": "46d271e77313b8db426145e3a1b2925547e6be90b7c8413e5f5b08a202611f24",
+      "id": "dd661354-4ee8-4ac1-a9cc-b4c7ee8cfb7e",
+      "job_id": "b739867e6c0255541343a53e6038864e8e05134c1b76669c1b1338ace6aae27f",
       "phase": "baseline",
       "command": "python -m unittest discover -s tests -v",
       "exit_code": 0,
-      "duration": 0.27990870003122836,
+      "duration": 0.22686509997583926,
       "stdout": "test_empty (test_quote.QuoteTest.test_empty) ... ok\ntest_single (test_quote.QuoteTest.test_single) ... ok\ntest_order (test_search.SearchTest.test_order) ... ok\n\n----------------------------------------------------------------------\nRan 3 tests in 0.000s\n\nOK\n",
       "status": "passed",
       "environment": "3.13.12",
-      "created_at": "2026-11-14T12:40:10.994377+00:00",
-      "revision_id": "ec493c65-743f-46a3-9c55-fc7e0612d965",
+      "created_at": "2026-11-14T15:55:46.701927+00:00",
+      "revision_id": "84b46887-9f48-434a-96cb-6373b82b2e2e",
       "base_snapshot": "927e0480861eab284fe2e6f8f79cd85d0b3539296b273a4d34e9678882ac81b6",
       "patch_hash": "09764e43ed6a145900e27013c52d82bbea02a5f452daa2ecfa81f4c04e199795"
     },
     {
-      "id": "1501ac4d-08bc-4b77-b714-bdfe3b78b4c6",
-      "job_id": "46d271e77313b8db426145e3a1b2925547e6be90b7c8413e5f5b08a202611f24",
+      "id": "63b57d3f-a017-4369-a8c0-aae39d351779",
+      "job_id": "b739867e6c0255541343a53e6038864e8e05134c1b76669c1b1338ace6aae27f",
       "phase": "regression-before",
       "command": "new regression test against baseline",
       "exit_code": 1,
-      "duration": 0.2355153999524191,
-      "stdout": "test_empty (test_quote.QuoteTest.test_empty) ... ok\ntest_quantity (test_quote.QuoteTest.test_quantity) ... FAIL\ntest_single (test_quote.QuoteTest.test_single) ... ok\ntest_order (test_search.SearchTest.test_order) ... ok\n\n======================================================================\nFAIL: test_quantity (test_quote.QuoteTest.test_quantity)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"C:\\Users\\ahmed\\Projects\\ducktape\\steward\\data\\restart-check\\b62065a59b6a4aad936d132ee14e04c6\\worktrees\\46d271e77313b8db426145e3a1b2925547e6be90b7c8413e5f5b08a202611f24\\f097ba89-9d67-47b2-a5aa-5810cc125b7b\\tests\\test_quote.py\", line 11, in test_quantity\n    self.assertEqual(quote([{ \"price_cents\": 100, \"quantity\": 2}])[\"total_cents\"], 220)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 110 != 220\n\n----------------------------------------------------------------------\nRan 4 tests in 0.010s\n\nFAILED (failures=1)\n",
+      "duration": 0.197956099989824,
+      "stdout": "test_empty (test_quote.QuoteTest.test_empty) ... ok\ntest_quantity (test_quote.QuoteTest.test_quantity) ... FAIL\ntest_single (test_quote.QuoteTest.test_single) ... ok\ntest_order (test_search.SearchTest.test_order) ... ok\n\n======================================================================\nFAIL: test_quantity (test_quote.QuoteTest.test_quantity)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"C:\\Users\\ahmed\\.paseo\\worktrees\\38qfwmxf\\duck-tape-app-navigation\\data\\restart-check\\3805f5af29254c6c9f555dbd3962ff63\\worktrees\\b739867e6c0255541343a53e6038864e8e05134c1b76669c1b1338ace6aae27f\\809fcb2d-a0e3-42e7-9b33-6c5c445be52d\\tests\\test_quote.py\", line 11, in test_quantity\n    self.assertEqual(quote([{ \"price_cents\": 100, \"quantity\": 2}])[\"total_cents\"], 220)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 110 != 220\n\n----------------------------------------------------------------------\nRan 4 tests in 0.001s\n\nFAILED (failures=1)\n",
       "status": "failed",
       "environment": "3.13.12",
-      "created_at": "2026-11-14T12:40:11.249931+00:00",
-      "revision_id": "ec493c65-743f-46a3-9c55-fc7e0612d965",
+      "created_at": "2026-11-14T15:55:46.918205+00:00",
+      "revision_id": "84b46887-9f48-434a-96cb-6373b82b2e2e",
       "base_snapshot": "927e0480861eab284fe2e6f8f79cd85d0b3539296b273a4d34e9678882ac81b6",
       "patch_hash": "09764e43ed6a145900e27013c52d82bbea02a5f452daa2ecfa81f4c04e199795"
     },
     {
-      "id": "16a5db22-91d7-447a-96d3-cfd1f36d1f8d",
-      "job_id": "46d271e77313b8db426145e3a1b2925547e6be90b7c8413e5f5b08a202611f24",
+      "id": "4cce5068-5485-4387-b461-3d91894ecc83",
+      "job_id": "b739867e6c0255541343a53e6038864e8e05134c1b76669c1b1338ace6aae27f",
       "phase": "after",
       "command": "python -m unittest discover -s tests -v",
       "exit_code": 0,
-      "duration": 0.21343929995782673,
+      "duration": 0.23353900003712624,
       "stdout": "test_empty (test_quote.QuoteTest.test_empty) ... ok\ntest_quantity (test_quote.QuoteTest.test_quantity) ... ok\ntest_single (test_quote.QuoteTest.test_single) ... ok\ntest_order (test_search.SearchTest.test_order) ... ok\n\n----------------------------------------------------------------------\nRan 4 tests in 0.000s\n\nOK\n",
       "status": "passed",
       "environment": "3.13.12",
-      "created_at": "2026-11-14T12:40:11.633176+00:00",
-      "revision_id": "ec493c65-743f-46a3-9c55-fc7e0612d965",
+      "created_at": "2026-11-14T15:55:47.410982+00:00",
+      "revision_id": "84b46887-9f48-434a-96cb-6373b82b2e2e",
       "base_snapshot": "927e0480861eab284fe2e6f8f79cd85d0b3539296b273a4d34e9678882ac81b6",
       "patch_hash": "09764e43ed6a145900e27013c52d82bbea02a5f452daa2ecfa81f4c04e199795"
     }
   ],
   "runs": [
     {
-      "job_id": "46d271e77313b8db426145e3a1b2925547e6be90b7c8413e5f5b08a202611f24",
+      "job_id": "b739867e6c0255541343a53e6038864e8e05134c1b76669c1b1338ace6aae27f",
       "status": "interrupted",
-      "lease_token": "1fa110ef-9089-4aed-93be-13e8e0084982",
-      "started_at": "2026-11-14T12:37:06.352566+00:00",
+      "lease_token": "a49bfcd1-40bb-4577-a3d1-df83375084ae",
+      "started_at": "2026-11-14T15:52:45.761237+00:00",
       "base_snapshot": "927e0480861eab284fe2e6f8f79cd85d0b3539296b273a4d34e9678882ac81b6",
-      "id": "38895790-922a-44aa-b348-19b028c0248b",
-      "created_at": "2026-11-14T12:37:06.371379+00:00",
-      "updated_at": "2026-11-14T12:40:06.705367+00:00",
-      "record_version": 2,
-      "finished_at": "2026-11-14T12:40:06.705281+00:00",
-      "error": "Worker lease expired; work will resume from persisted inputs"
-    },
-    {
-      "job_id": "46d271e77313b8db426145e3a1b2925547e6be90b7c8413e5f5b08a202611f24",
-      "status": "complete",
-      "lease_token": "f097ba89-9d67-47b2-a5aa-5810cc125b7b",
-      "started_at": "2026-11-14T12:40:06.766753+00:00",
-      "base_snapshot": "927e0480861eab284fe2e6f8f79cd85d0b3539296b273a4d34e9678882ac81b6",
-      "id": "a8f51092-d12a-4cd4-8d0a-6781e195dbad",
-      "created_at": "2026-11-14T12:40:06.785563+00:00",
-      "updated_at": "2026-11-14T12:40:11.705888+00:00",
-      "record_version": 6,
+      "id": "9d923b28-1338-437d-8ac3-cc3fe5f82c5f",
+      "created_at": "2026-11-14T15:52:45.780904+00:00",
+      "updated_at": "2026-11-14T15:55:45.808893+00:00",
+      "record_version": 4,
       "context": {
         "items": [
           {
@@ -128,7 +115,7 @@
             "end_line": 5,
             "content": "from pricing import total\nfrom config import TAX_RATE\n\ndef quote(items):\n    return {\"total_cents\": total(items, TAX_RATE)}",
             "hash": "c6429acac65fc2c509d13de8963d17b18e18313cb4f9230c417a4b97142d8366",
-            "chunk_id": "9ff175165fce42d33499728925c73ba7b7a592249049650b99d0e753c0103e0a",
+            "chunk_id": "d3ddfb6ad35b0a1bdca28807306f070ef437d3014cebf79c313b58fe9d313b52",
             "symbols": [
               {
                 "name": "quote",
@@ -137,11 +124,11 @@
                 "end_line": 5
               }
             ],
-            "repo_id": "6167e7bc-95e8-4943-b097-73eb3cbdcdf7",
-            "snapshot": "7edae1f46df301159bf61c89f81a3fd05b09129311370eb61d86d996f08b4cf4",
-            "snapshot_id": "7edae1f46df301159bf61c89f81a3fd05b09129311370eb61d86d996f08b4cf4",
+            "repo_id": "3bf7eb22-b033-45e1-8485-2af6b8ccb300",
+            "snapshot": "d5a1a7edeae9840cc21e297ca1302b4e4f344a0ace7c8215457328abb39430a7",
+            "snapshot_id": "d5a1a7edeae9840cc21e297ca1302b4e4f344a0ace7c8215457328abb39430a7",
             "blob_hash": "c6429acac65fc2c509d13de8963d17b18e18313cb4f9230c417a4b97142d8366",
-            "reason": "persisted full-text chunk match; exact symbol/path match; semantic similarity 0.750; graph imports (parsed/resolved) via pricing.py; graph imports (parsed/resolved) via config.py; graph tests (parsed/resolved) via tests/test_quote.py; preserves resolved import/call evidence ranges"
+            "reason": "persisted full-text chunk match; exact symbol/path match; graph imports (parsed/resolved) via pricing.py; graph imports (parsed/resolved) via config.py; graph tests (parsed/resolved) via tests/test_quote.py; preserves resolved import/call evidence ranges"
           },
           {
             "path": "pricing.py",
@@ -149,7 +136,7 @@
             "end_line": 3,
             "content": "def total(items, tax_rate):\n    subtotal = sum(item[\"price_cents\"] for item in items)\n    return subtotal + subtotal * tax_rate // 100",
             "hash": "71a4eb684db7055366c4edbf0901e3f5093ab54bc621ef9fdf463bc85bba416a",
-            "chunk_id": "c45284ede979b36efae58c9abf9b3f00b0f79d95b3c87361a2294b060ef81d9c",
+            "chunk_id": "d58b2e439bb075a51a23887bc00d26fe8cc0cecdd8ba281baed45192c9674a3f",
             "symbols": [
               {
                 "name": "total",
@@ -158,11 +145,11 @@
                 "end_line": 3
               }
             ],
-            "repo_id": "6167e7bc-95e8-4943-b097-73eb3cbdcdf7",
-            "snapshot": "7edae1f46df301159bf61c89f81a3fd05b09129311370eb61d86d996f08b4cf4",
-            "snapshot_id": "7edae1f46df301159bf61c89f81a3fd05b09129311370eb61d86d996f08b4cf4",
+            "repo_id": "3bf7eb22-b033-45e1-8485-2af6b8ccb300",
+            "snapshot": "d5a1a7edeae9840cc21e297ca1302b4e4f344a0ace7c8215457328abb39430a7",
+            "snapshot_id": "d5a1a7edeae9840cc21e297ca1302b4e4f344a0ace7c8215457328abb39430a7",
             "blob_hash": "71a4eb684db7055366c4edbf0901e3f5093ab54bc621ef9fdf463bc85bba416a",
-            "reason": "persisted full-text chunk match; exact symbol/path match; semantic similarity 0.686; graph imports (parsed/resolved) via app.py; graph calls (parsed/resolved binding) via app.py; preserves resolved import/call evidence ranges"
+            "reason": "persisted full-text chunk match; exact symbol/path match; graph imports (parsed/resolved) via app.py; graph calls (parsed/resolved binding) via app.py; preserves resolved import/call evidence ranges"
           },
           {
             "path": "config.py",
@@ -170,13 +157,13 @@
             "end_line": 2,
             "content": "TAX_RATE = 10\nMAX_ITEMS = 100",
             "hash": "c93c156b540d22f707688afbbc35d2d0c3120a0429180745e48ab89d6a2de42d",
-            "chunk_id": "e907e2a657aeabcba05e85732eeac51a8f7bed41edc8ce501b25eab25571ec2c",
+            "chunk_id": "83bde2af60d6d25ce6a3292cf41cd3af36f84d3eec922a997d08fc2ec2353f4c",
             "symbols": [],
-            "repo_id": "6167e7bc-95e8-4943-b097-73eb3cbdcdf7",
-            "snapshot": "7edae1f46df301159bf61c89f81a3fd05b09129311370eb61d86d996f08b4cf4",
-            "snapshot_id": "7edae1f46df301159bf61c89f81a3fd05b09129311370eb61d86d996f08b4cf4",
+            "repo_id": "3bf7eb22-b033-45e1-8485-2af6b8ccb300",
+            "snapshot": "d5a1a7edeae9840cc21e297ca1302b4e4f344a0ace7c8215457328abb39430a7",
+            "snapshot_id": "d5a1a7edeae9840cc21e297ca1302b4e4f344a0ace7c8215457328abb39430a7",
             "blob_hash": "c93c156b540d22f707688afbbc35d2d0c3120a0429180745e48ab89d6a2de42d",
-            "reason": "persisted full-text chunk match; exact symbol/path match; semantic similarity 0.625; graph imports (parsed/resolved) via app.py; preserves resolved import/call evidence ranges"
+            "reason": "persisted full-text chunk match; exact symbol/path match; graph imports (parsed/resolved) via app.py; preserves resolved import/call evidence ranges"
           },
           {
             "path": "tests/test_quote.py",
@@ -184,7 +171,7 @@
             "end_line": 8,
             "content": "import unittest\nfrom app import quote\n\nclass QuoteTest(unittest.TestCase):\n    def test_single(self):\n        self.assertEqual(quote([{ \"price_cents\": 100, \"quantity\": 1}])[\"total_cents\"], 110)\n    def test_empty(self):\n        self.assertEqual(quote([])[\"total_cents\"], 0)",
             "hash": "cea715cada808496fe54899f97a655356379485ff6bb7505fb526bef5d584ffc",
-            "chunk_id": "6ea4d1aeb200ed1f747e152616866c63776d58c95eb2a991077769031614e6fd",
+            "chunk_id": "3f0a40642e5c6fe08e2bbdfef843480d2ff6a733235f3fdf72713016168467ce",
             "symbols": [
               {
                 "name": "QuoteTest",
@@ -205,11 +192,11 @@
                 "end_line": 8
               }
             ],
-            "repo_id": "6167e7bc-95e8-4943-b097-73eb3cbdcdf7",
-            "snapshot": "7edae1f46df301159bf61c89f81a3fd05b09129311370eb61d86d996f08b4cf4",
-            "snapshot_id": "7edae1f46df301159bf61c89f81a3fd05b09129311370eb61d86d996f08b4cf4",
+            "repo_id": "3bf7eb22-b033-45e1-8485-2af6b8ccb300",
+            "snapshot": "d5a1a7edeae9840cc21e297ca1302b4e4f344a0ace7c8215457328abb39430a7",
+            "snapshot_id": "d5a1a7edeae9840cc21e297ca1302b4e4f344a0ace7c8215457328abb39430a7",
             "blob_hash": "cea715cada808496fe54899f97a655356379485ff6bb7505fb526bef5d584ffc",
-            "reason": "persisted full-text chunk match; exact symbol/path match; semantic similarity 0.731; graph tests (parsed/resolved) via app.py; preserves resolved import/call evidence ranges"
+            "reason": "persisted full-text chunk match; exact symbol/path match; graph tests (parsed/resolved) via app.py; preserves resolved import/call evidence ranges"
           },
           {
             "path": "search.py",
@@ -217,7 +204,7 @@
             "end_line": 6,
             "content": "def unique_labels(labels):\n    result = []\n    for label in labels:\n        if label not in result:\n            result.append(label)\n    return result",
             "hash": "62c27094c0e4ece62b7dbd344a3cf68674649bf59094d22871858b40daf32fe1",
-            "chunk_id": "0880b265fc2b127b2271155306dbbcc08b30a0f628c6a49bff6be2d7bc8cf31b",
+            "chunk_id": "94006db3f3bd53b7f7aa1d37f2a1a4beb071b5c2bd19f47245e72eac7e67a61b",
             "symbols": [
               {
                 "name": "unique_labels",
@@ -226,11 +213,11 @@
                 "end_line": 6
               }
             ],
-            "repo_id": "6167e7bc-95e8-4943-b097-73eb3cbdcdf7",
-            "snapshot": "7edae1f46df301159bf61c89f81a3fd05b09129311370eb61d86d996f08b4cf4",
-            "snapshot_id": "7edae1f46df301159bf61c89f81a3fd05b09129311370eb61d86d996f08b4cf4",
+            "repo_id": "3bf7eb22-b033-45e1-8485-2af6b8ccb300",
+            "snapshot": "d5a1a7edeae9840cc21e297ca1302b4e4f344a0ace7c8215457328abb39430a7",
+            "snapshot_id": "d5a1a7edeae9840cc21e297ca1302b4e4f344a0ace7c8215457328abb39430a7",
             "blob_hash": "62c27094c0e4ece62b7dbd344a3cf68674649bf59094d22871858b40daf32fe1",
-            "reason": "exact symbol/path match; semantic similarity 0.495"
+            "reason": "exact symbol/path match"
           },
           {
             "path": "README.md",
@@ -238,38 +225,209 @@
             "end_line": 5,
             "content": "# Parcel sample (fixture)\n\nEndpoint app.quote calls pricing.total and config.TAX_RATE.\nConstraint: use integer cents, never floating-point money. Empty orders return zero.\nThe dependency advisory is illustrative fixture data, never a live OSV claim.",
             "hash": "c8a189316273696c20ddc8c548e07d7e2a27fedc32934603d57d822ba4845c8f",
-            "chunk_id": "3c081d95340ceb21549fa5316cdeeb2c2a1b2ba86ab94a89d225eb9376c2a754",
+            "chunk_id": "7a52245379608810cf1cb67330e4d3b1e73a35f6c11894cd99b5094a6743be34",
             "symbols": [],
-            "repo_id": "6167e7bc-95e8-4943-b097-73eb3cbdcdf7",
-            "snapshot": "7edae1f46df301159bf61c89f81a3fd05b09129311370eb61d86d996f08b4cf4",
-            "snapshot_id": "7edae1f46df301159bf61c89f81a3fd05b09129311370eb61d86d996f08b4cf4",
+            "repo_id": "3bf7eb22-b033-45e1-8485-2af6b8ccb300",
+            "snapshot": "d5a1a7edeae9840cc21e297ca1302b4e4f344a0ace7c8215457328abb39430a7",
+            "snapshot_id": "d5a1a7edeae9840cc21e297ca1302b4e4f344a0ace7c8215457328abb39430a7",
             "blob_hash": "c8a189316273696c20ddc8c548e07d7e2a27fedc32934603d57d822ba4845c8f",
-            "reason": "persisted full-text chunk match; semantic similarity 0.768"
+            "reason": "persisted full-text chunk match"
           }
         ],
         "missing": [
           "Dynamic calls are incomplete; external systems are not inspected",
-          "Semantic coverage: 14/14 eligible chunks; cached by repository/snapshot/model/content"
+          "Embeddings unavailable; deterministic keyword/graph fallback"
         ],
-        "mode": "keyword + semantic + graph",
+        "mode": "keyword + graph",
         "snapshot": "927e0480861eab284fe2e6f8f79cd85d0b3539296b273a4d34e9678882ac81b6",
-        "snapshot_id": "7edae1f46df301159bf61c89f81a3fd05b09129311370eb61d86d996f08b4cf4",
-        "repo_id": "6167e7bc-95e8-4943-b097-73eb3cbdcdf7",
+        "snapshot_id": "d5a1a7edeae9840cc21e297ca1302b4e4f344a0ace7c8215457328abb39430a7",
+        "repo_id": "3bf7eb22-b033-45e1-8485-2af6b8ccb300",
         "overview": "Repository snapshot 927e0480861e. 8 indexed files; 1 excluded entries; 0 unsupported; 0 failed. 8 source-linked relationships. Structural inventory only: model synthesis unavailable. Dynamic calls and external systems are not fully resolved.",
         "knowledge": [
           {
-            "id": "6167e7bc-95e8-4943-b097-73eb3cbdcdf7-integer-cents",
+            "id": "3bf7eb22-b033-45e1-8485-2af6b8ccb300-integer-cents",
             "title": "Money uses integer cents",
             "content": "Use integer cents; never floating-point money. Empty orders return zero.",
             "scope": "*",
             "version": 2,
-            "updated_at": "2026-11-14T12:37:05.862394+00:00"
+            "updated_at": "2026-11-14T15:52:45.275656+00:00"
           }
         ],
-        "context_hash": "080c3b27c2fdc1579fe7eb01cbdc95080cb141634bb1abd9cb8cb0cf0c16fc34",
-        "token_estimate": 6999,
+        "context_hash": "d3aef271253a1ec46b8fe47ad3d97e003e5499c1da93400a236d017c62ed4c33",
+        "token_estimate": 6801,
         "token_count_method": "conservative UTF-8 byte upper bound",
-        "latency_ms": 3414.545
+        "latency_ms": 29.829
+      },
+      "provider": {
+        "model": "reviewed sample fixture",
+        "mode": "offline sample",
+        "usage": null,
+        "latency": 0,
+        "routing_reason": "Explicit bundled sample scenario only"
+      },
+      "finished_at": "2026-11-14T15:55:45.808630+00:00",
+      "error": "Worker lease expired; work will resume from persisted inputs"
+    },
+    {
+      "job_id": "b739867e6c0255541343a53e6038864e8e05134c1b76669c1b1338ace6aae27f",
+      "status": "complete",
+      "lease_token": "809fcb2d-a0e3-42e7-9b33-6c5c445be52d",
+      "started_at": "2026-11-14T15:55:45.862801+00:00",
+      "base_snapshot": "927e0480861eab284fe2e6f8f79cd85d0b3539296b273a4d34e9678882ac81b6",
+      "id": "a6136107-e8e1-4c8e-9b09-edeca86d5173",
+      "created_at": "2026-11-14T15:55:45.878589+00:00",
+      "updated_at": "2026-11-14T15:55:47.523827+00:00",
+      "record_version": 6,
+      "context": {
+        "items": [
+          {
+            "path": "app.py",
+            "start_line": 1,
+            "end_line": 5,
+            "content": "from pricing import total\nfrom config import TAX_RATE\n\ndef quote(items):\n    return {\"total_cents\": total(items, TAX_RATE)}",
+            "hash": "c6429acac65fc2c509d13de8963d17b18e18313cb4f9230c417a4b97142d8366",
+            "chunk_id": "d3ddfb6ad35b0a1bdca28807306f070ef437d3014cebf79c313b58fe9d313b52",
+            "symbols": [
+              {
+                "name": "quote",
+                "kind": "FunctionDef",
+                "start_line": 4,
+                "end_line": 5
+              }
+            ],
+            "repo_id": "3bf7eb22-b033-45e1-8485-2af6b8ccb300",
+            "snapshot": "d5a1a7edeae9840cc21e297ca1302b4e4f344a0ace7c8215457328abb39430a7",
+            "snapshot_id": "d5a1a7edeae9840cc21e297ca1302b4e4f344a0ace7c8215457328abb39430a7",
+            "blob_hash": "c6429acac65fc2c509d13de8963d17b18e18313cb4f9230c417a4b97142d8366",
+            "reason": "persisted full-text chunk match; exact symbol/path match; graph imports (parsed/resolved) via pricing.py; graph imports (parsed/resolved) via config.py; graph tests (parsed/resolved) via tests/test_quote.py; preserves resolved import/call evidence ranges"
+          },
+          {
+            "path": "pricing.py",
+            "start_line": 1,
+            "end_line": 3,
+            "content": "def total(items, tax_rate):\n    subtotal = sum(item[\"price_cents\"] for item in items)\n    return subtotal + subtotal * tax_rate // 100",
+            "hash": "71a4eb684db7055366c4edbf0901e3f5093ab54bc621ef9fdf463bc85bba416a",
+            "chunk_id": "d58b2e439bb075a51a23887bc00d26fe8cc0cecdd8ba281baed45192c9674a3f",
+            "symbols": [
+              {
+                "name": "total",
+                "kind": "FunctionDef",
+                "start_line": 1,
+                "end_line": 3
+              }
+            ],
+            "repo_id": "3bf7eb22-b033-45e1-8485-2af6b8ccb300",
+            "snapshot": "d5a1a7edeae9840cc21e297ca1302b4e4f344a0ace7c8215457328abb39430a7",
+            "snapshot_id": "d5a1a7edeae9840cc21e297ca1302b4e4f344a0ace7c8215457328abb39430a7",
+            "blob_hash": "71a4eb684db7055366c4edbf0901e3f5093ab54bc621ef9fdf463bc85bba416a",
+            "reason": "persisted full-text chunk match; exact symbol/path match; graph imports (parsed/resolved) via app.py; graph calls (parsed/resolved binding) via app.py; preserves resolved import/call evidence ranges"
+          },
+          {
+            "path": "config.py",
+            "start_line": 1,
+            "end_line": 2,
+            "content": "TAX_RATE = 10\nMAX_ITEMS = 100",
+            "hash": "c93c156b540d22f707688afbbc35d2d0c3120a0429180745e48ab89d6a2de42d",
+            "chunk_id": "83bde2af60d6d25ce6a3292cf41cd3af36f84d3eec922a997d08fc2ec2353f4c",
+            "symbols": [],
+            "repo_id": "3bf7eb22-b033-45e1-8485-2af6b8ccb300",
+            "snapshot": "d5a1a7edeae9840cc21e297ca1302b4e4f344a0ace7c8215457328abb39430a7",
+            "snapshot_id": "d5a1a7edeae9840cc21e297ca1302b4e4f344a0ace7c8215457328abb39430a7",
+            "blob_hash": "c93c156b540d22f707688afbbc35d2d0c3120a0429180745e48ab89d6a2de42d",
+            "reason": "persisted full-text chunk match; exact symbol/path match; graph imports (parsed/resolved) via app.py; preserves resolved import/call evidence ranges"
+          },
+          {
+            "path": "tests/test_quote.py",
+            "start_line": 1,
+            "end_line": 8,
+            "content": "import unittest\nfrom app import quote\n\nclass QuoteTest(unittest.TestCase):\n    def test_single(self):\n        self.assertEqual(quote([{ \"price_cents\": 100, \"quantity\": 1}])[\"total_cents\"], 110)\n    def test_empty(self):\n        self.assertEqual(quote([])[\"total_cents\"], 0)",
+            "hash": "cea715cada808496fe54899f97a655356379485ff6bb7505fb526bef5d584ffc",
+            "chunk_id": "3f0a40642e5c6fe08e2bbdfef843480d2ff6a733235f3fdf72713016168467ce",
+            "symbols": [
+              {
+                "name": "QuoteTest",
+                "kind": "ClassDef",
+                "start_line": 4,
+                "end_line": 8
+              },
+              {
+                "name": "test_single",
+                "kind": "FunctionDef",
+                "start_line": 5,
+                "end_line": 6
+              },
+              {
+                "name": "test_empty",
+                "kind": "FunctionDef",
+                "start_line": 7,
+                "end_line": 8
+              }
+            ],
+            "repo_id": "3bf7eb22-b033-45e1-8485-2af6b8ccb300",
+            "snapshot": "d5a1a7edeae9840cc21e297ca1302b4e4f344a0ace7c8215457328abb39430a7",
+            "snapshot_id": "d5a1a7edeae9840cc21e297ca1302b4e4f344a0ace7c8215457328abb39430a7",
+            "blob_hash": "cea715cada808496fe54899f97a655356379485ff6bb7505fb526bef5d584ffc",
+            "reason": "persisted full-text chunk match; exact symbol/path match; graph tests (parsed/resolved) via app.py; preserves resolved import/call evidence ranges"
+          },
+          {
+            "path": "search.py",
+            "start_line": 1,
+            "end_line": 6,
+            "content": "def unique_labels(labels):\n    result = []\n    for label in labels:\n        if label not in result:\n            result.append(label)\n    return result",
+            "hash": "62c27094c0e4ece62b7dbd344a3cf68674649bf59094d22871858b40daf32fe1",
+            "chunk_id": "94006db3f3bd53b7f7aa1d37f2a1a4beb071b5c2bd19f47245e72eac7e67a61b",
+            "symbols": [
+              {
+                "name": "unique_labels",
+                "kind": "FunctionDef",
+                "start_line": 1,
+                "end_line": 6
+              }
+            ],
+            "repo_id": "3bf7eb22-b033-45e1-8485-2af6b8ccb300",
+            "snapshot": "d5a1a7edeae9840cc21e297ca1302b4e4f344a0ace7c8215457328abb39430a7",
+            "snapshot_id": "d5a1a7edeae9840cc21e297ca1302b4e4f344a0ace7c8215457328abb39430a7",
+            "blob_hash": "62c27094c0e4ece62b7dbd344a3cf68674649bf59094d22871858b40daf32fe1",
+            "reason": "exact symbol/path match"
+          },
+          {
+            "path": "README.md",
+            "start_line": 1,
+            "end_line": 5,
+            "content": "# Parcel sample (fixture)\n\nEndpoint app.quote calls pricing.total and config.TAX_RATE.\nConstraint: use integer cents, never floating-point money. Empty orders return zero.\nThe dependency advisory is illustrative fixture data, never a live OSV claim.",
+            "hash": "c8a189316273696c20ddc8c548e07d7e2a27fedc32934603d57d822ba4845c8f",
+            "chunk_id": "7a52245379608810cf1cb67330e4d3b1e73a35f6c11894cd99b5094a6743be34",
+            "symbols": [],
+            "repo_id": "3bf7eb22-b033-45e1-8485-2af6b8ccb300",
+            "snapshot": "d5a1a7edeae9840cc21e297ca1302b4e4f344a0ace7c8215457328abb39430a7",
+            "snapshot_id": "d5a1a7edeae9840cc21e297ca1302b4e4f344a0ace7c8215457328abb39430a7",
+            "blob_hash": "c8a189316273696c20ddc8c548e07d7e2a27fedc32934603d57d822ba4845c8f",
+            "reason": "persisted full-text chunk match"
+          }
+        ],
+        "missing": [
+          "Dynamic calls are incomplete; external systems are not inspected",
+          "Embeddings unavailable; deterministic keyword/graph fallback"
+        ],
+        "mode": "keyword + graph",
+        "snapshot": "927e0480861eab284fe2e6f8f79cd85d0b3539296b273a4d34e9678882ac81b6",
+        "snapshot_id": "d5a1a7edeae9840cc21e297ca1302b4e4f344a0ace7c8215457328abb39430a7",
+        "repo_id": "3bf7eb22-b033-45e1-8485-2af6b8ccb300",
+        "overview": "Repository snapshot 927e0480861e. 8 indexed files; 1 excluded entries; 0 unsupported; 0 failed. 8 source-linked relationships. Structural inventory only: model synthesis unavailable. Dynamic calls and external systems are not fully resolved.",
+        "knowledge": [
+          {
+            "id": "3bf7eb22-b033-45e1-8485-2af6b8ccb300-integer-cents",
+            "title": "Money uses integer cents",
+            "content": "Use integer cents; never floating-point money. Empty orders return zero.",
+            "scope": "*",
+            "version": 2,
+            "updated_at": "2026-11-14T15:52:45.275656+00:00"
+          }
+        ],
+        "context_hash": "d3aef271253a1ec46b8fe47ad3d97e003e5499c1da93400a236d017c62ed4c33",
+        "token_estimate": 6801,
+        "token_count_method": "conservative UTF-8 byte upper bound",
+        "latency_ms": 32.276
       },
       "provider": {
         "model": "reviewed sample fixture",
@@ -291,9 +449,9 @@
           "after": "import unittest\nfrom app import quote\n\nclass QuoteTest(unittest.TestCase):\n    def test_single(self):\n        self.assertEqual(quote([{ \"price_cents\": 100, \"quantity\": 1}])[\"total_cents\"], 110)\n    def test_empty(self):\n        self.assertEqual(quote([])[\"total_cents\"], 0)\n\n    def test_quantity(self):\n        self.assertEqual(quote([{ \"price_cents\": 100, \"quantity\": 2}])[\"total_cents\"], 220)\n"
         }
       ],
-      "finished_at": "2026-11-14T12:40:11.688964+00:00",
-      "revision_id": "ec493c65-743f-46a3-9c55-fc7e0612d965"
+      "finished_at": "2026-11-14T15:55:47.501049+00:00",
+      "revision_id": "84b46887-9f48-434a-96cb-6373b82b2e2e"
     }
   ],
-  "data_directory": "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\data\\restart-check\\b62065a59b6a4aad936d132ee14e04c6"
+  "data_directory": "C:\\Users\\ahmed\\.paseo\\worktrees\\38qfwmxf\\duck-tape-app-navigation\\data\\restart-check\\3805f5af29254c6c9f555dbd3962ff63"
 }

@@ -11,6 +11,8 @@ Read README.md, CONTRIBUTING.md and docs/hackathon/TEAM_PLAN.md before changing 
 - C remains the sole editor of signals.py and data_platforms.py unless handed off. B consumes their existing interfaces and requests adapter changes from C. Do not split working modules just to establish ownership.
 
 ## Parallel Git and frontend handoff
+For the dedicated frontend design branches, use [the two-section frontend ownership plan](docs/FRONTEND_PARALLEL.md). Landing owns `frontend/src/landing/**`, `frontend/public/landing/**` and `frontend/tests/landing/**`; Workspace owns the shared app shell, router, global styles and app components. This is the explicit frontend handoff for those branches; backend A/B/C ownership remains unchanged.
+
 Use one separate branch and checkout/worktree per developer. Never switch branches inside someone else's checkout. Branch names: feat/agent/<task>, feat/repo/<task>, feat/global/<task> (or fix/chore with the same lane). Make small explicit-path commits. Never stage another person's work, run git clean -fdx, rewrite main, or force-push a shared branch.
 Use type(scope): imperative subject, <=72 characters; see CONTRIBUTING.md. One teammate reviews; the current integration captain merges a green PR. Branch protection is a hosting setting, not guaranteed by this file.
 

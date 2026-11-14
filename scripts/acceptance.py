@@ -45,7 +45,7 @@ def commands(tier,output,url=None):
         pytest('backend','deterministic',['tests'],('git',),extra=('--ignore=tests/live','-m','not live'))
         add('restart','deterministic',[sys.executable,'scripts/check_restart.py'],('git',),timeout=240)
         add('frontend-build','deterministic',[npm,'run','build'],('frontend',),cwd=ROOT/'frontend',timeout=180)
-        browser('browser-fixtures','deterministic',['tests/navigation.spec.ts','tests/imported-workflows.spec.ts','tests/evidence.spec.ts','tests/summaries.spec.ts','tests/settings.spec.ts'],('frontend',),{})
+        browser('browser-fixtures','deterministic',['tests/navigation.spec.ts','tests/imported-workflows.spec.ts','tests/evidence.spec.ts','tests/summaries.spec.ts','tests/settings.spec.ts','tests/workspace.spec.ts','tests/global-navigation.spec.ts','tests/global-catalogue.spec.ts'],('frontend',),{})
     if tier in {'sandbox','all'}:
         pytest('sandbox','sandbox',['tests/live/test_sandbox_live.py','tests/live/test_feature_acceptance_execution.py','tests/live/test_feature_frameworks.py'],('docker',),{'STEWARD_LIVE_SANDBOX':'1'},timeout=2400)
     if tier in {'live','all'}:

@@ -42,7 +42,7 @@ test('switching repositories discards a pending answer from the previous snapsho
  await page.route('**/api/repositories/repo-one/ask',async route=>{await waiting;await route.fulfill({json:{answer:'OLD_REPOSITORY_ANSWER',mode:'fixture',citations:[]}}).catch(()=>{})});
  await page.goto('/#/repositories/repo-one/repository');
  await page.getByLabel('Repository question').fill('How does this work?');await page.getByRole('button',{name:'Ask',exact:true}).click();
- await page.getByRole('combobox',{name:'Repository',exact:true}).selectOption('repo-two');release();
+ await page.getByRole('button',{name:'local/repo-two',exact:true}).click();release();
  await expect(page.getByText('OLD_REPOSITORY_ANSWER')).toHaveCount(0);
 });
 

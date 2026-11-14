@@ -222,11 +222,15 @@ def global_catalogue_graph(ecosystem: str = Query(min_length=1, max_length=64),
 
 @app.get('/api/repositories')
 def repositories():
+    from .routing import ensure_routes
+    ensure_routes()
     return [{k:v for k,v in r.items() if k not in ('index','root')} for r in db.list_records('repositories')]
 
 
 @app.get('/api/repositories/{id}')
 def repository_detail(id:str):
+    from .routing import ensure_routes
+    ensure_routes()
     r=require('repositories',id)
     return {k:v for k,v in r.items() if k != 'root'}
 
@@ -245,6 +249,9 @@ def register_repo(root, name, origin, repo_id=None, cancel=None, on_publish=None
         if cancel: cancel.raise_if_cancelled()
         if db.get_in(con,'repositories',repo_id): raise ValueError('Repository identity already exists')
         result=db.put_in(con,'repositories',repo)
+        from .routing import assign_routes
+        assign_routes(con)
+        result=db.get_in(con,'repositories',repo_id)
         db.index_search(result,con)
         db.put_in(con,'events',{'message':'Repository imported and indexed','repo_id':repo_id,'author':'Duck Tape'})
         if on_publish: on_publish(con,result)
@@ -430,6 +437,7 @@ def _create_job(body, *, enrich=None, expected_snapshot=None, catalogue_binding=
 @app.get('/api/jobs/{id}')
 def job_detail(id:str):
     j=require('jobs',id)
+    j['managed_target_branch']='steward/integration'
     for kind in ('revisions','checks','notes','decisions','runs'):
         j[kind]=[x for x in db.list_records(kind) if x.get('job_id')==id]
     return j
@@ -460,6 +468,8 @@ def job_action(id:str,action:str,body:dict={}):
 
 def apply_job(job,body):
     from . import integration,workflow
+    if body.get('target_branch','steward/integration') != 'steward/integration':
+        raise HTTPException(409,'Only the managed local branch steward/integration is supported')
     try:
         return integration.apply(job['id'],body.get('revision_id'),job.get('input_fingerprint'))
     except workflow.Conflict as exc:

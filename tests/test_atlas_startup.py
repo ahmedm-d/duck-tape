@@ -113,10 +113,13 @@ def test_not_required_skips_the_check(monkeypatch):
 
 def test_system_trust_store_is_optional(monkeypatch):
     monkeypatch.setattr(atlas_startup, 'use_system_trust_store', REAL_TRUST)
+    monkeypatch.setattr(atlas_startup, '_TRUSTSTORE_INJECTED', False)
     monkeypatch.setitem(sys.modules, 'truststore', None)
     assert atlas_startup.use_system_trust_store() is False
     injected = []
     monkeypatch.setitem(sys.modules, 'truststore', type('T', (), {'inject_into_ssl': staticmethod(lambda: injected.append(1))}))
+    assert atlas_startup.use_system_trust_store() is True and injected == [1]
+    # Idempotent: injecting again after pymongo is loaded recurses, so later calls are no-ops.
     assert atlas_startup.use_system_trust_store() is True and injected == [1]
 
 

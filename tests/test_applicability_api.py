@@ -45,8 +45,25 @@ def test_intake_dedupes_unchanged_rescans_and_refuses_withdrawn_or_unmatched(cli
     job = first['jobs'][0]
     assert (job['source'], job['type'], job['source_key']) == ('security', 'security', 'GHSA-35jh-r3h4-6jhm:lodash:4.17.20')
     assert again['jobs'][0]['id'] == job['id'] and len(db.list_records('jobs')) == 1
+    assert again['invalidated'] == []
     revised = api.post('/api/repositories/repo/applicability/intake', json={'entry': entry(revision=2, content_hash='d' * 64)}).json()
-    assert revised['jobs'][0]['id'] != job['id']
-    assert api.post('/api/repositories/repo/applicability/intake', json={'entry': entry(status='withdrawn')}).status_code == 422
+    assert revised['jobs'][0]['id'] != job['id'] and revised['invalidated'] == [job['id']]
+    old = db.get('jobs', job['id'])
+    assert old['status'] == 'Failed' and old['stale'] and old['approval'] is None and 'revision 2' in old['error']
+    assert db.get('jobs', revised['jobs'][0]['id'])['status'] == 'Awaiting approval'
+    withdrawn = api.post('/api/repositories/repo/applicability/intake', json={'entry': entry(revision=3, content_hash='e' * 64, status='withdrawn')})
+    assert withdrawn.status_code == 200 and withdrawn.json()['jobs'] == []
+    assert withdrawn.json()['invalidated'] == [revised['jobs'][0]['id']] and 'withdrawn' in withdrawn.json()['detail']
     unrelated = entry(affected=[{'ecosystem': 'npm', 'package': 'react', 'versions': ['18.0.0']}])
-    assert api.post('/api/repositories/repo/applicability/intake', json={'entry': unrelated}).status_code == 422
+    assert api.post('/api/repositories/repo/applicability/intake', json={'entry': unrelated}).json()['jobs'] == []
+    assert api.post('/api/repositories/repo/applicability/intake', json={'entry': entry(revision=0)}).status_code == 422
+
+
+def test_rejected_job_on_unchanged_evidence_stays_rejected(client):
+    api, _ = client
+    job = api.post('/api/repositories/repo/applicability/intake', json={'entry': entry()}).json()['jobs'][0]
+    db.put('jobs', {**db.get('jobs', job['id']), 'status': 'Rejected'})
+    again = api.post('/api/repositories/repo/applicability/intake', json={'entry': entry(retrieved_at='later')}).json()
+    assert again['jobs'][0]['id'] == job['id'] and db.get('jobs', job['id'])['status'] == 'Rejected'
+    api.post('/api/repositories/repo/applicability/intake', json={'entry': entry(status='withdrawn')})
+    assert db.get('jobs', job['id'])['status'] == 'Rejected'

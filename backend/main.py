@@ -639,16 +639,40 @@ def repository_applicability(id:str,body:dict):
     return {'profile':{key:profile[key] for key in ('repo_id','snapshot_id','profile_hash','gaps','capabilities')},'matches':matches}
 
 
+def _invalidate_catalogue_jobs(repo_id:str,entry_id:str,current:set[str],reason:str):
+    """Fail open jobs for this catalogue entry whose evidence no longer matches the current revision/match."""
+    def invalidate(con):
+        stale=[]
+        for row in con.execute("SELECT data FROM records WHERE kind='jobs'").fetchall():
+            job=json.loads(row[0])
+            if (job.get('repo_id')==repo_id and job.get('status') not in TERMINAL|{'Failed'} and job.get('source') in {'security','analysis','research'}
+                    and str(job.get('source_key') or '').startswith(entry_id+':') and job.get('evidence_fingerprint') not in current):
+                db.put_in(con,'jobs',{**job,'status':'Failed','error':reason,'approval':None,'stale':True,'lease_token':None,'lease_until':0})
+                stale.append(job['id'])
+        if stale: db.put_in(con,'events',{'message':f'Catalogue entry {entry_id[:80]} changed; {len(stale)} dependent job(s) invalidated','repo_id':repo_id,'author':'Duck Tape'})
+        return stale
+    return db.atomic(invalidate)
+
+
 @app.post('/api/repositories/{id}/applicability/intake')
 def applicability_intake(id:str,body:dict):
-    """Re-match one entry on the current snapshot, then use existing intake and preparation policies."""
+    """Re-match one entry on the current snapshot, then use existing intake and preparation policies.
+
+    Open jobs created from an earlier revision, or from an entry that is now withdrawn or no
+    longer matches, are invalidated; rejected/snoozed decisions on unchanged evidence are kept.
+    """
     from .applicability import intake_payloads, match
     profile=_current_profile(id,body.get('snapshot_id'))
-    try:
-        found=match(profile,body.get('entry'))
-        payloads=intake_payloads(found,body['entry'])
+    try: found=match(profile,body.get('entry'))
     except ValueError as exc: raise HTTPException(422,str(exc)) from None
-    return {'match':found,'jobs':[create_job(JobInput(**payload)) for payload in payloads]}
+    try: payloads=intake_payloads(found,body['entry'])
+    except ValueError as exc:
+        stale=_invalidate_catalogue_jobs(id,found['entry_id'],set(),f'Catalogue entry is no longer a current match ({exc}); re-assess applicability.')
+        return {'match':found,'jobs':[],'invalidated':stale,'detail':str(exc)}
+    jobs=[create_job(JobInput(**payload)) for payload in payloads]
+    stale=_invalidate_catalogue_jobs(id,found['entry_id'],{job.get('evidence_fingerprint') for job in jobs},
+                                     f'Catalogue entry changed to revision {found["entry_revision"]}; retry against the current revision.')
+    return {'match':found,'jobs':jobs,'invalidated':stale}
 
 
 DIST=Path(__file__).resolve().parents[1]/'frontend'/'dist'

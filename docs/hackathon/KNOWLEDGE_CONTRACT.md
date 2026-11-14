@@ -1,6 +1,6 @@
 # Repository and global knowledge handoff
 
-This is the **planned B/C integration contract**, not a claim that these new objects or routes already exist. Reuse existing typed provider, retrieval and intake boundaries. Agree concrete schema changes with the current integration captain before parallel implementation.
+This is the **B/C integration contract**. B's side is now implemented in `backend/applicability.py` and the `/api/repositories/{id}/profile`, `/applicability` and `/applicability/intake` routes, tested against labelled fixtures in `tests/fixtures/catalogue/`. C's catalogue pipeline and Atlas catalogue lookup are still planned. Reuse existing typed provider, retrieval and intake boundaries. Agree concrete schema changes with the current integration captain before parallel implementation.
 
 ## Responsibilities and storage
 
@@ -41,7 +41,7 @@ Map a matched vulnerability to existing `source=security`, an improvement to `an
 
 C deduplicates public source records. B deduplicates repository proposals using repository identity, canonical finding, affected package/version and meaningful evidence revision. Keep unchanged source keys stable and revalidate the current snapshot before intake. Preserve rejection/snooze decisions for unchanged evidence; a polling timestamp must not reopen a job.
 
-Current intake fingerprints title/description/source URL/type. It does **not** yet bind the proposed catalogue revision fields. B and the captain must add explicit match/revision bindings and invalidation through the existing workflow before claiming catalogue freshness is enforced. When source, applicable version, catalogue revision, approved knowledge or decisions change, re-assess applicability and invalidate dependent plans/checks/approvals before reuse. Never silently replace evidence attached to an existing patch. Withdrawn/stale entries must be labelled and withheld from fresh automatic proposals until revalidated.
+Catalogue intake now puts the entry revision and content hash into the intake fingerprint. It stores explicit `catalogue` and `applicability` fields on the job, and it invalidates open jobs for that entry when a material revision, a withdrawal or a no-longer-matching re-check arrives. Repository refresh already invalidates non-terminal jobs. The GlobalEntry fields that matching relies on are `id`, `kind`, `revision` (a positive integer), `content_hash`, `source_url`, `status` (`active` or otherwise), and `affected[]`, where each rule has `ecosystem`, `package` and either `versions[]` or `ranges[]` of `introduced`/`fixed`/`last_affected`. When source, applicable version, catalogue revision, approved knowledge or decisions change, re-assess applicability and invalidate dependent plans/checks/approvals before reuse. Never silently replace evidence attached to an existing patch. Withdrawn/stale entries must be labelled and withheld from fresh automatic proposals until revalidated.
 
 ## Independent development and acceptance
 

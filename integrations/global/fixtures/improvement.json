@@ -1,0 +1,11 @@
+{
+  "canonical_id": "improvement:duck-tape-fixture",
+  "title": "Labelled fixture: evaluate runtime improvement",
+  "summary": "Synthetic improvement fixture for local contract tests. No measured benefit or live cloud execution is claimed.",
+  "source_url": "https://docs.python.org/3.13/whatsnew/3.13.html",
+  "published_at": "2024-10-07T00:00:00Z",
+  "affected": [{"ecosystem": "CPython", "package": "python", "versions": ["3.13"]}],
+  "evidence": ["https://docs.python.org/3.13/whatsnew/3.13.html"],
+  "limitations": ["Fixture only; benefits require local measurement."],
+  "source_quality": "fixture"
+}

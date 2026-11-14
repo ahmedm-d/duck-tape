@@ -1,0 +1,71 @@
+{
+  "checked_at": "2026-11-14T16:39:10.656928+00:00",
+  "live": true,
+  "provider": "atlas",
+  "first": {
+    "provider": "atlas",
+    "published": 2,
+    "failed": 0,
+    "results": [
+      {
+        "canonical_id": "CVE-2024-35195",
+        "material_revision": 1,
+        "status": "published",
+        "attempts": 1,
+        "detail": "Complete public revision stored."
+      },
+      {
+        "canonical_id": "improvement:cpython-313-free-threading",
+        "material_revision": 1,
+        "status": "published",
+        "attempts": 1,
+        "detail": "Complete public revision stored."
+      }
+    ]
+  },
+  "repeat": {
+    "provider": "atlas",
+    "published": 2,
+    "failed": 0,
+    "results": [
+      {
+        "canonical_id": "CVE-2024-35195",
+        "material_revision": 1,
+        "status": "published",
+        "attempts": 1,
+        "detail": "Complete public revision stored."
+      },
+      {
+        "canonical_id": "improvement:cpython-313-free-threading",
+        "material_revision": 1,
+        "status": "published",
+        "attempts": 1,
+        "detail": "Complete public revision stored."
+      }
+    ]
+  },
+  "conflict_failure": {
+    "provider": "atlas",
+    "published": 0,
+    "failed": 1,
+    "results": [
+      {
+        "canonical_id": "CVE-2024-35195",
+        "material_revision": 1,
+        "status": "failed",
+        "attempts": 3,
+        "detail": "Publication failed; prior complete revision retained. Check configuration and revision conflicts, then retry."
+      }
+    ]
+  },
+  "prior_record_preserved": true,
+  "private_access_denied": true,
+  "head_count": 2,
+  "revision_count": 2,
+  "query_ids": [
+    "CVE-2024-35195"
+  ],
+  "result": "passed",
+  "reader_query": "passed",
+  "reader_write_denied": true
+}

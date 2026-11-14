@@ -1,0 +1,41 @@
+{
+  "mode": "live-public-https",
+  "repeated_poll_stable": true,
+  "entries": [
+    {
+      "canonical_id": "CVE-2024-35195",
+      "revision": 1,
+      "material_hash": "8f0db7efda7f87e272d3e87803653c55ccd057461be8e673be16768d63a079c9",
+      "source_content_hash": "d7087a1eaa73a35a525a245b04314d07e4904467b26832826ed0d5a67ef2fb92",
+      "source_url": "https://osv.dev/vulnerability/GHSA-9wx4-h78v-vm56",
+      "retrieved_at": "2026-11-14T14:59:56.464015Z",
+      "source_quality": "unreviewed",
+      "coverage": "unknown"
+    },
+    {
+      "canonical_id": "improvement:cpython-313-free-threading",
+      "revision": 1,
+      "material_hash": "5a2433607e6fed00dead6ffc6581670fc8a217f65a4485a9d9c2024bf8515530",
+      "source_content_hash": "5e05750e219507e83d2bbfaec92c25cc23807da4d05837b0a7ef86a65df9426f",
+      "source_url": "https://docs.python.org/3.13/whatsnew/3.13.html",
+      "retrieved_at": "2026-11-14T14:59:56.479310Z",
+      "source_quality": "unreviewed",
+      "coverage": "unknown"
+    }
+  ],
+  "cloud_configuration": {
+    "atlas": {
+      "enabled": false,
+      "configured": false,
+      "state": "disabled",
+      "connection_checked": false
+    },
+    "databricks": {
+      "enabled": false,
+      "configured": false,
+      "state": "disabled",
+      "connection_checked": false
+    }
+  },
+  "cloud_connections_attempted": false
+}

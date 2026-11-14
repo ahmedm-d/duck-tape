@@ -1,0 +1,784 @@
+{
+  "fixture": "reviewed Python Parcel sample plus fixed TS module chain; labels defined independently of retrieval",
+  "live": true,
+  "provider": "MongoDB Atlas vector search via data_platforms.atlas_search",
+  "embedding_model": "nomic-embed-text",
+  "limit": 6,
+  "repo_id": "evaluation-atlas-atlas-d2f59e8d-0f11-4d91-a5a2-70b34bf1a79e",
+  "source_snapshot_id": "27e0f1066c4f46717ad40ffbb31b850fe932d0ee199189e19ae3a6fe4233887d",
+  "sync": {
+    "provider": "atlas",
+    "uploaded": 21,
+    "excluded": 0,
+    "index_ready": true,
+    "detail": "Vectors upserted. Search indexing is asynchronous; new vectors may not yet be searchable."
+  },
+  "searchable_after_seconds": 11.0,
+  "results": [
+    {
+      "query": "quote",
+      "requested_mode": "graph",
+      "mode": "keyword + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "app.py",
+          4,
+          5
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "tests/test_quote.py",
+          4,
+          8
+        ]
+      ],
+      "found_ranges": [
+        [
+          "tests/test_quote.py",
+          1,
+          8
+        ],
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "ts/api.ts",
+          2,
+          2
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "README.md",
+          1,
+          5
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.6666666666666666,
+      "range_recall": 1.0,
+      "range_precision": 0.6666666666666666,
+      "latency_ms": 7.981,
+      "atlas_notes": []
+    },
+    {
+      "query": "quote",
+      "requested_mode": "graph+atlas",
+      "mode": "keyword + atlas + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "app.py",
+          4,
+          5
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "tests/test_quote.py",
+          4,
+          8
+        ]
+      ],
+      "found_ranges": [
+        [
+          "tests/test_quote.py",
+          1,
+          8
+        ],
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "ts/api.ts",
+          2,
+          2
+        ],
+        [
+          "README.md",
+          1,
+          5
+        ],
+        [
+          "ts/api.test.ts",
+          1,
+          2
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ]
+      ],
+      "file_recall": 0.75,
+      "file_precision": 0.5,
+      "range_recall": 0.75,
+      "range_precision": 0.5,
+      "latency_ms": 686.745,
+      "atlas_notes": [
+        "Atlas candidates: 12 validated against local snapshot chunks; source text from local evidence"
+      ]
+    },
+    {
+      "query": "unique_labels",
+      "requested_mode": "graph",
+      "mode": "keyword + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "search.py",
+          1,
+          6
+        ],
+        [
+          "tests/test_search.py",
+          4,
+          6
+        ]
+      ],
+      "found_ranges": [
+        [
+          "search.py",
+          1,
+          6
+        ],
+        [
+          "tests/test_search.py",
+          1,
+          6
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "requirements.lock",
+          1,
+          2
+        ],
+        [
+          "README.md",
+          1,
+          5
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.3333333333333333,
+      "range_recall": 1.0,
+      "range_precision": 0.3333333333333333,
+      "latency_ms": 10.777,
+      "atlas_notes": []
+    },
+    {
+      "query": "unique_labels",
+      "requested_mode": "graph+atlas",
+      "mode": "keyword + atlas + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "search.py",
+          1,
+          6
+        ],
+        [
+          "tests/test_search.py",
+          4,
+          6
+        ]
+      ],
+      "found_ranges": [
+        [
+          "search.py",
+          1,
+          6
+        ],
+        [
+          "tests/test_search.py",
+          1,
+          6
+        ],
+        [
+          "README.md",
+          1,
+          5
+        ],
+        [
+          "tests/test_quote.py",
+          5,
+          6
+        ],
+        [
+          "tests/test_quote.py",
+          7,
+          8
+        ],
+        [
+          "ts/api.test.ts",
+          2,
+          2
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.4,
+      "range_recall": 1.0,
+      "range_precision": 0.3333333333333333,
+      "latency_ms": 762.197,
+      "atlas_notes": [
+        "Atlas candidates: 12 validated against local snapshot chunks; source text from local evidence"
+      ]
+    },
+    {
+      "query": "MAX_ITEMS",
+      "requested_mode": "graph",
+      "mode": "keyword + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "config.py",
+          2,
+          2
+        ],
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "tests/test_quote.py",
+          4,
+          8
+        ]
+      ],
+      "found_ranges": [
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "tests/test_quote.py",
+          1,
+          8
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ],
+        [
+          "requirements.lock",
+          1,
+          2
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.5,
+      "range_recall": 1.0,
+      "range_precision": 0.5,
+      "latency_ms": 14.795,
+      "atlas_notes": []
+    },
+    {
+      "query": "MAX_ITEMS",
+      "requested_mode": "graph+atlas",
+      "mode": "keyword + atlas + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "config.py",
+          2,
+          2
+        ],
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "tests/test_quote.py",
+          4,
+          8
+        ]
+      ],
+      "found_ranges": [
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "tests/test_quote.py",
+          1,
+          8
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "README.md",
+          1,
+          5
+        ],
+        [
+          "ts/api.ts",
+          1,
+          2
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.5,
+      "range_recall": 1.0,
+      "range_precision": 0.5,
+      "latency_ms": 832.032,
+      "atlas_notes": [
+        "Atlas candidates: 12 validated against local snapshot chunks; source text from local evidence"
+      ]
+    },
+    {
+      "query": "quoteTS",
+      "requested_mode": "graph",
+      "mode": "keyword + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "ts/api.ts",
+          1,
+          2
+        ],
+        [
+          "ts/helper.ts",
+          1,
+          2
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ],
+        [
+          "ts/api.test.ts",
+          1,
+          2
+        ]
+      ],
+      "found_ranges": [
+        [
+          "ts/api.ts",
+          1,
+          2
+        ],
+        [
+          "ts/api.test.ts",
+          1,
+          2
+        ],
+        [
+          "ts/helper.ts",
+          1,
+          2
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "requirements.lock",
+          1,
+          2
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.6666666666666666,
+      "range_recall": 1.0,
+      "range_precision": 0.6666666666666666,
+      "latency_ms": 20.646,
+      "atlas_notes": []
+    },
+    {
+      "query": "quoteTS",
+      "requested_mode": "graph+atlas",
+      "mode": "keyword + atlas + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "ts/api.ts",
+          1,
+          2
+        ],
+        [
+          "ts/helper.ts",
+          1,
+          2
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ],
+        [
+          "ts/api.test.ts",
+          1,
+          2
+        ]
+      ],
+      "found_ranges": [
+        [
+          "ts/api.ts",
+          1,
+          2
+        ],
+        [
+          "ts/api.test.ts",
+          1,
+          2
+        ],
+        [
+          "ts/helper.ts",
+          1,
+          2
+        ],
+        [
+          "app.py",
+          4,
+          5
+        ],
+        [
+          "tests/test_quote.py",
+          4,
+          8
+        ],
+        [
+          "README.md",
+          1,
+          5
+        ]
+      ],
+      "file_recall": 0.75,
+      "file_precision": 0.5,
+      "range_recall": 0.75,
+      "range_precision": 0.5,
+      "latency_ms": 860.764,
+      "atlas_notes": [
+        "Atlas candidates: 12 validated against local snapshot chunks; source text from local evidence"
+      ]
+    },
+    {
+      "query": "quantity is ignored when calculating a quote",
+      "requested_mode": "graph",
+      "mode": "keyword + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "app.py",
+          4,
+          5
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "tests/test_quote.py",
+          4,
+          8
+        ]
+      ],
+      "found_ranges": [
+        [
+          "tests/test_quote.py",
+          1,
+          8
+        ],
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "ts/api.ts",
+          2,
+          2
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "README.md",
+          1,
+          5
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.6666666666666666,
+      "range_recall": 1.0,
+      "range_precision": 0.6666666666666666,
+      "latency_ms": 10.043,
+      "atlas_notes": []
+    },
+    {
+      "query": "quantity is ignored when calculating a quote",
+      "requested_mode": "graph+atlas",
+      "mode": "keyword + atlas + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "app.py",
+          4,
+          5
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "tests/test_quote.py",
+          4,
+          8
+        ]
+      ],
+      "found_ranges": [
+        [
+          "tests/test_quote.py",
+          1,
+          8
+        ],
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "ts/api.ts",
+          2,
+          2
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "README.md",
+          1,
+          5
+        ],
+        [
+          "ts/api.test.ts",
+          2,
+          2
+        ]
+      ],
+      "file_recall": 0.75,
+      "file_precision": 0.5,
+      "range_recall": 0.75,
+      "range_precision": 0.5,
+      "latency_ms": 813.708,
+      "atlas_notes": [
+        "Atlas candidates: 12 validated against local snapshot chunks; source text from local evidence"
+      ]
+    },
+    {
+      "query": "reject orders with too many items",
+      "requested_mode": "graph",
+      "mode": "keyword + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "config.py",
+          2,
+          2
+        ],
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "tests/test_quote.py",
+          4,
+          8
+        ]
+      ],
+      "found_ranges": [
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "tests/test_quote.py",
+          1,
+          8
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "README.md",
+          1,
+          5
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.5,
+      "range_recall": 1.0,
+      "range_precision": 0.5,
+      "latency_ms": 16.793,
+      "atlas_notes": []
+    },
+    {
+      "query": "reject orders with too many items",
+      "requested_mode": "graph+atlas",
+      "mode": "keyword + atlas + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "config.py",
+          2,
+          2
+        ],
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "tests/test_quote.py",
+          4,
+          8
+        ]
+      ],
+      "found_ranges": [
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "tests/test_quote.py",
+          1,
+          8
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "README.md",
+          1,
+          5
+        ],
+        [
+          "tests/test_search.py",
+          5,
+          6
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.5,
+      "range_recall": 1.0,
+      "range_precision": 0.5,
+      "latency_ms": 533.196,
+      "atlas_notes": [
+        "Atlas candidates: 12 validated against local snapshot chunks; source text from local evidence"
+      ]
+    }
+  ],
+  "warning": "Small fixed tasks on one fixture measure retrieval only; no quality, task-success or latency improvement is claimed."
+}

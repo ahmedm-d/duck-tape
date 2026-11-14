@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Literal
 from urllib.parse import urlparse
 
-from fastapi import FastAPI, HTTPException, UploadFile, File, Request
+from fastapi import FastAPI, HTTPException, UploadFile, File, Request, Query
 from fastapi.responses import FileResponse, Response, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
@@ -194,6 +194,30 @@ def health():
     worker=db.get('services','worker') or {}
     active=worker.get('status')=='running' and worker.get('heartbeat','')>(datetime.now(timezone.utc)-timedelta(seconds=15)).isoformat()
     return {'status':'ok','workspace':'local','worker':'running' if active else 'stopped','monitoring':'running' if active and not poll_stop.is_set() else 'stopped'}
+
+
+@app.get('/api/global-catalogue')
+def global_catalogue_query(ecosystem: str = Query(min_length=1, max_length=64),
+                           package: str = Query(min_length=1, max_length=256),
+                           limit: int = Query(default=25, ge=1, le=100),
+                           provider: Literal['local', 'atlas'] = 'local') -> dict:
+    from .global_catalogue import Catalogue, default_path
+    if provider == 'atlas':
+        from .global_pipeline import query_atlas, Error
+        try:
+            return query_atlas(ecosystem, package, limit=limit)
+        except Error:
+            raise HTTPException(503, 'Public Atlas unavailable; coverage remains unknown.') from None
+    return {**Catalogue(default_path()).query(ecosystem, package, limit=limit), 'provider': 'local'}
+
+
+@app.get('/api/global-catalogue/graph')
+def global_catalogue_graph(ecosystem: str = Query(min_length=1, max_length=64),
+                           package: str = Query(min_length=1, max_length=256),
+                           limit: int = Query(default=25, ge=1, le=100),
+                           provider: Literal['local', 'atlas'] = 'local') -> dict:
+    from .global_catalogue import graph_result
+    return graph_result(global_catalogue_query(ecosystem, package, limit, provider))
 
 
 @app.get('/api/repositories')
@@ -612,6 +636,161 @@ def research(id:str,body:dict):
         text=fetched.decode('utf-8',errors='replace')[:30000] if isinstance(fetched,bytes) else str(fetched)[:30000]
     if not text.strip(): raise HTTPException(422,'Paste source text or provide a public HTTPS URL')
     return create_job(JobInput(repo_id=id,title=str(body.get('title','Research proposal'))[:200],description='Unverified research hypothesis. Investigate repository applicability and define a measurable comparison. Source evidence:\n'+text,source='research',type='performance',source_url=url))
+
+
+def _current_profile(id:str,snapshot_id:str|None=None):
+    from .applicability import profile_for
+    repo=require('repositories',id)
+    current=repo.get('source_snapshot_id') or repo['snapshot']
+    if snapshot_id not in (None,current,repo['snapshot']): raise HTTPException(409,'Snapshot is not current; re-assess applicability')
+    return profile_for(id,current)
+
+
+@app.get('/api/repositories/{id}/graph')
+def repository_graph(id:str,engine:str='auto'):
+    """Snapshot-bound knowledge map: Graphify when installed, else the labelled built-in symbol graph."""
+    from .graphify_graph import GraphifyUnavailable, knowledge_graph
+    repo=require('repositories',id)
+    try: return knowledge_graph(id,repo.get('source_snapshot_id') or repo['snapshot'],engine)
+    except GraphifyUnavailable as exc: raise HTTPException(503,str(exc)) from None
+    except ValueError as exc: raise HTTPException(422,str(exc)) from None
+
+
+@app.get('/api/repositories/{id}/agent-context')
+def repository_agent_context(id:str,query:str,budget_tokens:int=3500,job_id:str|None=None,snapshot_id:str|None=None):
+    """graph_context v1 for agents and the UI: local, snapshot-bound, null means unknown."""
+    from .agent_context import agent_graph_context
+    repo=require('repositories',id)
+    current=repo.get('source_snapshot_id') or repo['snapshot']
+    if snapshot_id not in (None,current,repo['snapshot']): raise HTTPException(409,'Snapshot is not current; rebuild the graph context')
+    job=None
+    if job_id:
+        job=require('jobs',job_id)
+        if job.get('repo_id')!=id: raise HTTPException(404,'Job not found in this repository')
+    try: return agent_graph_context(id,current,query,budget_tokens,job=job)
+    except ValueError as exc: raise HTTPException(422,str(exc)) from None
+
+
+@app.post('/api/repositories/{id}/atlas-graph-mirror')
+def repository_atlas_graph_mirror(id:str):
+    """Explicit opt-in: mirror the current snapshot's graph and approved knowledge to private Atlas."""
+    from . import atlas_graph
+    from .data_platforms import DataPlatformError
+    repo=require('repositories',id)
+    current=repo.get('source_snapshot_id') or repo['snapshot']
+    try: return atlas_graph.mirror(id,current)
+    except atlas_graph.MirrorRefused as exc: raise HTTPException(409,str(exc)) from None
+    except DataPlatformError as exc: raise HTTPException(503,str(exc)) from None
+
+
+@app.get('/api/repositories/{id}/profile')
+def repository_profile(id:str):
+    return _current_profile(id)
+
+
+@app.post('/api/repositories/{id}/applicability')
+def repository_applicability(id:str,body:dict):
+    """Match public catalogue entries locally; nothing is uploaded or queued."""
+    from .applicability import catalogue_entry, match
+    entries=body.get('entries')
+    if not isinstance(entries,list) or not 1<=len(entries)<=100: raise HTTPException(422,'Provide 1 to 100 catalogue entries')
+    profile=_current_profile(id,body.get('snapshot_id'))
+    try: matches=[match(profile,catalogue_entry(entry)) for entry in entries]
+    except ValueError as exc: raise HTTPException(422,str(exc)) from None
+    return {'profile':{key:profile[key] for key in ('repo_id','snapshot_id','profile_hash','gaps','capabilities')},'matches':matches}
+
+
+@app.post('/api/repositories/{id}/applicability/catalogue')
+def applicability_catalogue(id:str,body:dict):
+    """Match the public catalogue against this repository's resolved dependencies; creates no jobs.
+
+    Body: {snapshot_id?, provider: 'local'|'atlas' (default 'local'), limit?: 1..100 per package}.
+    provider=atlas sends the exact ecosystem/package names from the private profile to the public
+    catalogue cluster, so it is an explicit choice; local reads only the separate local catalogue file.
+    An Atlas failure is HTTP 503 with unknown coverage, never a silent local fallback. Coverage is always
+    unknown: no entry is not safe. `entries` carries the matcher-shape entry for each matched record,
+    ready for the explicit /applicability/intake route.
+    """
+    from .applicability import from_global_entry, match
+    provider=body.get('provider','local')
+    limit=body.get('limit',25)
+    if provider not in ('local','atlas'): raise HTTPException(422,"provider must be 'local' or 'atlas'")
+    if type(limit) is not int or not 1<=limit<=100: raise HTTPException(422,'limit must be an integer from 1 to 100')
+    profile=_current_profile(id,body.get('snapshot_id'))
+    names=sorted({(item['ecosystem'],item['name']) for item in profile['packages']})
+    queried,errors,limitations,found,truncated=[],[],[],{},False
+    from .global_pipeline import Error, query_atlas
+    if provider=='local':
+        from .global_catalogue import Catalogue, default_path
+        catalogue=Catalogue(default_path())
+    for ecosystem,package in names[:200]:
+        try:
+            if provider=='atlas': result=query_atlas(ecosystem,package,limit=limit)
+            else: result=catalogue.query(ecosystem,package,limit=limit)
+        except Error: raise HTTPException(503,'Public Atlas unavailable; coverage remains unknown.') from None
+        except ValueError as exc:
+            errors.append({'ecosystem':ecosystem,'package':package,'detail':str(exc)[:300]})
+            continue
+        queried.append({'ecosystem':ecosystem,'package':package,'entries':len(result['entries']),'truncated':result['truncated']})
+        limitations+=result['limitations']
+        for record in result['entries']: found.setdefault((record['canonical_id'],record['material_revision']),record)
+        truncated=truncated or result['truncated']
+    if len(names)>200: limitations.append(f'Only the first 200 of {len(names)} resolved packages were queried.')
+    if truncated: limitations.append('At least one package has more catalogue entries than the limit; raise limit or narrow the query.')
+    if profile['gaps']: limitations.append(f'{len(profile["gaps"])} unresolved manifest gap(s) in the profile; absence of a match is not absence of exposure.')
+    if provider=='atlas': limitations.append("Atlas readers cannot see another machine's failed source refresh; stored freshness is the only freshness shown.")
+    entries=[from_global_entry(record) for record in found.values()]
+    try: matches=[match(profile,entry) for entry in entries]
+    except ValueError as exc: raise HTTPException(422,str(exc)) from None
+    return {'profile':{**{key:profile[key] for key in ('repo_id','snapshot_id','profile_hash','gaps','capabilities')},'package_count':len(profile['packages'])},
+            'provider':provider,'queried':queried,'matches':matches,'entries':[entry for entry,item in zip(entries,matches) if item['status']=='matched'],
+            'coverage':'unknown','limitations':list(dict.fromkeys(limitations+['Catalogue coverage is partial; no match does not mean unaffected.'])),'errors':errors}
+
+
+def _invalidate_catalogue_jobs(repo_id:str,entry_id:str,current:set[str],reason:str):
+    """Fail open jobs for this catalogue entry whose evidence no longer matches the current revision/match."""
+    def invalidate(con):
+        stale=[]
+        for row in con.execute("SELECT data FROM records WHERE kind='jobs'").fetchall():
+            job=json.loads(row[0])
+            if (job.get('repo_id')==repo_id and job.get('status') not in TERMINAL|{'Failed'} and job.get('source') in {'security','analysis','research'}
+                    and str(job.get('source_key') or '').startswith(entry_id+':') and job.get('evidence_fingerprint') not in current):
+                db.put_in(con,'jobs',{**job,'status':'Failed','error':reason,'approval':None,'stale':True,'lease_token':None,'lease_until':0})
+                stale.append(job['id'])
+        if stale: db.put_in(con,'events',{'message':f'Catalogue entry {entry_id[:80]} changed; {len(stale)} dependent job(s) invalidated','repo_id':repo_id,'author':'Duck Tape'})
+        return stale
+    return db.atomic(invalidate)
+
+
+@app.post('/api/repositories/{id}/applicability/intake')
+def applicability_intake(id:str,body:dict):
+    """Re-match one entry on the current snapshot, then use existing intake and preparation policies.
+
+    Open jobs created from an earlier revision, or from an entry that is now withdrawn or no
+    longer matches, are invalidated; rejected/snoozed decisions on unchanged evidence are kept.
+    """
+    from .applicability import catalogue_entry, intake_payloads, match
+    profile=_current_profile(id,body.get('snapshot_id'))
+    try:
+        entry=catalogue_entry(body.get('entry'))
+        found=match(profile,entry)
+    except ValueError as exc: raise HTTPException(422,str(exc)) from None
+    try: payloads=intake_payloads(found,entry)
+    except ValueError as exc:
+        stale=_invalidate_catalogue_jobs(id,found['entry_id'],set(),f'Catalogue entry is no longer a current match ({exc}); re-assess applicability.')
+        return {'match':found,'jobs':[],'invalidated':stale,'detail':str(exc)}
+    binding={'entry_id':found['entry_id'],'entry_revision':found['entry_revision'],'entry_hash':found['entry_hash'],'entry_kind':found['entry_kind'],
+             'match_key':found['match_key'],'profile_hash':found['profile_hash'],'snapshot_id':found['snapshot_id']}
+    evidence={key:found[key] for key in ('status','evidence','citations','rationale','acceptance_criteria','limitations','cwe_ids','affected_symbols')}
+    def bind(job):
+        if job.get('status') in TERMINAL|{'Failed'} or job.get('catalogue')==binding: return job
+        bound={**job,'catalogue':binding,'applicability':evidence}
+        if not job.get('plan_hash'): bound.update(rationale=found['rationale'],acceptance_criteria=found['acceptance_criteria'])
+        return bound
+    jobs=[db.mutate('jobs',job['id'],bind) for job in (create_job(JobInput(**payload)) for payload in payloads)]
+    stale=_invalidate_catalogue_jobs(id,found['entry_id'],{job.get('evidence_fingerprint') for job in jobs},
+                                     f'Catalogue entry changed to revision {found["entry_revision"]}; retry against the current revision.')
+    return {'match':found,'jobs':jobs,'invalidated':stale}
 
 
 DIST=Path(__file__).resolve().parents[1]/'frontend'/'dist'

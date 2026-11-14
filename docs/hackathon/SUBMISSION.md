@@ -89,8 +89,8 @@ Use relative paths for repository artifacts and public URLs only where needed. I
 | Regression fails before / passes after | Exact check commands: TBD | TBD | TBD |
 | Unsafe proposal handling | Seeded case: TBD | TBD | TBD |
 | Approved knowledge affects a later request | Scenario and approved version: TBD | TBD | TBD |
-| Duck Tape uses its internal Atlas memory | Explicit projection/query plus worker run: TBD | TBD | TBD |
-| Databricks evaluates Duck Tape agent runs | Explicit export plus query: TBD | TBD | TBD |
+| Duck Tape uses its internal Atlas memory | 2026-11-14, Atlas M0, Ollama `nomic-embed-text` (768 d): `data_platforms.atlas_sync` then `atlas_search` on the Parcel sample; `retrieve(..., atlas=True)` comparison | [RETRIEVAL.md](../RETRIEVAL.md#atlas-candidates-opt-in) | Live: 14 chunks uploaded, 0 excluded, index queryable; search returned local-validated chunks (scores 0.85–0.88). Recall versus local fallback mixed on 3 queries; no gain claimed. Worker run with Atlas enabled still TBD. |
+| Databricks evaluates Duck Tape agent runs | 2026-11-14, Free Edition serverless warehouse: `python scripts/integrations.py databricks-sync --run <sample run>` then `databricks-summary` | Command output; table `workspace.default.ducktape_runs` | Live: 1 row merged and queried back (complete, 1637 ms, tokens unknown/NULL). Run used the offline sample fixture provider, so `verified=false` by design; a live-model run is still needed. |
 | Global source becomes a repository-specific proposal | Public source -> catalogue revision -> local snapshot match: TBD | Planned | Not implemented by the planning docs |
 | Internal agent base/adapted comparison, if performed | Held-out manifest and settings: TBD | TBD | TBD |
 | UI/build and demo | npm run build; exact browser/demo checks: TBD | TBD | TBD |

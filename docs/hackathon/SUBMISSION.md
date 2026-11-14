@@ -29,11 +29,11 @@ Replace each TBD with a checked fact or explicitly mark it unavailable. These ar
 | Duck Tape internal base inference provider/model/version | TBD |
 | Internal Adaption usage and adapted agent model/version, if any | TBD; an API adapter alone is not an adaptation result |
 | Hugging Face model/provider/revision, if used | TBD |
-| Embedding provider/model and vector dimensions | TBD |
-| Internal Atlas evidence-memory index, namespace filters and worker retrieval evidence | TBD; omit credentials/connection secrets |
-| Internal Databricks agent-evaluation table/query and exported comparisons | TBD; redact secrets/private account details |
+| Embedding provider/model and vector dimensions | Local Ollama `nomic-embed-text` (137M, F16), 768 dimensions (dev machine, 14 Nov 2026); confirm on the submission build |
+| Internal Atlas evidence-memory index, namespace filters and worker retrieval evidence | Atlas M0, database `ducktape`, collection/index `evidence_vectors` (vectorSearch, cosine, 768 d), filters `repo_id`/`snapshot_id`/`embedding_space` (SHA-256 hashed). The opt-in retrieval measurement is in RETRIEVAL.md. Worker retrieval with Atlas is **not yet exercised**: the worker uses the legacy `retrieve` form (A) |
+| Internal Databricks agent-evaluation table/query and exported comparisons | Free Edition serverless warehouse, table `workspace.default.ducktape_runs` from `integrations/databricks/schema.sql`; `databricks-sync` plus `databricks-summary` live on 14 Nov 2026 with 1 offline-sample run (`verified=false`). A live-model comparison is TBD |
 | Global catalogue sources, Databricks processing/publication and Atlas queries | Planned; replace with actual run/revision evidence if implemented |
-| Other models, APIs, datasets and open-source dependencies | TBD; include licenses/attribution where required |
+| Other models, APIs, datasets and open-source dependencies | [Graphify](https://github.com/Graphify-Labs/graphify) 0.9.108 (`graphifyy`, Apache-2.0), an external CLI for the knowledge map; Nomic `nomic-embed-text` via Ollama; PyMongo 4.20.0; OSV API (`api.osv.dev`, existing scanner); Python/Node dependencies in `requirements*.txt` and `frontend/package-lock.json`. A's model list and C's data sources are still TBD |
 | Evaluation tasks, holdout separation and actual results | TBD |
 | Known failures, unmeasured claims and unavailable integrations | TBD |
 | Existing-code provenance and organizer eligibility response | TBD; no unsupported attestation |

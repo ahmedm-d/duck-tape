@@ -614,6 +614,43 @@ def research(id:str,body:dict):
     return create_job(JobInput(repo_id=id,title=str(body.get('title','Research proposal'))[:200],description='Unverified research hypothesis. Investigate repository applicability and define a measurable comparison. Source evidence:\n'+text,source='research',type='performance',source_url=url))
 
 
+def _current_profile(id:str,snapshot_id:str|None=None):
+    from .applicability import profile_for
+    repo=require('repositories',id)
+    current=repo.get('source_snapshot_id') or repo['snapshot']
+    if snapshot_id not in (None,current,repo['snapshot']): raise HTTPException(409,'Snapshot is not current; re-assess applicability')
+    return profile_for(id,current)
+
+
+@app.get('/api/repositories/{id}/profile')
+def repository_profile(id:str):
+    return _current_profile(id)
+
+
+@app.post('/api/repositories/{id}/applicability')
+def repository_applicability(id:str,body:dict):
+    """Match public catalogue entries locally; nothing is uploaded or queued."""
+    from .applicability import match
+    entries=body.get('entries')
+    if not isinstance(entries,list) or not 1<=len(entries)<=100: raise HTTPException(422,'Provide 1 to 100 catalogue entries')
+    profile=_current_profile(id,body.get('snapshot_id'))
+    try: matches=[match(profile,entry) for entry in entries]
+    except ValueError as exc: raise HTTPException(422,str(exc)) from None
+    return {'profile':{key:profile[key] for key in ('repo_id','snapshot_id','profile_hash','gaps','capabilities')},'matches':matches}
+
+
+@app.post('/api/repositories/{id}/applicability/intake')
+def applicability_intake(id:str,body:dict):
+    """Re-match one entry on the current snapshot, then use existing intake and preparation policies."""
+    from .applicability import intake_payloads, match
+    profile=_current_profile(id,body.get('snapshot_id'))
+    try:
+        found=match(profile,body.get('entry'))
+        payloads=intake_payloads(found,body['entry'])
+    except ValueError as exc: raise HTTPException(422,str(exc)) from None
+    return {'match':found,'jobs':[create_job(JobInput(**payload)) for payload in payloads]}
+
+
 DIST=Path(__file__).resolve().parents[1]/'frontend'/'dist'
 if DIST.exists():
     app.mount('/assets',StaticFiles(directory=DIST/'assets'),name='assets')

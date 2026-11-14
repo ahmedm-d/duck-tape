@@ -328,6 +328,22 @@
           "verified_on": "2026-11-14",
           "upstream": "https://github.com/DLVulDet/PrimeVul",
           "upstream_license": "MIT (GitHub repository licence, verified via api.github.com on 2026-11-14)"
+        },
+        {
+          "id": "hitoshura25/crossvul",
+          "url": "https://huggingface.co/datasets/hitoshura25/crossvul",
+          "license": "apache-2.0",
+          "verification": "Live GET https://huggingface.co/api/datasets/hitoshura25/crossvul -> cardData.license",
+          "verified_on": "2026-11-14",
+          "upstream": "https://zenodo.org/records/4734050",
+          "upstream_license": "CC-BY-4.0 (Zenodo record 4734050 metadata, verified via zenodo.org/api on 2026-11-14)"
+        },
+        {
+          "id": "starsofchance/CVEfixes_v1.0.8",
+          "url": "https://huggingface.co/datasets/starsofchance/CVEfixes_v1.0.8",
+          "license": "mit",
+          "verification": "Live GET https://huggingface.co/api/datasets/starsofchance/CVEfixes_v1.0.8 -> cardData.license",
+          "verified_on": "2026-11-14"
         }
       ]
     }

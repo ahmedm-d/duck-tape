@@ -46,6 +46,7 @@ MIN_TRAIN_ROWS = 1000
 EVAL_PAIRS = 100  # 100 vulnerable + 100 fixed = 200 eval rows
 VULN_SHARE = 0.60
 MAX_PROMPT_TOKENS = 6000  # estimated as chars / 4
+MAX_LINE_CHARS = 500  # longer lines mean minified or generated code
 MAX_EVAL_COMPONENT_PAIRS = 12  # larger project/CVE components stay in train
 MAX_CROSSVUL_FUNCS_PER_FILE = 3
 MAX_CROSSVUL_FUNC_LINES = 150
@@ -302,6 +303,7 @@ class Localization:
     end_line: int
     mode: str  # "changed" (rewritten/removed lines), "inserted" (fix only adds code) or "whole"
     excerpt: str
+    fix_excerpt: str = ""  # first non-trivial line the upstream fix introduces (suggested fix)
 
 
 _TRIVIAL_PREFIXES = ("//", "/*", "*", "#", "'''", '"""')
@@ -310,6 +312,9 @@ _TRIVIAL_PREFIXES = ("//", "/*", "*", "#", "'''", '"""')
 def _trivial(line: str) -> bool:
     stripped = line.strip()
     return not stripped or stripped.startswith(_TRIVIAL_PREFIXES)
+
+
+EXCERPT_MAX = 160
 
 
 def localize_change(vulnerable: str, fixed: str) -> Localization:
@@ -326,6 +331,7 @@ def localize_change(vulnerable: str, fixed: str) -> Localization:
     spans: list[tuple[int, int]] = []
     modes: list[str] = []
     excerpt = ""
+    fix_excerpt = ""
     for tag, i1, i2, j1, j2 in matcher.get_opcodes():
         if tag == "equal":
             continue
@@ -341,11 +347,13 @@ def localize_change(vulnerable: str, fixed: str) -> Localization:
             first = v_lines[max(0, i1 - 1)] if v_lines else ""
         spans.append(span)
         if not excerpt:
-            excerpt = norm_line(first).replace("`", "'")[:90]
+            excerpt = norm_line(first).replace("`", "'")[:EXCERPT_MAX]
+            added = next((x for x in f_lines[j1:j2] if not _trivial(x)), "")
+            fix_excerpt = norm_line(added).replace("`", "'")[:EXCERPT_MAX]
     if not spans:
         return Localization(1, total, "whole", "")
     mode = "changed" if "changed" in modes else "inserted"
-    return Localization(min(s[0] for s in spans), max(s[1] for s in spans), mode, excerpt)
+    return Localization(min(s[0] for s in spans), max(s[1] for s in spans), mode, excerpt, fix_excerpt)
 
 
 # --------------------------------------------------------------------------------------------
@@ -429,18 +437,24 @@ def build_prompt(*, path: str, code: str, graph_context: dict[str, Any]) -> str:
 def describe_finding(
     *, cwe: str, name: str, impact: str, cve: str | None, loc: Localization
 ) -> str:
-    cite = f"{cwe} ({name})" + (f", cited for {cve}" if cve else "")
+    """Concrete, code-grounded description: where, what the weak code is, a suggested fix, typical impact.
+
+    The suggested fix is the first line the real upstream fix introduced, so it is never invented.
+    """
+    cite = f"{cwe} ({name})" + (f", as in {cve}" if cve else "")
     span = f"line {loc.start_line}" if loc.start_line == loc.end_line else f"lines {loc.start_line}-{loc.end_line}"
     if loc.mode == "changed":
-        where = f"The upstream fix for this function rewrites or removes {span}"
-        where += f" (first changed line: `{loc.excerpt}`)." if loc.excerpt else "."
-        where += " The weakness is in that code."
+        where = f"The weakness is at {span}"
+        where += f": `{loc.excerpt}`." if loc.excerpt else "."
+        fix = f" Suggested fix: replace it with code like `{loc.fix_excerpt}`." if loc.fix_excerpt else " Suggested fix: rewrite that code safely."
     elif loc.mode == "inserted":
-        where = f"The upstream fix adds code at {span}, handling that this version lacks"
-        where += f" (nearest existing line: `{loc.excerpt}`)." if loc.excerpt else "."
+        where = f"A required check or safeguard is missing at {span}"
+        where += f", next to `{loc.excerpt}`." if loc.excerpt else "."
+        fix = f" Suggested fix: add code like `{loc.fix_excerpt}`." if loc.fix_excerpt else " Suggested fix: add the missing check."
     else:
-        where = "The upstream fix changes this function, so the weakness is within the function as a whole."
-    return f"Matches {cite}. {where} In the unfixed version {impact}."
+        where = "The weakness is in this function as a whole; no single line can be isolated."
+        fix = ""
+    return f"{cite}. {where}{fix} Typical impact of this weakness: {impact}."
 
 
 def build_completion(
@@ -1092,7 +1106,7 @@ def verify_licence(dataset_id: str, file_licence: str | None = None) -> dict[str
                     "verification": f"Recorded from a manual GET {url} on {recorded['recorded_on']}; live re-check failed: {type(exc).__name__}"}
         return {**base, "license": file_licence or "", "verified_on": today,
                 "verification": f"Licence string recorded by the source extractor; live HF API re-check failed: {type(exc).__name__}"}
-    if file_licence and str(found).lower() != file_licence.lower():
+    if file_licence and str(found).lower() not in file_licence.lower():
         raise SystemExit(f"{dataset_id}: card licence {found!r} differs from the extractor's {file_licence!r}")
     return {**base, "license": str(found), "verification": f"Live GET {url} -> cardData.license",
             "verified_on": today, "api_sha": str(payload.get("sha") or "")}
@@ -1148,6 +1162,12 @@ def write_report(
         return "\n".join(out)
 
     tc, ec = _counts(train), _counts(evals)
+    preferred = sum(1 for b in train if b.language in PREFERRED_LANGUAGES)
+    lang_note = (
+        f"{preferred} of {len(train)} train rows are Python/JavaScript/TypeScript; the rest are C/C++ or other."
+        if preferred
+        else "C/C++ only in this build (no Python/JavaScript/TypeScript source was present)."
+    )
     lang_rows = []
     for name, subset in (("train", train), ("eval", evals)):
         for lang, n in sorted(Counter(b.language for b in subset).items(), key=lambda kv: (-kv[1], kv[0])):
@@ -1188,8 +1208,7 @@ instruction-tuning format `{{"prompt","completion"}}`. The train and eval JSONL 
 
 Notes: the function snippets inside these datasets come from open-source projects (for example Linux, ImageMagick,
 Chromium, FFmpeg, QEMU) and keep their own licences; only the dataset-level licences above were verified.
-The CrossVul mirror card says Apache-2.0 while the Zenodo record it derives from says CC-BY-4.0; both are permissive,
-and attribution to CrossVul and PrimeVul should be kept in any model card.
+Keep attribution to each source (PrimeVul: Ding et al.) in any model card.
 
 ## Counts
 
@@ -1215,34 +1234,35 @@ Rows by source:
 {table(cwe_rows, ("CWE", "Rows"))}
 
 Priority of train vulnerable rows (deterministic CWE table, default medium):
+
 {table(prio_rows, ("Priority", "Rows"))}
 
 Localisation of train vulnerable rows (`changed` = replaced/removed lines, `inserted` = fix only adds code, mapped to
 the surrounding lines, `whole` = no non-trivial hunk mapped):
+
 {table(loc_rows, ("Mode", "Rows"))}
 
 ## Eval/train group-overlap check
 
 Eval is {ec['rows']} rows ({ec['vulnerable']} vulnerable, {ec['fixed']} fixed) drawn from whole project/CVE components
-of PrimeVul only (components with at most {MAX_EVAL_COMPONENT_PAIRS} pairs), so twins stay together.
+of the sources that carry CVE ids (components with at most {MAX_EVAL_COMPONENT_PAIRS} pairs), so twins stay together.
 
 {table([("CVE ids shared by train and eval", overlap['cve_overlap']), ("Projects shared by train and eval", overlap['project_overlap']), ("Pairs shared by train and eval", overlap['pair_overlap'])], ("Check", "Count"))}
 
 ## Limitations
 
-- **C/C++ dominates.** PrimeVul is C/C++ only. The optional CrossVul reduction adds a few hundred Python/JavaScript/
-  TypeScript function pairs, but transfer to the Python/TypeScript repositories Duck Tape reviews is expected to be weak.
-  Eval is C/C++ only (CrossVul has no CVE or project column, so a held-out group split cannot be verified there); treat eval
-  scores as a measure of in-domain behaviour, not of Python/TypeScript performance.
+- **Language coverage: {lang_note}** Transfer to the Python/TypeScript repositories Duck Tape reviews is
+  expected to be weak when the mix is C/C++-heavy; treat eval scores as in-domain behaviour, not Python/TypeScript
+  performance. Sources without a CVE id cannot be held out by CVE/project group, so they only contribute train rows.
 - **Labels come from fix commits.** A "vulnerable" function is the pre-fix version and a "fixed" one the post-fix version.
-  Fix commits can include unrelated edits, and PrimeVul labels are known to be noisy. CrossVul labels are file-level CWEs
-  applied to changed functions, so they are weaker; commits touching more than {MAX_CROSSVUL_FUNCS_PER_FILE} functions in a file are skipped.
+  Fix commits can include unrelated edits, and PrimeVul labels are known to be noisy.
+  Language `c/c++` means a header or a file name that PrimeVul does not give.
 - **Single-function context.** The graph_context is a stub with no callers, imports or tests, so the model learns to judge a
   function in isolation and cannot learn reachability. Missing information is stated in `gaps`, never fabricated.
 - **Reference lines.** For fixes that only add code (for example a missing bounds check) the reference points at the
   lines around the insertion point. Several hunks are merged into one min-to-max range.
 - **File paths.** About a third of PrimeVul rows have no `file_name`; the path is taken from the NVD description when
-  it names a file and is otherwise `unknown`. CrossVul rows always use `unknown`.
+  it names a file and is otherwise `unknown`.
 - **Priority is a lookup, not a risk assessment**, and findings text is templated, so the model will be fluent but not
   creative; it has no exploitability or severity evidence.
 - **Snapshot IDs** are the upstream fix commit ids from PrimeVul and are identical for both twins, so they carry no label signal.

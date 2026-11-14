@@ -18,11 +18,12 @@ instruction-tuning format `{"prompt","completion"}`. The train and eval JSONL fi
 | Dataset | Licence on HF card | Verification | Verified on | Upstream licence |
 | --- | --- | --- | --- | --- |
 | colin/PrimeVul | mit | Live GET https://huggingface.co/api/datasets/colin/PrimeVul -> cardData.license | 2026-11-14 | MIT (GitHub repository licence, verified via api.github.com on 2026-11-14) |
+| hitoshura25/crossvul | apache-2.0 | Live GET https://huggingface.co/api/datasets/hitoshura25/crossvul -> cardData.license | 2026-11-14 | CC-BY-4.0 (Zenodo record 4734050 metadata, verified via zenodo.org/api on 2026-11-14) |
+| starsofchance/CVEfixes_v1.0.8 | mit | Live GET https://huggingface.co/api/datasets/starsofchance/CVEfixes_v1.0.8 -> cardData.license | 2026-11-14 |  |
 
 Notes: the function snippets inside these datasets come from open-source projects (for example Linux, ImageMagick,
 Chromium, FFmpeg, QEMU) and keep their own licences; only the dataset-level licences above were verified.
-The CrossVul mirror card says Apache-2.0 while the Zenodo record it derives from says CC-BY-4.0; both are permissive,
-and attribution to CrossVul and PrimeVul should be kept in any model card.
+Keep attribution to each source (PrimeVul: Ding et al.) in any model card.
 
 ## Counts
 
@@ -33,64 +34,74 @@ and attribution to CrossVul and PrimeVul should be kept in any model card.
 
 Train vulnerable share: 60.0% (target 60%). Eval is balanced 50/50 with twins together.
 
-Pipeline: pairs read per source: {'colin/PrimeVul': 4682};
-246 pairs skipped (no parseable signature, identical code, scrub/length limits or prompt over
-6000 estimated tokens), 10 pairs removed as duplicates on normalised code,
-4426 usable pairs. Secret redactions are applied per function before any diff or row is built.
+Pipeline: pairs read per source: {'colin/PrimeVul': 4682, 'hitoshura25/crossvul': 752, 'starsofchance/CVEfixes_v1.0.8': 2500};
+1847 pairs skipped (no parseable signature, identical code, scrub/length limits or prompt over
+6000 estimated tokens), 117 pairs removed as duplicates on normalised code,
+5970 usable pairs. Secret redactions are applied per function before any diff or row is built.
 
 Rows by source:
 
 | Source | Split | Rows |
 | --- | --- | --- |
-| colin/PrimeVul | train | 5000 |
-| colin/PrimeVul | eval | 200 |
+| colin/PrimeVul | train | 1924 |
+| hitoshura25/crossvul | train | 1386 |
+| starsofchance/CVEfixes_v1.0.8 | train | 1690 |
+| colin/PrimeVul | eval | 188 |
+| starsofchance/CVEfixes_v1.0.8 | eval | 12 |
 
 ## Language mix
 
 | Split | Language | Rows |
 | --- | --- | --- |
-| train | c | 3487 |
-| train | c/c++ | 914 |
-| train | c++ | 599 |
-| eval | c | 156 |
-| eval | c++ | 30 |
-| eval | c/c++ | 14 |
+| train | javascript | 2252 |
+| train | c | 1330 |
+| train | python | 734 |
+| train | c/c++ | 358 |
+| train | c++ | 236 |
+| train | typescript | 90 |
+| eval | c | 124 |
+| eval | c++ | 32 |
+| eval | c/c++ | 32 |
+| eval | python | 6 |
+| eval | typescript | 6 |
 
 ## Top 10 CWEs (train, vulnerable rows)
 
 | CWE | Rows |
 | --- | --- |
-| CWE-119 | 360 |
-| CWE-125 | 324 |
-| CWE-787 | 269 |
-| CWE-20 | 243 |
-| CWE-476 | 167 |
-| CWE-200 | 150 |
-| CWE-416 | 148 |
-| CWE-703 | 129 |
-| CWE-190 | 114 |
-| CWE-399 | 105 |
+| CWE-79 | 921 |
+| CWE-20 | 193 |
+| CWE-125 | 171 |
+| CWE-119 | 167 |
+| CWE-787 | 135 |
+| CWE-200 | 115 |
+| CWE-476 | 110 |
+| CWE-703 | 71 |
+| CWE-416 | 65 |
+| CWE-264 | 63 |
 
 Priority of train vulnerable rows (deterministic CWE table, default medium):
+
 | Priority | Rows |
 | --- | --- |
-| critical | 536 |
-| high | 1022 |
-| low | 3 |
-| medium | 1439 |
+| critical | 354 |
+| high | 1600 |
+| low | 9 |
+| medium | 1037 |
 
 Localisation of train vulnerable rows (`changed` = replaced/removed lines, `inserted` = fix only adds code, mapped to
 the surrounding lines, `whole` = no non-trivial hunk mapped):
+
 | Mode | Rows |
 | --- | --- |
-| changed | 1996 |
-| inserted | 985 |
-| whole | 19 |
+| changed | 2376 |
+| inserted | 613 |
+| whole | 11 |
 
 ## Eval/train group-overlap check
 
 Eval is 200 rows (100 vulnerable, 100 fixed) drawn from whole project/CVE components
-of PrimeVul only (components with at most 12 pairs), so twins stay together.
+of the sources that carry CVE ids (components with at most 12 pairs), so twins stay together.
 
 | Check | Count |
 | --- | --- |
@@ -100,19 +111,18 @@ of PrimeVul only (components with at most 12 pairs), so twins stay together.
 
 ## Limitations
 
-- **C/C++ dominates.** PrimeVul is C/C++ only. The optional CrossVul reduction adds a few hundred Python/JavaScript/
-  TypeScript function pairs, but transfer to the Python/TypeScript repositories Duck Tape reviews is expected to be weak.
-  Eval is C/C++ only (CrossVul has no CVE or project column, so a held-out group split cannot be verified there); treat eval
-  scores as a measure of in-domain behaviour, not of Python/TypeScript performance.
+- **Language coverage: 3076 of 5000 train rows are Python/JavaScript/TypeScript; the rest are C/C++ or other.** Transfer to the Python/TypeScript repositories Duck Tape reviews is
+  expected to be weak when the mix is C/C++-heavy; treat eval scores as in-domain behaviour, not Python/TypeScript
+  performance. Sources without a CVE id cannot be held out by CVE/project group, so they only contribute train rows.
 - **Labels come from fix commits.** A "vulnerable" function is the pre-fix version and a "fixed" one the post-fix version.
-  Fix commits can include unrelated edits, and PrimeVul labels are known to be noisy. CrossVul labels are file-level CWEs
-  applied to changed functions, so they are weaker; commits touching more than 3 functions in a file are skipped.
+  Fix commits can include unrelated edits, and PrimeVul labels are known to be noisy.
+  Language `c/c++` means a header or a file name that PrimeVul does not give.
 - **Single-function context.** The graph_context is a stub with no callers, imports or tests, so the model learns to judge a
   function in isolation and cannot learn reachability. Missing information is stated in `gaps`, never fabricated.
 - **Reference lines.** For fixes that only add code (for example a missing bounds check) the reference points at the
   lines around the insertion point. Several hunks are merged into one min-to-max range.
 - **File paths.** About a third of PrimeVul rows have no `file_name`; the path is taken from the NVD description when
-  it names a file and is otherwise `unknown`. CrossVul rows always use `unknown`.
+  it names a file and is otherwise `unknown`.
 - **Priority is a lookup, not a risk assessment**, and findings text is templated, so the model will be fluent but not
   creative; it has no exploitability or severity evidence.
 - **Snapshot IDs** are the upstream fix commit ids from PrimeVul and are identical for both twins, so they carry no label signal.

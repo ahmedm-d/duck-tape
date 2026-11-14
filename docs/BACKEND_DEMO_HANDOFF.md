@@ -135,13 +135,13 @@ For a compatible local/remote server, use `STEWARD_MODEL_PROVIDER=openai`, its `
 
 4. Ensure Docker is running in Linux-container mode; `python scripts/setup.py --sandbox` builds the reviewed pinned execution images. Imported/model-generated code requires that sandbox, even for a small demo. Restart `run.py` and inspect `POST /api/settings/health`.
 5. Verify output compatibility: runtime expects structured JSON schemas in `backend/model_schemas.py`, not Markdown diffs or arbitrary tool calls. The training-preparation files used varied formats; the actual completed artifact must pass this check. No permissive shell/tool execution fallback was added.
-6. Run the schema smoke, then application qualification, explicitly loading the same `.env` before importing the evaluator:
+6. Run the all-role schema smoke, then application qualification, using the CLI, which loads the same `.env` before backend imports:
 
 ```sh
-python -c "import run; run.load_environment(); from scripts.evaluate_models import main; raise SystemExit(main())" --smoke --output data/model-smoke.json
-python -c "import run; run.load_environment(); from scripts.evaluate_models import main; raise SystemExit(main())" --driver scripts.qualification_driver:driver --output data/model-qualification.json
+python scripts/evaluate_models.py --smoke --output data/model-smoke.json
+python scripts/evaluate_models.py --driver scripts.qualification_driver:driver --output data/model-qualification.json
 ```
 
 Run original and augmented configurations separately on the same held-out cases. Require `qualified: true`; unavailable/failed cases remain open. `python scripts/acceptance.py --tier live --url http://127.0.0.1:8781` additionally exercises provider/retrieval/imported workflows/browser checks and may consume inference credits.
 
-After those gates pass, demo import → graph/context → sourced proposal → approve → decision if needed → patch → checks → note/revision → exact-patch approval → managed apply/export. Model quality and serving compatibility remain external gates; backend contract tests cannot guarantee them.
+After those gates pass, demo import -> graph/context -> sourced proposal -> approve -> decision if needed -> patch -> checks -> note/revision -> exact-patch approval -> managed apply/export. Model quality and serving compatibility remain external gates; backend contract tests cannot guarantee them.

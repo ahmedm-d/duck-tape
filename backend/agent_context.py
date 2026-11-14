@@ -186,6 +186,10 @@ def agent_graph_context(repo_id: str, snapshot_id: str, query: str, budget_token
     if engine not in ('builtin', 'graphify'):
         raise ValueError('engine must be builtin or graphify')
     graph = graphify_graph.knowledge_graph(repo_id, snapshot_id, 'auto') if engine == 'graphify' else graphify_graph.builtin(repo_id, snapshot_id, index)
+    if graph.get('repo_id') != repo_id or graph.get('snapshot_id') != snapshot_id:
+        raise ValueError('Graph scope does not match the requested repository snapshot')
+    if cancel:
+        cancel.raise_if_cancelled()
     gaps += [str(item)[:240] for item in graph.get('gaps', [])[:4]]
     nodes = {node['id']: node for node in graph['nodes']}
     by_location = {(node.get('path'), node.get('line')): node for node in graph['nodes'] if node.get('kind') != 'file'}
@@ -230,7 +234,8 @@ def agent_graph_context(repo_id: str, snapshot_id: str, query: str, budget_token
     if job and isinstance(job.get('catalogue'), dict) and isinstance(job.get('applicability'), dict):
         if job['catalogue'].get('snapshot_id') not in (None, snapshot_id):
             gaps.append('The job match was made on another snapshot; re-assess applicability before relying on it')
-        matches.append(_catalogue_match(index, job['applicability'], job['catalogue'].get('entry_id'), job['catalogue'].get('entry_revision'), job['catalogue'].get('entry_kind')))
+        else:
+            matches.append(_catalogue_match(index, job['applicability'], job['catalogue'].get('entry_id'), job['catalogue'].get('entry_revision'), job['catalogue'].get('entry_kind')))
     if entries:
         from .applicability import build_profile, match
         profile = build_profile(index, repo_id=repo_id, snapshot_id=snapshot_id)

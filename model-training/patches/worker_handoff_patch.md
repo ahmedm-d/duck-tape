@@ -1,3 +1,5 @@
+> Historical training handoff. Do not apply its worker patch or treat its local-only graph/reachability claims as current. Runtime integration already exists. Use the [current graph contract](../../docs/REPO_GRAPH_HANDOFF.md) and `backend/model_schemas.py`. Adaption training is underway; completed artifacts still need live qualification.
+
 # Worker Handoff Patch — `HANDOFF_B_TO_A.md` Section 5 Wiring
 
 This document contains the exact patch snippets for `backend/worker.py` (and `tests/test_worker.py`) implementing Section 5 of `HANDOFF_B_TO_A.md`:

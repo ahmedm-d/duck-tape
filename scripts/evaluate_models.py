@@ -5,6 +5,7 @@ Full evaluation requires a pipeline driver returning independently verified evid
 The driver must actually run checks against manifest sources and expected behavior.
 """
 import argparse
+import ast
 import importlib
 import hashlib
 import json
@@ -15,6 +16,9 @@ import subprocess
 import time
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+if __name__ == '__main__':
+    from run import load_environment
+    load_environment()
 from backend import db, providers
 from backend.contracts import CancellationToken, ProviderRequest
 
@@ -35,33 +39,57 @@ def smoke():
     original = 'def greet():\n    return "Hello world"\n'
     import hashlib
     import uuid
-    from backend import edits as edit_engine, snapshots
+    from backend import edits as edit_engine, snapshots, model_schemas
     scratch = db.DATA_DIR/'model-smoke'/uuid.uuid4().hex
     source = scratch/'source'
     source.mkdir(parents=True)
     (source/'greeting.py').write_bytes(original.encode())
+    original_test = 'from greeting import greet\n\ndef test_existing():\n    assert isinstance(greet(), str)\n'
+    (source/'test_greeting.py').write_bytes(original_test.encode())
     snapshot = snapshots.capture('model-smoke', source, {})
     edit_engine.read_file(snapshot['id'], 'greeting.py', hashlib.sha256(original.encode()).hexdigest())
+    edit_engine.read_file(snapshot['id'], 'test_greeting.py', hashlib.sha256(original_test.encode()).hexdigest())
     cases = [
         ('investigation', {'question': 'What does greet return?', 'files': [{'path': 'greeting.py', 'content': original}]}, None),
         ('planning', {'job': 'Change greet() to return Hello Duck Tape.', 'files': [{'path': 'greeting.py', 'content': original}]}, None),
         ('implementation', {'job': 'Change greet() to return Hello Duck Tape, preserve its signature.', 'files': [{'path': 'greeting.py', 'hash': hashlib.sha256(original.encode()).hexdigest(), 'complete': True, 'content': original}]}, None),
+        ('repair', {'job': 'Change greet() to return Hello Duck Tape, preserve its signature.', 'feedback': [{'kind': 'verification', 'error': 'Previous attempt still returned Hello world; correct the greeting.'}], 'files': [{'path': 'greeting.py', 'hash': hashlib.sha256(original.encode()).hexdigest(), 'complete': True, 'content': original}]}, None),
         ('review', {'job': {'description': 'greet must remain a no-argument function and return Hello Duck Tape.'}, 'proposed_sources': [{'path': 'greeting.py', 'content': 'def greet():\n    return "Hello Duck Tape"\n'}], 'approved_knowledge': []}, True),
         ('review', {'job': {'description': 'greet must return Hello Duck Tape.'}, 'proposed_sources': [{'path': 'greeting.py', 'content': 'def greet():\n    return "Goodbye"\n'}], 'approved_knowledge': []}, False),
     ]
+    for role in ('regression', 'acceptance'):
+        payload = {'job': 'greet() must return Hello Duck Tape.',
+                   'instruction': 'Preserve test_existing unchanged. Append exactly one no-argument function named test_requested_greeting with one assertion: assert greet() == "Hello Duck Tape". Change only test_greeting.py. Do not modify source or add imports.',
+                   'files': [{'path': 'test_greeting.py', 'hash': hashlib.sha256(original_test.encode()).hexdigest(), 'complete': True, 'content': original_test}],
+                   'read_only_sources': [{'path': 'greeting.py', 'content': original}]}
+        if role == 'acceptance':
+            payload['acceptance_criteria'] = [{'id': 'criterion-1', 'description': 'greet() returns Hello Duck Tape'}]
+        cases.append((role, payload, None))
     records = []
     for task, payload, approved in cases:
         started = time.monotonic()
         try:
             result = providers.complete(ProviderRequest(task=task, payload=payload, cache=False, max_output_tokens=1024), CancellationToken())
+            model_schemas.validate(result.output, task, payload=payload)
             passed = result.output.get('approved') == approved if approved is not None else True
-            if task == 'implementation':
+            if task in ('implementation', 'repair'):
                 edits = result.output.get('edits', [])
                 passed = bool(edits) and any('Hello Duck Tape' in str(edit.get('content')) or 'Hello Duck Tape' in str(edit.get('replacements')) for edit in edits)
                 passed = passed and all(edit['path'] == 'greeting.py' and edit['expected_hash'] == hashlib.sha256(original.encode()).hexdigest() for edit in edits)
                 if passed:
-                    candidate = edit_engine.apply(snapshot, edits, scratch/'candidate')
+                    candidate = edit_engine.apply(snapshot, edits, scratch/task)
                     passed = (Path(candidate.worktree)/'greeting.py').read_bytes() == b'def greet():\n    return "Hello Duck Tape"\n'
+            if task in ('regression', 'acceptance'):
+                edits = result.output.get('edits', [])
+                passed = bool(edits) and all(edit['path'] == 'test_greeting.py' and edit['op'] == 'update' for edit in edits)
+                if passed:
+                    candidate = edit_engine.apply(snapshot, edits, scratch/task)
+                    actual = (Path(candidate.worktree)/'test_greeting.py').read_text(encoding='utf-8')
+                    expected = original_test + '\ndef test_requested_greeting():\n    assert greet() == "Hello Duck Tape"\n'
+                    # Parse only: generated code requires Docker even for a smoke test.
+                    passed = ast.dump(ast.parse(actual)) == ast.dump(ast.parse(expected))
+                    if task == 'acceptance':
+                        passed = passed and result.output['coverage'] == [{'criterion_id': 'criterion-1', 'path': 'test_greeting.py', 'test': 'test_requested_greeting'}]
             if task == 'planning' and 'steps' in result.output:
                 passed = all(path == 'greeting.py' for step in result.output['steps'] for path in step['paths'])
             references = result.output.get('evidence', []) + [finding['reference'] for finding in result.output.get('findings', [])]
@@ -70,7 +98,7 @@ def smoke():
         except Exception as exc:
             records.append({'task': task, 'passed': False, 'error': type(exc).__name__, 'telemetry': getattr(exc, 'telemetry', {}), 'latency': time.monotonic()-started})
     return {'kind': 'provider_schema_smoke', 'qualified': False,
-            'note': 'Schema/edit/review smoke is not the 12-task application qualification gate.', 'attempts': records}
+            'note': 'Schema/edit/review smoke statically checks exact test assertions; it does not execute model code or replace the Docker application qualification gate.', 'attempts': records}
 
 
 def evaluate(manifest, driver=None, on_result=None):

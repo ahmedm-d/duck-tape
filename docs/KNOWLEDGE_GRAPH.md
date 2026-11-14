@@ -1,5 +1,7 @@
 # Knowledge graphs
 
+Current backend integration and B's separate Databricks work: [handoff contract](REPO_GRAPH_HANDOFF.md). Private Atlas graph projection is explicit and optional; workflow state remains local.
+
 Duck Tape keeps three separate kinds of knowledge and joins them only on the local machine. This page explains each layer, who owns it, how evidence flows from an imported snapshot to A's worker, and what is implemented today versus planned. Team roles follow [TEAM_PLAN.md](hackathon/TEAM_PLAN.md): **A** models and the worker, **B** repository knowledge, **C** global knowledge. The payload contract is [KNOWLEDGE_CONTRACT.md](hackathon/KNOWLEDGE_CONTRACT.md); retrieval measurements are in [RETRIEVAL.md](RETRIEVAL.md).
 
 ## The three layers
@@ -8,7 +10,7 @@ Duck Tape keeps three separate kinds of knowledge and joins them only on the loc
 | --- | --- | --- | --- | --- |
 | Repository code graph | B | Files, symbols, import/call/test/re-export edges, routes, boundaries, unresolved references for one immutable snapshot | SQLite, inside the repository index | Built-in graph (`backend/symbols.py`) and Graphify knowledge map (`backend/graphify_graph.py`) implemented |
 | Approved team knowledge | B | Versioned decisions, conventions and constraints with path scope and cited evidence | SQLite `knowledge` / `knowledge_versions` | Implemented (`backend/knowledge.py`) |
-| Public global catalogue | C | Vulnerabilities, improvements, framework and research updates with affected-version rules and revisions | Databricks curation, published to separate Atlas collections | Planned; local labelled fixture only |
+| Public global catalogue | C | Vulnerabilities, improvements, framework and research updates with affected-version rules and revisions | Databricks curation, published to separate Atlas collections | Implemented local/Atlas catalogue; Databricks curation and manual publication adapters, see BACKEND_DEMO_HANDOFF.md |
 
 The **applicability match** (B, `backend/applicability.py`) is the only join between the private repository and the public catalogue. It runs locally against a snapshot-bound `RepositoryProfile`; neither the profile nor the match is uploaded.
 
@@ -23,8 +25,8 @@ flowchart LR
     NOTES["Team notes<br/>never model input"]
   end
   subgraph Cloud["Duck Tape infrastructure (opt-in)"]
-    DBX["Databricks curation (C, planned)"]
-    CAT["Atlas global catalogue (C, planned)"]
+    DBX["Databricks public curation (C)"]
+    CAT["Atlas public catalogue (C)"]
     VEC["Atlas evidence_vectors<br/>hashed ids + vectors only"]
   end
   SNAP --> GRAPH

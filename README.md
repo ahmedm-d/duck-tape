@@ -6,6 +6,14 @@ The goal is to reduce the work between noticing a problem and having a checked p
 
 **Steward was the working name during development.** The application UI, Python configuration variables (`STEWARD_*`) and some documentation still use that name. This repository is called **Duck Tape**; those existing identifiers remain compatible with local installations.
 
+## Three-person hackathon workspace
+
+Start with the [team plan](docs/hackathon/TEAM_PLAN.md), [three copy-paste kickoff prompts](docs/hackathon/START_HERE.md) and [repository rules](CONTRIBUTING.md). The workstreams are **agent intelligence**, **repository memory/evaluation**, and **product experience/integration**. File ownership is defined in [AGENTS.md](AGENTS.md). The [foundation verification](docs/evidence/hackathon-foundation/README.md) records current checks and remaining live setup. Fetch the latest `main` before starting the parallel workstreams; the original initial commit is preserved.
+
+The [internal stack foundation](docs/integrations/README.md) uses **Hugging Face and Adaption for Duck Tape's agent inference**, **MongoDB Atlas for its evidence memory and retrieval**, and **Databricks Data Intelligence Platform for its agent-run evaluation**. These power Duck Tape itself; they are never installed into imported repositories. Model adapters are connected to the existing worker. Atlas projection/search and Databricks metrics export are implemented as explicit operator commands in `scripts/integrations.py`; their automatic worker wiring is the data owner's next milestone. SQLite remains the transactional workflow authority and local fallback. Live accounts, provisioned resources and model qualification still need the acceptance steps in the team plan.
+
+**Submission provenance:** the supplied event rules require code written during the hackathon and a public repository. This project contains existing implementation, and its history was consolidated before this work. The new Git history is not proof of when the code was written. Confirm eligibility and disclose existing work before submitting; see the [submission checklist](docs/hackathon/SUBMISSION.md). This foundation does not change repository visibility.
+
 ## How it works
 
 1. Import a public HTTPS Git repository or ZIP, or open the bundled Parcel sample.
@@ -25,7 +33,7 @@ This is a functioning **local prototype**, with a real backend, worker, persiste
 | --- | --- |
 | Sample workflow | Four explicitly labelled fixture scenarios: cross-module bug, feature decision, dependency advisory and measurable performance proposal. Edits, diffs, checks, revisions and managed application are real. |
 | Repository understanding | Snapshot-isolated indexing, Python/JS/TS parsing, full-text and graph retrieval, source explorer, scoped knowledge, optional embeddings and evidence-linked Q&A. Missing synthesis and coverage gaps are shown. |
-| Live inference | OpenAI-compatible and Ollama adapters, typed responses, routing, budgets, telemetry and a separate review pass. No proprietary inference account is required. |
+| Live inference | Adaption Responses, Hugging Face Inference Providers, OpenAI-compatible and Ollama adapters; typed responses, routing, budgets, telemetry and a separate review pass. No proprietary inference account is required. |
 | Live model reliability | The recorded 3B baseline passed two cases, failed eight model-quality cases and left two cases incomplete after runtime interruption. It is **not qualified**. Later schema/startup fixes have deterministic tests; a fresh live qualification is still required. |
 | Verification | Backend, browser, restart and actual Docker evidence are retained. Fixture inference, live inference and externally incomplete runs are distinguished. The new paired retrieval-to-task harness still needs its live run. |
 
@@ -39,7 +47,9 @@ See [verification and limitations](docs/VERIFICATION.md), the [14-journey accept
 | API | FastAPI/Python with validated inputs and guarded workflow transitions |
 | Persistence | SQLite for repositories, snapshots, graph/index records, knowledge, jobs, revisions, checks and audit events |
 | Execution | Separate supervised worker, durable work items, leases, checkpoints and cancellation |
-| Model providers | Server-configured open-weight endpoints; optional embedding adapter and persistent vectors |
+| Agent inference | Hugging Face open-weight inference and Adaption Responses; server-side routing, validation and a separate review pass |
+| Repository memory | MongoDB Atlas vector projection with repository/snapshot filters and local source evidence; SQLite local fallback |
+| Agent evaluation | Databricks SQL export of measured terminal-run outcomes, verification and usage; unknown values remain unknown |
 | Verification sandbox | Constrained Linux Docker containers, bounded resources, network disabled during checks and controlled dependency preparation |
 
 Source lives in `backend/`, `frontend/`, `scripts/`, `sandbox/` and `tests/`. Runtime data, credentials, installed dependencies and model weights are excluded from Git. The architecture and configuration guides below describe the boundaries in more detail.

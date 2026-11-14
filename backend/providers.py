@@ -22,6 +22,11 @@ PROMPT_VERSION = 'steward-13'
 _runner_error = None
 _embedding_runner_error = None
 RUNNER_BIND_TIMEOUT = 30
+SPONSOR_ENDPOINTS = {
+    'adaption': 'https://api.prod.adaptionlabs.ai/api/v1',
+    'huggingface': 'https://router.huggingface.co/v1',
+}
+SPONSOR_KEYS = {'adaption': 'ADAPTION_API_KEY', 'huggingface': 'HF_TOKEN'}
 
 def configuration():
     from . import db
@@ -33,9 +38,14 @@ def configuration():
     stronger=(runtime/'qwen-coder-1.5b.ready').exists()
     portable=runtime/('qwen-coder-1.5b.gguf' if stronger else 'qwen-coder-0.5b.gguf')
     local=portable.exists() and portable.stat().st_size>400_000_000 and not os.getenv('STEWARD_MODEL_ENDPOINT')
-    endpoint = os.getenv('STEWARD_MODEL_ENDPOINT', stored.get('endpoint','http://127.0.0.1:11435/v1' if local else 'http://127.0.0.1:11434')).rstrip('/')
-    model=os.getenv('STEWARD_MODEL',stored.get('model',('qwen-coder-1.5b' if stronger else 'qwen-coder-local') if local else ''))
-    return {'endpoint':endpoint, 'kind':os.getenv('STEWARD_MODEL_PROVIDER',stored.get('kind','openai' if local else 'ollama')), 'small_model':os.getenv('STEWARD_SMALL_MODEL',stored.get('small_model',model)), 'model':model, 'context_limit':int(os.getenv('STEWARD_CONTEXT_LIMIT',str(stored.get('context_limit',8192 if local else 16000)))), 'embedding_model':os.getenv('STEWARD_EMBEDDING_MODEL',stored.get('embedding_model','')), 'embedding_endpoint':os.getenv('STEWARD_EMBEDDING_ENDPOINT',stored.get('embedding_endpoint','')).rstrip('/')}
+    kind = os.getenv('STEWARD_MODEL_PROVIDER', stored.get('kind', 'openai' if local else 'ollama'))
+    # Switching protocols must not inherit another provider's endpoint or model.
+    selected = stored if kind == stored.get('kind', kind) else {}
+    local = local and kind == 'openai'
+    default_endpoint = SPONSOR_ENDPOINTS.get(kind, 'http://127.0.0.1:11435/v1' if local else 'http://127.0.0.1:11434')
+    endpoint = os.getenv('STEWARD_MODEL_ENDPOINT', selected.get('endpoint', default_endpoint)).rstrip('/')
+    model = os.getenv('STEWARD_MODEL', selected.get('model', ('qwen-coder-1.5b' if stronger else 'qwen-coder-local') if local else ''))
+    return {'endpoint':endpoint, 'kind':kind, 'small_model':(os.getenv('STEWARD_SMALL_MODEL',selected.get('small_model')) or model), 'model':model, 'context_limit':int(os.getenv('STEWARD_CONTEXT_LIMIT',str(selected.get('context_limit',8192 if local else 16000)))), 'embedding_model':os.getenv('STEWARD_EMBEDDING_MODEL',stored.get('embedding_model','')), 'embedding_endpoint':os.getenv('STEWARD_EMBEDDING_ENDPOINT',stored.get('embedding_endpoint','')).rstrip('/')}
 
 def installed_runtime(embedding=False):
     """Read only an explicitly installed project-local runtime; never fetch weights."""
@@ -69,7 +79,7 @@ def start_embedding_runner():
     config=configuration()
     if not config['embedding_model'] or not config['embedding_endpoint']: return
     installed=installed_runtime(embedding=True)
-    if not installed or config['kind']!='openai' or (config['embedding_endpoint'],config['embedding_model'])!=(installed['endpoint'],installed['alias']): return
+    if not installed or config['kind'] not in ('openai', 'adaption', 'huggingface') or (config['embedding_endpoint'],config['embedding_model'])!=(installed['endpoint'],installed['alias']): return
     try:
         if installed['alias'] in [item['id'] for item in request('/models',timeout=2,embedding=True).get('data',[])]:
             _embedding_runner_error=None
@@ -218,7 +228,16 @@ def request(path, payload=None, timeout=30, cancel=None, *, embedding=False):
     headers = {'Content-Type':'application/json'}
     separate = embedding and bool(config['embedding_endpoint'])
     endpoint = config['embedding_endpoint'] if separate else config['endpoint']
+    if embedding and config['kind'] in SPONSOR_ENDPOINTS and (not separate or endpoint == config['endpoint']):
+        raise ProviderError('embedding_endpoint_required')
     secret = os.getenv('STEWARD_EMBEDDING_KEY' if separate else 'STEWARD_MODEL_KEY')
+    if not separate and config['kind'] in SPONSOR_ENDPOINTS:
+        origin = urllib.parse.urlsplit(endpoint)
+        official = urllib.parse.urlsplit(SPONSOR_ENDPOINTS[config['kind']])
+        if not secret and (origin.scheme, origin.netloc.lower()) == (official.scheme, official.netloc):
+            secret = os.getenv(SPONSOR_KEYS[config['kind']])
+        if not secret:
+            raise ProviderError('missing_api_key')
     if secret:
         headers['Authorization'] = 'Bearer '+secret
     async def fetch():
@@ -251,7 +270,7 @@ def request(path, payload=None, timeout=30, cancel=None, *, embedding=False):
 
 def health():
     config = configuration()
-    result = {**config, 'available':False, 'mode':'offline sample', 'qualification':'Not qualified for autonomous review; see recorded task/check evidence', 'runner_installed':bool(installed_runtime() or shutil.which('ollama') or (Path(__file__).resolve().parents[1]/'data/model-runtime/runner/llama-server.exe').exists()), 'usage':None}
+    result = {**config, 'connection_check':'model_catalog', 'available':False, 'mode':'offline sample', 'qualification':'Not qualified for autonomous review; see recorded task/check evidence', 'runner_installed':bool(installed_runtime() or shutil.which('ollama') or (Path(__file__).resolve().parents[1]/'data/model-runtime/runner/llama-server.exe').exists()), 'usage':None}
     if _runner_error:
         result['local_runner_error']=_runner_error
     if _embedding_runner_error:
@@ -268,11 +287,12 @@ def health():
         data = request('/api/tags' if config['kind']=='ollama' else '/models', timeout=2)
         models = [m.get('name',m.get('id')) for m in data.get('models',data.get('data',[]))]
         result['installed_models'] = models
-        selected = config['model'] or (models[0] if models else '')
-        available=bool(selected and selected in models)
+        selected = config['model'] or (models[0] if models and config['kind'] not in SPONSOR_ENDPOINTS else '')
+        catalog_model = selected.partition(':')[0] if config['kind'] == 'huggingface' else selected
+        available=bool(catalog_model and catalog_model in models)
         result.update(model=selected, available=available, mode='live' if available else 'offline sample')
     except Exception as exc:
-        result['error'] = 'Provider unavailable: '+type(exc).__name__
+        result['error'] = 'Provider unavailable: '+(exc.code if isinstance(exc, ProviderError) else type(exc).__name__)
     return result
 
 def capabilities(role='implementation'):
@@ -284,6 +304,7 @@ def capabilities(role='implementation'):
         'context_limit': int(os.getenv(prefix+'CONTEXT_LIMIT', str(config['context_limit']))),
         'max_output_tokens': int(os.getenv(prefix+'MAX_OUTPUT_TOKENS', os.getenv('STEWARD_MAX_OUTPUT_TOKENS', '4096'))),
         'structured_output': os.getenv(prefix+'STRUCTURED_OUTPUT', os.getenv('STEWARD_MODEL_STRUCTURED_OUTPUT', 'true')).lower() == 'true',
+        'structured_output_mode': 'prompt_and_validate' if config['kind'] == 'adaption' else 'json_schema',
         'schema_version': model_schemas.SCHEMA_VERSION,
         'qualification': 'unqualified',
     }
@@ -317,14 +338,52 @@ def _system(task):
 
 
 def _usage(raw, kind):
+    if not isinstance(raw, dict):
+        raise ProviderError('invalid_schema')
     source = raw if kind == 'ollama' else raw.get('usage')
+    if source is not None and not isinstance(source, dict):
+        raise ProviderError('invalid_usage')
     if not source or (kind == 'ollama' and not any(k in source for k in ('prompt_eval_count', 'eval_count'))):
         return None
-    names = ('prompt_eval_count', 'eval_count') if kind == 'ollama' else ('prompt_tokens', 'completion_tokens')
+    names = ('prompt_eval_count', 'eval_count') if kind == 'ollama' else ('input_tokens', 'output_tokens') if kind == 'adaption' else ('prompt_tokens', 'completion_tokens')
     values = [source.get(name) for name in names]
     if any(value is not None and (type(value) is not int or value < 0) for value in values):
         raise ProviderError('invalid_usage')
     return {'input_tokens': values[0], 'output_tokens': values[1]}
+
+
+def _adaption_text(raw):
+    if raw.get('error'):
+        raise ProviderError('provider_failed')
+    if raw.get('status') != 'completed':
+        details = raw.get('incomplete_details')
+        if details is not None and not isinstance(details, dict):
+            raise ProviderError('invalid_schema')
+        reason = (details or {}).get('reason')
+        raise ProviderError('truncated' if reason == 'max_output_tokens' else 'incomplete_finish')
+    parts = []
+    if not isinstance(raw.get('output'), list):
+        raise ProviderError('invalid_schema')
+    for item in raw['output']:
+        if not isinstance(item, dict):
+            raise ProviderError('invalid_schema')
+        if item.get('type') == 'reasoning':
+            continue
+        if item.get('type') != 'message':
+            raise ProviderError('unexpected_tool_output')
+        if item.get('status', 'completed') != 'completed':
+            raise ProviderError('incomplete_finish')
+        if item.get('role', 'assistant') != 'assistant' or not isinstance(item.get('content'), list):
+            raise ProviderError('invalid_schema')
+        for part in item['content']:
+            if not isinstance(part, dict):
+                raise ProviderError('invalid_schema')
+            if part.get('type') == 'refusal' or part.get('refusal'):
+                raise ProviderError('refusal')
+            if part.get('type') != 'output_text' or not isinstance(part.get('text'), str):
+                raise ProviderError('invalid_schema')
+            parts.append(part['text'])
+    return ''.join(parts)
 
 
 def _error_code(exc):
@@ -355,13 +414,14 @@ def complete(task, payload=None, risk='low', *, cancel=None):
     model, reason = route(task, request_input.risk, len(serialized.encode()), request_input.scope, request_input.failure_count)
     start = time.monotonic()
     telemetry = {'model': model, 'role': task, 'routing_reason': reason, 'latency': 0,
-                 'usage': None, 'attempts': 0, 'attempt_log': [], 'cached': False, 'mode': 'live'}
+                 'usage': None, 'attempts': 0, 'attempt_log': [], 'cached': False, 'mode': 'live',
+                 'structured_output_mode': capability['structured_output_mode']}
     def fail(code):
         telemetry['latency'] = time.monotonic()-start
         raise ProviderError(code, telemetry)
     if _cancelled(cancel):
         fail('cancelled')
-    if config['kind'] not in ('openai', 'ollama') or not capability['structured_output']:
+    if config['kind'] not in ('openai', 'ollama', 'adaption', 'huggingface') or not capability['structured_output']:
         fail('structured_output_unsupported')
     schema = model_schemas.schema_for(task, legacy=not typed, payload=request_input.payload)
     messages = [{'role': 'system', 'content': _system(task)+' Schema: '+json.dumps(schema, separators=(',', ':'))},
@@ -405,6 +465,15 @@ def complete(task, payload=None, risk='low', *, cancel=None):
                 entry['usage'] = _usage(raw, 'ollama')
                 finish = raw.get('done_reason')
                 text = raw['message']['content']
+            elif config['kind'] == 'adaption':
+                # shortcut: Adaption documents no JSON constraint parameter; prompt and validate until it does.
+                raw = request('/responses', {'model': model, 'instructions': messages[0]['content'], 'input': serialized,
+                              'max_output_tokens': output_limit, 'temperature': 0, 'stream': False,
+                              'tools': [], 'tool_choice': 'none', 'agentic_memory': False, 'store': False},
+                              timeout=timeout, cancel=cancel)
+                entry['usage'] = _usage(raw, 'adaption')
+                text = _adaption_text(raw)
+                finish = 'stop'
             else:
                 raw = request('/chat/completions', {'model': model, 'messages': messages,
                               'response_format': {'type': 'json_schema', 'json_schema': {'name': task, 'strict': True, 'schema': schema}},

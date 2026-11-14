@@ -1,19 +1,19 @@
 # Configuration
 
-Settings can persist non-secret provider endpoint, protocol, model IDs, context limit and embedding model. Explicit process environment overrides those settings. `run.py` also reads the **project's own** `.env` as literal `STEWARD_NAME=value` entries. It does not evaluate shell expressions or read imported repository environment files.
+Settings can persist non-secret provider endpoint, protocol, model IDs, context limit and embedding model. Explicit process environment overrides those settings. `run.py` also reads the **project's own** `.env` as literal `STEWARD_NAME=value` entries plus `ADAPTION_API_KEY` and `HF_TOKEN`. It does not evaluate shell expressions or read imported repository environment files.
 
 | Variable | Meaning |
 |---|---|
 | `STEWARD_DATA_DIR` | Persistent workspace; default `data/workspace/` |
-| `STEWARD_MODEL_PROVIDER` | `ollama` or `openai` compatible protocol |
-| `STEWARD_MODEL_ENDPOINT` | Ollama base URL or compatible base ending in `/v1` |
+| `STEWARD_MODEL_PROVIDER` | `ollama`, `openai`, `adaption` or `huggingface` protocol |
+| `STEWARD_MODEL_ENDPOINT` | Base URL for the selected protocol; hosted defaults are documented in the inference guide |
 | `STEWARD_MODEL` | Default model ID |
 | `STEWARD_SMALL_MODEL` | Optional smaller triage/summary model |
 | `STEWARD_CONTEXT_LIMIT` | Complete prompt/context budget; default 16000 |
 | `STEWARD_MAX_OUTPUT_TOKENS` | Output reservation; default 4096 |
 | `STEWARD_MODEL_TIMEOUT` | Per-attempt provider timeout in seconds |
 | `STEWARD_EMBEDDING_MODEL` | Real embedding model; absent means keyword/graph fallback |
-| `STEWARD_EMBEDDING_ENDPOINT` | Optional separate embedding URL; uses the selected provider protocol |
+| `STEWARD_EMBEDDING_ENDPOINT` | Optional separate embedding URL; Adaption/Hugging Face require a separate OpenAI-compatible endpoint |
 | `STEWARD_EMBEDDING_KEY` | Optional credential for a separate embedding endpoint; coding credentials are never forwarded there |
 | `STEWARD_MODEL_KEY` | Optional server-only credential; never saved by UI |
 | `STEWARD_SANDBOX_PYTHON_IMAGE` / `STEWARD_SANDBOX_NODE_IMAGE` | Locally built runtime tags; resolved to immutable image IDs for checks |
@@ -68,3 +68,7 @@ A stable source key deduplicates unchanged evidence; changed underlying evidence
 `POST /api/repositories/{id}/research` accepts `{title,text,url?}`. Public URL content is fetched safely and attributed; pasted text is one-time intake. Research findings are hypotheses until checks or comparable benchmarks support a claim.
 
 Imports, refresh, scans and summary refresh return persistent operation records. Poll `GET /api/operations/{id}`; failed work supports retry and pending work supports cancellation. Source refresh invalidates dependent jobs, summaries, approvals and stale knowledge. Applying an approved revision writes only to its managed `steward/integration` branch.
+
+## Duck Tape internal services
+
+Hugging Face and Adaption run Duck Tape's models; MongoDB Atlas projects its evidence memory; Databricks evaluates its agent runs. These are operator/server settings, never additions to imported client repositories. See the [internal stack guide](integrations/README.md), [inference configuration](integrations/INFERENCE.md), and [Atlas/Databricks setup](integrations/DATA_PLATFORMS.md). The current cloud-memory and metrics paths use explicit operator commands, while inference is connected to the existing worker. Live cloud/model acceptance remains separate from configuration and offline tests.

@@ -30,6 +30,10 @@ When the sandbox is unavailable, arbitrary imports and live model edits are neve
 
 ## Models and untrusted evidence
 
-`providers.py` implements Ollama and OpenAI-compatible chat and embedding adapters. It validates schemas, bounds transport and retries, routes by task/context/risk, and records actual model, latency and available usage. Missing usage remains unknown. Cache inputs include source/context, policy versions, instructions, decisions, revision and model/prompt versions. Fixtures remain explicitly sample-only.
+`providers.py` implements Adaption Responses, Hugging Face Inference Providers, Ollama and OpenAI-compatible inference. Hosted modes use a separate compatible endpoint for embeddings. It validates schemas, bounds transport and retries, routes by task/context/risk, and records actual model, latency and available usage. Missing usage remains unknown. Cache inputs include source/context, policy versions, instructions, decisions, revision and model/prompt versions. Fixtures remain explicitly sample-only.
 
 Repository text, tickets, articles and model output are data, never permission to run commands or reveal credentials. Public fetches validate and pin DNS, recheck redirects and reject private addresses. Git transport uses a restricted local broker, a bare fetch and raw blob export; it does not check out or run imported hooks/filters. ZIP extraction rejects traversal, symlinks, device names and expansion limits. React renders imported text as text. Provider credentials are server-only. Demo member labels are not access control.
+
+## Internal memory and evaluation services
+
+MongoDB Atlas and Databricks belong to Duck Tape's infrastructure, not its imported repositories. `data_platforms.py` projects snapshot-scoped chunk vectors to Atlas and resolves query results against local source evidence. It exports bounded terminal-run metrics to Databricks using parameterized SQL; failures and unknown usage remain visible. `scripts/integrations.py` exposes explicit operator commands. These paths are not yet automatically called by worker retrieval/completion. SQLite retains workflow transactions, leases and approvals. See the [internal stack guide](integrations/README.md) for current capability and live acceptance boundaries.

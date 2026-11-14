@@ -1,0 +1,8 @@
+{
+  "fields": [
+    {"type": "vector", "path": "embedding", "numDimensions": 768, "similarity": "cosine"},
+    {"type": "filter", "path": "repo_id"},
+    {"type": "filter", "path": "snapshot_id"},
+    {"type": "filter", "path": "embedding_space"}
+  ]
+}

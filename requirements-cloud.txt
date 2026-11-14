@@ -1,0 +1,2 @@
+# Optional Atlas adapter; core HTTP client is already in requirements.txt.
+pymongo==4.20.0

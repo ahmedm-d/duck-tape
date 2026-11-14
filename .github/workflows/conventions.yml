@@ -1,0 +1,21 @@
+name: Commit conventions
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+permissions:
+  contents: read
+jobs:
+  commit-conventions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Check PR title and commits
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          COMMIT_RANGE: ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}
+        run: python scripts/check_commit_message.py --title-env PR_TITLE --range-env COMMIT_RANGE

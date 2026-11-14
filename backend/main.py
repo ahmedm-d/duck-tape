@@ -509,6 +509,29 @@ def promote_knowledge(id:str,discussion_id:str):
 def activity(): return list(reversed(db.list_records('events')))[0:300]
 
 
+@app.get('/api/integrations')
+def integration_status():
+    """Local readiness only: this route never probes or uploads to a cloud service."""
+    from . import data_platforms, providers
+    config = providers.configuration()
+    integrations = data_platforms.status()
+    for kind, variable in (('adaption', 'ADAPTION_API_KEY'), ('huggingface', 'HF_TOKEN')):
+        enabled = config['kind'] == kind
+        endpoint, official = urlparse(config['endpoint']), urlparse(providers.SPONSOR_ENDPOINTS[kind])
+        native_origin = (endpoint.scheme, endpoint.netloc.lower()) == (official.scheme, official.netloc.lower())
+        credential = os.getenv('STEWARD_MODEL_KEY') or (native_origin and os.getenv(variable))
+        configured = enabled and bool(config['model']) and bool(credential)
+        integrations[kind] = {
+            'enabled': enabled,
+            'configured': configured,
+            'state': 'configured' if configured else 'needs_configuration' if enabled else 'not_selected',
+            'detail': 'Selected configuration is present; run provider health and a checked task to verify it.' if configured else
+                      'Set a model and a server-side credential valid for this endpoint; no remote request was made.' if enabled else
+                      'Select this provider in Inference providers to use it. No remote request was made.',
+        }
+    return {'schema_version': 1, 'live_verified': False, 'integrations': integrations}
+
+
 @app.get('/api/settings')
 @app.post('/api/settings/health')
 def settings():
@@ -537,7 +560,7 @@ def configure_provider(body:dict):
             raise HTTPException(422,'Provider endpoint needs a HTTP(S) URL without credentials or query parameters')
         if parsed.scheme=='http' and parsed.hostname not in {'localhost','127.0.0.1','::1'}:
             raise HTTPException(422,'Remote providers require HTTPS')
-    if config.get('kind') not in {'ollama','openai'}: raise HTTPException(422,'Choose Ollama or OpenAI-compatible inference')
+    if config.get('kind') not in {'ollama','openai','adaption','huggingface'}: raise HTTPException(422,'Choose Ollama, OpenAI-compatible, Adaption or Hugging Face inference')
     for name in ('model','small_model','embedding_model'):
         if not isinstance(config.get(name,''),str) or len(config.get(name,''))>200: raise HTTPException(422,'Model identifiers must be bounded strings')
     if type(config.get('context_limit')) is not int or not 1024<=config['context_limit']<=131072: raise HTTPException(422,'Context limit must be 1024–131072')

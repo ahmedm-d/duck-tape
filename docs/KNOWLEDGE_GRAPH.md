@@ -130,6 +130,26 @@ Measured on 14 November 2026: on the bundled Parcel sample, Graphify 0.9.108 pro
 
 Profiles reuse `signals.dependencies()`: `package-lock.json` v2/v3, pinned `requirements.txt`/`requirements.lock` and registry packages in `uv.lock`. Other lockfiles, loose ranges and unsupported ecosystems stay `unknown`. A version match establishes affected-version applicability, never exploitability; improvements are hypotheses until measured. `intake_payloads` maps a current, active match to existing `POST /api/intake` bodies (`vulnerability` to `security`, `improvement` to `analysis`, framework/research updates to `research`).
 
+### Agent graph context (`backend/agent_context.py`, implemented)
+
+`agent_graph_context(repo_id, snapshot_id, query, budget_tokens=3500, job=None, entries=None)` and `GET /api/repositories/{id}/agent-context?query=…&budget_tokens=…&job_id=…` return **`graph_context v1`**, the block A's agents receive inside `<graph_context>…</graph_context>`. Every `?` field may be null, and null means unknown, never false.
+
+| Key | Content and limits |
+| --- | --- |
+| `scope` | `repo_id`, `snapshot_id`, `engine` (`duck-tape-symbols` or `graphify`), `engine_version?`, `graph_hash` |
+| `focal_symbols[]` | Symbols inside the retrieved ranges: `node_id`, `path`, `start_line`, `end_line?`, `kind`, `label`, `signature?` (declaration text at `start_line`, untrusted source), `community?` (Graphify only), `degree` (resolved static call sites into the symbol), `high_degree` (top 10% of this snapshot, at least 3) |
+| `edges[]` | Structural edges touching focal files: `relation`, `confidence` (`EXTRACTED` for parsed or Graphify-extracted, else `INFERRED`), `suggestion_only`, `evidence{path, line}`. `AMBIGUOUS` is never produced |
+| `blast_radius` | `dependent_files`, `linked_test_files` (static test imports only), `communities_touched?`, `structural_risk` (labelled heuristic), `basis` |
+| `catalogue_matches[]` | From the job's stored match (`job_id`) or entries passed in: `status`, lockfile `citations`, `limitations`, `cwe?`, `directly_imported?`, `sink_reachable?`, per-package `usage` evidence |
+| `approved_knowledge[]` | Current team-approved knowledge only (never drafts, stale records or team notes) |
+| `gaps[]`, `context_hash` | Everything missing or trimmed, and a hash of the block |
+
+**Usage and reachability rule.** For each matched package the builder looks for static imports of its import names (PyPI names are normalised, with a small table for names that differ, such as PyYAML → `yaml`) and resolves calls through those bindings.
+- `directly_imported` is `true` with file:line evidence, `false` when parsed files have no static import, or null when dynamic imports or unparsed files leave it open. `false` does not mean unreachable: a transitive dependency runs without being imported.
+- `sink_reachable` is `true` only when a resolved static call matches an affected symbol named by the public entry (`affected_symbols` or OSV-style rule `symbols`). Otherwise it is null ("not shown reachable"); it is never `false`.
+
+The block is bounded in UTF-8 bytes like retrieval. Edges, then focal symbols, then knowledge are trimmed first, and each trim is recorded in `gaps`. Nothing is uploaded.
+
 ## Isolation, refresh and invalidation
 
 - **Snapshot binding.** Every node, edge, chunk, citation and profile carries repository and snapshot identity plus a content hash. `load_index` rejects a snapshot from another repository, and `index_chunks` refuses a changed index for an existing snapshot.
@@ -163,7 +183,8 @@ Embeddings are still source-derived data, and a configured remote embedding prov
 | Graphify engine: normalized graph, SQLite cache, `GET /api/repositories/{id}/graph`, opt-in retrieval edges | Implemented: fixture, mocked-subprocess and real installed-CLI tests; retrieval default stays `builtin` (no measured gain) | `backend/graphify_graph.py`, `tests/test_graphify_graph.py` |
 | Databricks public-source ingestion/curation and Atlas catalogue publication | Planned (C) | [KNOWLEDGE_CONTRACT.md](hackathon/KNOWLEDGE_CONTRACT.md) |
 | Runtime Atlas catalogue lookup feeding the matcher | Planned (C supplies, B consumes) | |
-| Worker retrieval using Atlas/Graphify options | Planned (A): the worker still calls the legacy index-dict form of `retrieve` | `backend/worker.py` |
+| Agent graph context `graph_context v1` (signatures, degree, blast radius, catalogue usage evidence, `GET /agent-context`) | Implemented, fixture-tested; not yet called by the worker | `backend/agent_context.py`, `tests/test_agent_context.py` |
+| Worker retrieval and graph context | Planned (A): the worker still calls the legacy index-dict form of `retrieve` and does not yet include `graph_context` | `backend/worker.py` |
 | UI graph view | Planned; designs in progress in Figma | |
 
 Fixture, mocked-transport and live results are reported separately. A configured integration is not a connected one, and a connected one is not qualified.

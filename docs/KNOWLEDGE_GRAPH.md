@@ -70,11 +70,19 @@ flowchart TD
 
 With `graph=True` (the default), the paths of the four highest-scoring chunks form the frontier. For up to three rounds, every edge in `index['edges']` touching the frontier is followed in both directions. The related file's chunk covering the edge's evidence line is scored `10 - 2 * depth` (10, 8, 6), with reason text such as `graph calls (parsed/resolved binding) via app.py`. Chunks that cover the resolved import/call lines get up to 32 extra points. The first chunk of each documentation, configuration or dependency file gets a floor score of 1. Overlapping ranges in the same file are deduplicated; non-adjacent ranges are kept.
 
-### Atlas vector candidates (opt-in)
+### Atlas is required
+
+Duck Tape runs in **Atlas required** mode by default (`STEWARD_ATLAS_REQUIRED=1`, see `backend/atlas_mode.py`). `run.py` calls `backend/atlas_startup.check_atlas_ready()` before serving and exits with a secret-free message unless Atlas is enabled (`STEWARD_ATLAS_ENABLED=1`), configured (`STEWARD_ATLAS_URI`, `STEWARD_ATLAS_DIMENSIONS`), `pymongo` is importable and a TLS-verified `ping` succeeds. If the optional `truststore` package is installed, the OS trust store is used so antivirus or proxy re-signing does not break verification; certificate verification is never disabled. Importing `backend.main` does not run this check.
+
+In this mode repository knowledge is projected to the team's private Atlas project by design: chunk vectors, the graph mirror and approved knowledge (exactly what is sent and withheld is in the table below). SQLite remains authoritative for workflow state, leases, approvals and repository knowledge; Atlas holds the current snapshot's projection. Required mode does not by itself show better retrieval: the 14 November 2026 measurement below (graph + Atlas had lower file recall than graph alone on 3 of 6 tasks) was taken with the old opt-in behaviour, and no new gain is claimed.
+
+`STEWARD_ATLAS_REQUIRED=0` is the **test/CI escape hatch**: `tests/conftest.py`, `.github/workflows/check.yml`, `scripts/acceptance.py` and `scripts/check_restart.py` set it so deterministic gates never contact a real cluster, and the older opt-in flags then apply unchanged. It is not a production setting.
+
+### Atlas vector candidates
 
 `retrieve(..., atlas=True)`, or `STEWARD_ATLAS_RETRIEVAL=1` with `STEWARD_ATLAS_ENABLED=1`, calls `_atlas_candidates`, which wraps `data_platforms.atlas_search`. Only chunk IDs that resolve to locally eligible chunks of the same repository and snapshot (and any `paths` filter) count; text always comes from local evidence. Any failure leaves keyword/graph retrieval in place with an `Atlas candidates unavailable (...)` note. The worker currently calls `retrieve` with a stored index dictionary (the legacy form), which never adds Atlas candidates or Graphify edges; the repository `search` and `ask` routes can.
 
-On the 14 November 2026 live fixed-task run, graph + Atlas had lower file recall than graph alone on 3 of 6 tasks (0.75 versus 1.00 on `quote`, `quoteTS` and the quantity-bug query) and equal recall on the other three ([evidence](evidence/retrieval-atlas-live.json)). Atlas scores can displace graph neighbours, so the switch stays **off by default**.
+On the 14 November 2026 live fixed-task run, graph + Atlas had lower file recall than graph alone on 3 of 6 tasks (0.75 versus 1.00 on `quote`, `quoteTS` and the quantity-bug query) and equal recall on the other three ([evidence](evidence/retrieval-atlas-live.json)). Atlas scores can displace graph neighbours, so outside required mode the switch stays **off by default**.
 
 ## Node and edge schema
 
@@ -171,12 +179,12 @@ The block is bounded in UTF-8 bytes like retrieval. Edges, then focal symbols, t
 | --- | --- |
 | Team notes | Never enter retrieval, embeddings, prompts, training or cloud analytics. A note becomes knowledge only by explicit promotion plus approval. |
 | Repository profile, matches, decisions | Computed and stored locally; never pushed to the public catalogue. |
-| Atlas `evidence_vectors` | Only SHA-256 repository/snapshot/embedding-space identifiers, deterministic chunk IDs and vectors. No source text, paths or symbol names; secret-bearing files are excluded whole. Queries are embedded first and refused if they look like credentials. |
-| Atlas graph mirror (`repo_nodes`, `repo_edges`, `approved_knowledge`) | Explicit opt-in, separate from vector retrieval: needs `STEWARD_ATLAS_GRAPH_MIRROR=1` plus the Atlas settings, private database only (never `*_public`). Sends node labels, paths, line numbers, declaration lines, edge relations and team-approved, non-stale, non-conflicting knowledge text. Never sends team notes, drafts, jobs, profiles, file bodies or evidence text; secret-bearing files are excluded whole, as for vectors. |
+| Atlas `evidence_vectors` (required mode: sent) | Only SHA-256 repository/snapshot/embedding-space identifiers, deterministic chunk IDs and vectors. No source text, paths or symbol names; secret-bearing files are excluded whole. Queries are embedded first and refused if they look like credentials. |
+| Atlas graph mirror (`repo_nodes`, `repo_edges`, `approved_knowledge`) (required mode: sent) | Part of the projection in Atlas required mode (explicit opt-in via `STEWARD_ATLAS_GRAPH_MIRROR=1` only when `STEWARD_ATLAS_REQUIRED=0`); private database only (never `*_public`). Sends node labels, paths, line numbers, declaration lines, edge relations and team-approved, non-stale, non-conflicting knowledge text. Never sends team notes, drafts, jobs, profiles, file bodies or evidence text; secret-bearing files are excluded whole, as for vectors. |
 | Graphify | Code-only and offline on a scratch copy; no LLM backend, model keys or query log. |
 | Databricks metrics | Hashed run/repository IDs and allowlisted counts, timings and statuses only. |
 
-Embeddings are still source-derived data, and a configured remote embedding provider receives the text it embeds. Choose explicitly which repositories may use Atlas.
+In required mode the Atlas rows above leave the machine for the team's private Atlas project by design; team notes, drafts, file bodies, secret-bearing files, jobs, patches and credentials do not. Embeddings are still source-derived data, and a configured remote embedding provider receives the text it embeds.
 
 ## Current versus planned
 
@@ -186,8 +194,9 @@ Embeddings are still source-derived data, and a configured remote embedding prov
 | Retrieval with graph expansion (depth 3), FTS, exact matches, optional local embeddings | Implemented | `backend/retrieval.py` |
 | Approved scoped knowledge with versioning and invalidation | Implemented | `backend/knowledge.py` |
 | RepositoryProfile, ApplicabilityMatch, intake mapping and routes (`/profile`, `/applicability`, `/applicability/intake`) | Implemented, tested against a labelled local fixture | `backend/applicability.py`, `backend/main.py` |
-| Opt-in Atlas vector candidates | Implemented, off by default; live-measured 14 Nov 2026 with lower recall on 3 of 6 fixed tasks | `backend/retrieval.py`, `backend/data_platforms.py` |
-| Opt-in Atlas graph and approved-knowledge mirror (`POST /api/repositories/{id}/atlas-graph-mirror`): idempotent upsert, one snapshot per repository | Implemented, off by default; mocked-collection tests only, not yet live-checked | `backend/atlas_graph.py`, `tests/test_atlas_graph.py` |
+| Atlas required mode: startup gate in `run.py`, required by default, `STEWARD_ATLAS_REQUIRED=0` for tests/CI | Startup gate implemented; mocked tests only, no live cluster check | `backend/atlas_mode.py`, `backend/atlas_startup.py`, `tests/test_atlas_startup.py` |
+| Atlas vector candidates | Implemented; used by default only in required mode, otherwise opt-in; live-measured 14 Nov 2026 (old opt-in behaviour) with lower recall on 3 of 6 fixed tasks | `backend/retrieval.py`, `backend/data_platforms.py` |
+| Atlas graph and approved-knowledge mirror (`POST /api/repositories/{id}/atlas-graph-mirror`): idempotent upsert, one snapshot per repository | Implemented; part of the required-mode projection, otherwise opt-in; mocked-collection tests only, not yet live-checked | `backend/atlas_graph.py`, `tests/test_atlas_graph.py` |
 | Graphify engine: normalized graph, SQLite cache, `GET /api/repositories/{id}/graph`, opt-in retrieval edges | Implemented: fixture, mocked-subprocess and real installed-CLI tests; retrieval default stays `builtin` (no measured gain) | `backend/graphify_graph.py`, `tests/test_graphify_graph.py` |
 | Databricks public-source ingestion/curation and Atlas catalogue publication | Planned (C) | [KNOWLEDGE_CONTRACT.md](hackathon/KNOWLEDGE_CONTRACT.md) |
 | Runtime catalogue lookup feeding the matcher (`POST /applicability/catalogue`, `from_global_entry`) | Local provider implemented and tested with one real public OSV record against a labelled demo repository; Atlas provider tested with a mocked transport only (not run live from this route); no worker or UI wiring yet | `backend/applicability.py`, `backend/main.py`, `tests/test_applicability_catalogue.py` |

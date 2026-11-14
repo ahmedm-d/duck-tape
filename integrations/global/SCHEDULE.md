@@ -2,6 +2,8 @@
 
 `databricks-job.json` is a Jobs API create payload for the existing **DUCKTAPE** profile and workspace `https://dbc-a762c421-e9f8.cloud.databricks.com`. It uses existing SQL warehouse `710499d60f04f73d`; it creates no warehouse, cluster, account or paid resource. The serverless task is scheduled for 07:00 UTC daily but starts **PAUSED**, allows one concurrent run, has a 900-second timeout and no whole-job automatic retries. Individual cloud writes retain their bounded retries.
 
+Serverless auto-optimization can retry independently of `max_retries=0`; live verification observed this behavior. The definition now explicitly sets `disable_auto_optimization=true` to keep whole-task retries disabled. See [serverless auto-optimization](https://docs.databricks.com/aws/en/jobs/run-serverless-jobs).
+
 The notebook fetches the real OSV advisory and attributed Python improvement, calls the existing normalization/curation job, and optionally publishes to the public Atlas database. `publish=false` initially. The deterministic tests do not connect to Databricks; actual live execution is recorded separately below.
 
 ## Recorded live verification
@@ -73,7 +75,25 @@ After the scoped Atlas credential/network path is usable, run once with the task
 
 ## Remaining live checks
 
-- Jobs create/run permission, serverless environment 4, dependency installation, notebook-native authentication, public OSV/Python fetches and warehouse writes passed in the recorded manual run. Secret-scope access and Atlas SRV/TLS egress were not exercised by that curation-only run.
-- Atlas publication and the actual scheduled trigger must still be verified under account network policies and fair-use limits. SQL connectivity alone does not establish either.
+- Jobs create/run permission, serverless environment 4, dependency installation, notebook-native authentication, public OSV/Python fetches and warehouse writes passed in the recorded manual run. Subsequent publication runs successfully read the dedicated Atlas secret but failed. A read-only probe resolved three Atlas SRV records and connected to TCP27017; TLS failed and the scoped Atlas ping timed out. HTTPS egress changed from `3.145.247.177` to `3.145.247.155` across probes, so the single observed `/32` allowlist is not a dependable recurring connection policy.
+- Local Atlas publication is independently verified in [live-atlas-evidence.json](live-atlas-evidence.json); **Databricks-to-Atlas publication and an actual scheduled trigger remain unverified**. The clean post-allowlist manual attempt `994468391849329` failed. Exact TLS failure cause remains unproven; do not disable certificate verification or broaden network access to force success.
+- A supported network policy must precede recurring publication. [Databricks serverless networking](https://docs.databricks.com/aws/en/security/network/serverless-network-security/) documents account-level connectivity controls and the retirement of the legacy stable-IP method; [firewall configuration](https://docs.databricks.com/aws/en/security/network/serverless-network-security/serverless-firewall-config) describes supported outbound policies. No paid networking or broad ranges were configured here. Observing one HTTPS egress IP does not establish a stable MongoDB egress path.
 - The existing single-producer, 100-material-revision restore bound and source-failure visibility limits in [README.md](README.md) still apply. Retain job output; a fresh-looking Atlas record alone does not prove its latest source refresh succeeded.
 - Keep the trigger paused if any required check fails. No successful scheduled trigger or Atlas publication is claimed by this evidence.
+
+## Verified explicit local relay
+
+When the Databricks-to-Atlas network path is unavailable, the existing integrations CLI can restore actual curated Delta revisions into an isolated local catalogue, then explicitly publish from the operator's already-allowed network. This path does not fetch/normalize sources locally and does not establish a scheduled cloud publication.
+
+Use the application requirements plus `requirements-cloud.txt`. Configure the existing warehouse connection (`STEWARD_GLOBAL_DATABRICKS_ENABLED=1`, `STEWARD_DATABRICKS_HOST`, `STEWARD_DATABRICKS_WAREHOUSE_ID`, process-only `STEWARD_DATABRICKS_TOKEN`) and separate public publisher (`STEWARD_GLOBAL_ATLAS_ENABLED=1`, process-only `STEWARD_GLOBAL_ATLAS_URI`). Obtain credentials from the existing authenticated SDK/secret store; do not put them in command arguments or tracked files. Start with a new database path:
+
+```sh
+python scripts/integrations.py catalogue-restore --database data/global-relay-new.sqlite3
+python scripts/integrations.py catalogue-query --database data/global-relay-new.sqlite3 --ecosystem PyPI --package requests
+python scripts/integrations.py catalogue-publish --database data/global-relay-new.sqlite3
+python scripts/integrations.py catalogue-query --atlas --ecosystem PyPI --package requests
+```
+
+`catalogue-restore` validates complete revision history and hashes through the same bounded restore helper used by the notebook; it does not publish. The operator must stop if restoration fails. The existing 100-history limit applies, and older retrievals cannot replace fresher Atlas records.
+
+The live relay restored two revisions fetched by Databricks at 16:46:42 UTC, published both, repeated publication without new material revisions, and verified both exact Atlas package queries. See [live-relay-evidence.json](live-relay-evidence.json). Its first local attempt lacked the optional PyMongo driver and failed safely; using the existing isolated optional-driver target completed verification. This is a manual relay, not an automatic schedule or a workaround for Databricks network controls.

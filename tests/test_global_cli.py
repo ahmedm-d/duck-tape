@@ -85,3 +85,17 @@ def test_graph_cli_honors_isolated_default_path(tmp_path, monkeypatch, capsys):
     result = json.loads(capsys.readouterr().out)
     assert result['coverage'] == 'unknown' and result['edges'] == []
     assert (tmp_path / 'graph.sqlite3').exists()
+
+
+def test_restore_reads_delta_without_publishing(tmp_path, monkeypatch, capsys):
+    from backend import global_pipeline
+    calls = []
+    monkeypatch.setattr(integrations, 'load_environment', lambda: None)
+    monkeypatch.setattr(global_pipeline, 'restore_databricks', lambda catalogue: calls.append(catalogue) or 2)
+    def forbidden(*args, **kwargs):
+        raise AssertionError('Restore must not publish or curate')
+    monkeypatch.setattr(global_pipeline, 'publish_atlas', forbidden)
+    monkeypatch.setattr(global_pipeline, 'curate_databricks', forbidden)
+    assert integrations.main(['catalogue-restore', '--database', str(tmp_path / 'restored.sqlite3')]) == 0
+    assert json.loads(capsys.readouterr().out) == {'restored_revisions': 2}
+    assert len(calls) == 1

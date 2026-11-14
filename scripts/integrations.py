@@ -28,7 +28,7 @@ def main(argv=None) -> int:
     commands.add_parser("databricks-summary", help="Query measured metrics in the configured table")
     commands.add_parser("catalogue-status", help="Inspect public pipeline configuration without connecting")
     for name in ("catalogue-query", "catalogue-graph", "catalogue-ingest-osv", "catalogue-ingest-improvement",
-                 "catalogue-import", "catalogue-publish", "catalogue-curate", "catalogue-operations"):
+                 "catalogue-import", "catalogue-publish", "catalogue-curate", "catalogue-restore", "catalogue-operations"):
         command = commands.add_parser(name, help="Explicit public catalogue operation")
         command.add_argument("--database", type=Path)
         if name in ("catalogue-query", "catalogue-graph"):
@@ -106,6 +106,8 @@ def catalogue_command(args: argparse.Namespace) -> dict:
             entry = ingest_improvement(catalogue, record)
         return entry.model_dump(mode='json')
     from backend import global_pipeline
+    if args.command == "catalogue-restore":
+        return {'restored_revisions': global_pipeline.restore_databricks(catalogue)}
     if args.command == "catalogue-ingest-osv":
         return global_pipeline.ingest_osv(catalogue, args.id).model_dump(mode='json')
     entries = catalogue.entries(limit=100)

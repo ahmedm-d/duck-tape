@@ -13,6 +13,7 @@
       "task_key": "public_catalogue",
       "timeout_seconds": 900,
       "max_retries": 0,
+      "disable_auto_optimization": true,
       "environment_key": "public_pipeline",
       "notebook_task": {
         "notebook_path": "/Workspace/Shared/duck-tape-public/integrations/global/scheduled_notebook",

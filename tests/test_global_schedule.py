@@ -29,6 +29,7 @@ def test_job_is_paused_serial_bounded_and_serverless():
     task = definition['tasks'][0]
     assert not any(key in task for key in ['new_cluster', 'existing_cluster_id', 'job_cluster_key'])
     assert task['max_retries'] == 0
+    assert task['disable_auto_optimization'] is True
     assert task['notebook_task']['base_parameters']['publish'] == 'false'
     assert 'warehouse-token' not in json.dumps(definition)
 

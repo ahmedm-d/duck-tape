@@ -364,6 +364,35 @@
       "completed_at": null,
       "last_checked_at": "2026-11-14T19:58:02+00:00",
       "notes": "Reused idempotent run from manifest"
+    },
+    {
+      "agent": "researcher",
+      "account_index": 5,
+      "account_label": "researcher",
+      "account_role": "Researcher (vulnerability findings)",
+      "wave": "all",
+      "idempotency_key": "duck-tape-researcher-v1",
+      "run_id": "cf4d5b7a-92e2-483c-8dc5-3688fc9b6e35",
+      "dataset_id": "26c8b3ed-faef-4887-8529-7dd656419f88",
+      "model": "Qwen/Qwen3.6-35B-A3B",
+      "training_method": "instruction",
+      "status": "running",
+      "iterations_completed": 0.0,
+      "max_iterations": 3.0,
+      "target_win_rate": 0.8,
+      "best_win_rate": null,
+      "download_available": false,
+      "error": null,
+      "best_hyperparams": null,
+      "created_at": "2026-11-14T21:00:45.659000+00:00",
+      "completed_at": null,
+      "last_checked_at": "2026-11-14T21:00:53+00:00",
+      "base_rows": 5000,
+      "augmentation_domain_rows": 5000,
+      "effective_rows": 10000,
+      "processing_mode": "raw",
+      "adopted_from_web_ui": false,
+      "notes": null
     }
   ],
   "datasets": {
@@ -523,6 +552,19 @@
       },
       "source_file": "model-training/data/processed/test_writer.jsonl",
       "uploaded_at": "2026-11-14T19:57:21+00:00"
+    },
+    "researcher": {
+      "dataset_id": "26c8b3ed-faef-4887-8529-7dd656419f88",
+      "name": "duck_tape_researcher",
+      "status": "succeeded",
+      "row_count": 5000,
+      "processing_mode": "raw",
+      "column_mapping": {
+        "prompt": "prompt",
+        "completion": "completion"
+      },
+      "source_file": "model-training/data/processed/researcher.jsonl",
+      "uploaded_at": "2026-11-14T21:00:44+00:00"
     }
   },
   "custom_evals": {
@@ -571,5 +613,5 @@
       "authenticated": true
     }
   },
-  "updated_at": "2026-11-14T19:58:02+00:00"
+  "updated_at": "2026-11-14T21:00:53+00:00"
 }

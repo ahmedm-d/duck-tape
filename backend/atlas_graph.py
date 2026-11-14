@@ -31,8 +31,13 @@ def _id(*parts) -> str:
     return hashlib.sha256(json.dumps(list(parts), separators=(',', ':')).encode()).hexdigest()
 
 
+def _required() -> bool:
+    from .atlas_mode import atlas_required
+    return atlas_required()
+
+
 def _config() -> dict:
-    if os.getenv(FLAG) != '1':
+    if os.getenv(FLAG) != '1' and not _required():  # Atlas-required mode needs no separate opt-in
         raise MirrorRefused(f'Atlas graph mirror is disabled; set {FLAG}=1 to opt in')
     if not data_platforms._enabled('atlas'):
         raise MirrorRefused('Atlas integration is disabled; the graph mirror needs STEWARD_ATLAS_ENABLED=1')

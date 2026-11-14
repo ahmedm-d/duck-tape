@@ -9,7 +9,7 @@ from typing import Sequence, TypeVar
 
 from dotenv import load_dotenv
 
-from .schemas import ChatTrajectoryRow, InstructionRow, PreferenceRow
+from .schemas import ChatTrajectoryRow, ContrastiveTripletRow, InstructionRow, PreferenceRow, VisionInstructionRow
 
 T = TypeVar("T")
 
@@ -62,6 +62,24 @@ def write_chat_jsonl(rows: Sequence[ChatTrajectoryRow], output_path: Path) -> Pa
 
 def write_preference_jsonl(rows: Sequence[PreferenceRow], output_path: Path) -> Path:
     """Write validated PreferenceRow objects as UTF-8 LF JSONL."""
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with output_path.open("w", encoding="utf-8", newline="\n") as handle:
+        for row in rows:
+            handle.write(row.model_dump_json() + "\n")
+    return output_path
+
+
+def write_vision_jsonl(rows: Sequence[VisionInstructionRow], output_path: Path) -> Path:
+    """Write validated VisionInstructionRow objects as UTF-8 LF JSONL."""
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with output_path.open("w", encoding="utf-8", newline="\n") as handle:
+        for row in rows:
+            handle.write(row.model_dump_json() + "\n")
+    return output_path
+
+
+def write_triplet_jsonl(rows: Sequence[ContrastiveTripletRow], output_path: Path) -> Path:
+    """Write validated ContrastiveTripletRow objects as UTF-8 LF JSONL."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w", encoding="utf-8", newline="\n") as handle:
         for row in rows:

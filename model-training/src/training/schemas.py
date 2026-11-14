@@ -94,6 +94,35 @@ class VisionInstructionRow(BaseModel):
     image_context: str = Field(min_length=1)
     completion: str = Field(min_length=1)
 
+    @field_validator("image_context")
+    @classmethod
+    def validate_image_context(cls, value: str) -> str:
+        if value.startswith("https://"):
+            return value
+        if value.startswith("data:image/") and "," in value:
+            header, payload = value.split(",", 1)
+            if header.endswith(";base64") and payload.strip():
+                return value
+        raise ValueError("image_context must be a valid base64 data:image/*;base64,... URI or https:// URL")
+
+
+class ContrastiveTripletRow(BaseModel):
+    """Contrastive retrieval triplet JSONL row format."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    query: str = Field(min_length=1)
+    pos: list[str] = Field(min_length=1)
+    neg: list[str] = Field(min_length=1)
+
+    @field_validator("pos", "neg")
+    @classmethod
+    def validate_non_empty_items(cls, value: list[str]) -> list[str]:
+        for idx, item in enumerate(value):
+            if not isinstance(item, str) or not item.strip():
+                raise ValueError(f"triplet list element [{idx}] must be a non-empty string")
+        return value
+
 
 ROUTER_AGENTS = (
     "TicketParser",
@@ -215,6 +244,21 @@ def compute_jsonl_token_stats(path: Path, encoding_name: str = "cl100k_base") ->
                 p_len = len(enc.encode(validated_pref.prompt, disallowed_special=()))
                 c_len = len(enc.encode(validated_pref.chosen, disallowed_special=())) + len(
                     enc.encode(validated_pref.rejected, disallowed_special=())
+                )
+            elif "image_context" in record:
+                validated_vis = VisionInstructionRow.model_validate(record)
+                img_toks = (
+                    256
+                    if validated_vis.image_context.startswith("data:image/")
+                    else len(enc.encode(validated_vis.image_context, disallowed_special=()))
+                )
+                p_len = len(enc.encode(validated_vis.prompt, disallowed_special=())) + img_toks
+                c_len = len(enc.encode(validated_vis.completion, disallowed_special=()))
+            elif "query" in record and "pos" in record and "neg" in record:
+                validated_trip = ContrastiveTripletRow.model_validate(record)
+                p_len = len(enc.encode(validated_trip.query, disallowed_special=()))
+                c_len = sum(
+                    len(enc.encode(x, disallowed_special=())) for x in validated_trip.pos + validated_trip.neg
                 )
             else:
                 validated = InstructionRow.model_validate(record)

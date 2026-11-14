@@ -112,7 +112,7 @@ def _knowledge_documents(repo_id: str, snapshot_id: str, base: dict, paths: list
     docs, excluded = {}, 0
     for record in db.list_records('knowledge'):
         if (record.get('repo_id') != repo_id or record.get('status') != 'team-approved'
-                or record.get('id') in conflicting or record.get('kind') in NOT_KNOWLEDGE):
+                or record.get('stale') or record.get('id') in conflicting or record.get('kind') in NOT_KNOWLEDGE):
             continue
         text = f"{record.get('title', '')}\n{record.get('content', '')}"
         if repository.SECRET.search(text) or repository.SECRET_ASSIGNMENT.search(text):

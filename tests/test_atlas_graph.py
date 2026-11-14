@@ -152,6 +152,7 @@ def test_notes_drafts_stale_conflicting_and_other_repositories_are_never_written
                                ('disputed', 'conflicting'), ('rejected', 'rejected')):
         knowledge(identifier, status=status)
     knowledge('note', kind='notes')
+    db.put('knowledge', {'id': 'invalidated', 'repo_id': REPO, 'title': 'old', 'content': 'old rule', 'status': 'team-approved', 'stale': True})
     db.put('knowledge', {'id': 'other', 'repo_id': 'someone-else', 'title': 'x', 'content': 'y', 'status': 'team-approved'})
     knowledge('a', constraint={'key': 'money', 'value': 'cents'})
     knowledge('b', constraint={'key': 'money', 'value': 'floats'})

@@ -38,6 +38,8 @@ The fixed database is `ducktape_public`, with `global_entries` current records a
 
 ## Databricks normalization job
 
+For the existing Free Edition workspace, [SCHEDULE.md](SCHEDULE.md) provides a paused daily job definition, scoped-secret notebook wrapper and an allowlisted upload/manual-verification recipe. Creating the job alone does not verify scheduled execution.
+
 Run `schema.sql` manually in an existing warehouse. Public revisions go to fixed `workspace.default.ducktape_global_revisions`, separate from the run-metrics table. Set `STEWARD_GLOBAL_DATABRICKS_ENABLED=1`; the existing `STEWARD_DATABRICKS_HOST`, `STEWARD_DATABRICKS_TOKEN`, and `STEWARD_DATABRICKS_WAREHOUSE_ID` supply the operator's warehouse connection. Enabling the metrics integration does not enable this pipeline.
 
 Check out this Duck Tape revision as the Databricks job source and install its Python requirements and optional cloud driver in the Duck Tape job environment. Use a Python script task with `integrations/global/databricks_job.py`. Supply an explicit JSON source manifest:
@@ -63,4 +65,4 @@ Delta updates use bound parameters and [Databricks `raise_error`](https://docs.d
 - Public fetches and descriptor files: 1 MiB. Each cloud batch: 100 entries. Stateless job history restore: at most 100 complete material revisions and the existing SQL response byte limit. Overflow/incomplete history stops the job; larger catalogues need partitioned restoration before use.
 - The local catalogue persists latest per-source ingestion/publication outcomes. Local queries mark failed source evidence unknown. An Atlas-only reader cannot see a new source-fetch failure from a different machine; it sees stored retrieval age and withdrawal until a successful refresh. Consumers must consult job outcomes and withhold automatic proposals after a known failed refresh.
 - The pipeline never deletes old revisions automatically. Withdrawal is material public evidence, not deletion. No model, proposal permission, patch approval or private repository applicability is changed here.
-- Deterministic tests cover mocked transport/cloud behavior. No live Databricks or Atlas account was available during this implementation. Public HTTP evidence, when recorded, establishes only that source retrieval ran.
+- Deterministic tests cover mocked transport/cloud behavior. Subsequent real Delta curation/repeat/restoration and a successful Databricks normalization notebook run are recorded in [live-databricks-evidence.json](live-databricks-evidence.json). That curation-only run did not publish to Atlas, and its schedule remained paused. Public HTTP evidence alone establishes only source retrieval.

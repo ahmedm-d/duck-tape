@@ -1,6 +1,8 @@
 """The Atlas graph mirror is exercised against an in-memory fake; no network, no live cluster."""
+import sys
 from contextlib import contextmanager
 from pathlib import PurePosixPath
+from types import SimpleNamespace
 
 import pytest
 from fastapi.testclient import TestClient
@@ -19,13 +21,20 @@ REPO = 'repo-private'
 COLLECTIONS = ('repo_nodes', 'repo_edges', 'approved_knowledge')
 
 
+class FakeReplaceOne:
+    """Stands in for pymongo.ReplaceOne so the tests run without the optional cloud drivers."""
+
+    def __init__(self, filter, replacement, upsert=False):
+        self.filter, self.replacement, self.upsert = filter, replacement, upsert
+
+
 class FakeCollection:
     def __init__(self):
         self.documents = {}
 
     def bulk_write(self, operations, ordered=False):
         for operation in operations:
-            self.documents[operation._filter['_id']] = dict(operation._doc)
+            self.documents[operation.filter['_id']] = dict(operation.replacement)
 
     def delete_many(self, condition):
         doomed = [key for key, doc in self.documents.items()
@@ -51,6 +60,7 @@ def atlas(tmp_path, monkeypatch):
                  'STEWARD_ATLAS_GRAPH_MIRROR', 'STEWARD_GRAPH_ENGINE'):
         monkeypatch.delenv(name, raising=False)
     db.init()
+    monkeypatch.setitem(sys.modules, 'pymongo', SimpleNamespace(ReplaceOne=FakeReplaceOne))
     fake = FakeAtlas()
 
     @contextmanager
@@ -257,3 +267,16 @@ def test_route_is_409_when_disabled_and_503_on_atlas_failure(atlas, monkeypatch)
     monkeypatch.setattr(data_platforms, '_atlas_collection', failing)
     broken = client.post(url)
     assert broken.status_code == 503 and 'never-show-this' not in broken.text
+
+
+def test_missing_pymongo_fails_closed_with_clear_message_and_503(atlas, monkeypatch):
+    enable(monkeypatch)
+    repo = make_repo()
+    knowledge('k1')
+    monkeypatch.setitem(sys.modules, 'pymongo', None)  # makes `from pymongo import ...` raise ImportError
+    with pytest.raises(data_platforms.DataPlatformError, match='requirements-cloud.txt'):
+        atlas_graph.mirror(REPO, 'snap-1')
+    assert atlas.opened == [] and atlas.collections == {}
+    response = TestClient(main.app).post(f'/api/repositories/{repo["id"]}/atlas-graph-mirror')
+    assert response.status_code == 503 and 'requirements-cloud.txt' in response.json()['detail']
+    assert 'never-show-this' not in response.text

@@ -191,8 +191,8 @@ Embeddings are still source-derived data, and a configured remote embedding prov
 | Graphify engine: normalized graph, SQLite cache, `GET /api/repositories/{id}/graph`, opt-in retrieval edges | Implemented: fixture, mocked-subprocess and real installed-CLI tests; retrieval default stays `builtin` (no measured gain) | `backend/graphify_graph.py`, `tests/test_graphify_graph.py` |
 | Databricks public-source ingestion/curation and Atlas catalogue publication | Planned (C) | [KNOWLEDGE_CONTRACT.md](hackathon/KNOWLEDGE_CONTRACT.md) |
 | Runtime catalogue lookup feeding the matcher (`POST /applicability/catalogue`, `from_global_entry`) | Local provider implemented and tested with one real public OSV record against a labelled demo repository; Atlas provider tested with a mocked transport only (not run live from this route); no worker or UI wiring yet | `backend/applicability.py`, `backend/main.py`, `tests/test_applicability_catalogue.py` |
-| Agent graph context `graph_context v1` (signatures, degree, blast radius, catalogue usage evidence, `GET /agent-context`) | Implemented, fixture-tested; not yet called by the worker | `backend/agent_context.py`, `tests/test_agent_context.py` |
-| Worker retrieval and graph context | Planned (A): the worker still calls the legacy index-dict form of `retrieve` and does not yet include `graph_context` | `backend/worker.py` |
+| Agent graph context `graph_context v1` (signatures, degree, blast radius, catalogue usage evidence, `GET /agent-context`) | Implemented, fixture-tested; called by the worker | `backend/agent_context.py`, `tests/test_agent_context.py` |
+| Worker retrieval and graph context | Implemented (A, merged in `e6dd6e5`): the snapshot form of `retrieve`, `applicability`/`catalogue` in the job payload, and `<graph_context>` for investigation, planning, implementation and review; fixture worker tests with a mocked provider | `backend/worker.py`, `tests/test_worker_handoff.py` |
 | UI graph view | Planned; designs in progress in Figma | |
 
 Fixture, mocked-transport and live results are reported separately. A configured integration is not a connected one, and a connected one is not qualified.

@@ -1,0 +1,14 @@
+!data/
+.env.training
+.venv/
+__pycache__/
+data/raw/
+data/processed/*.jsonl
+data/eval/*.jsonl
+models/checkpoints/
+*.tgz
+*.safetensors
+*.bin
+!data/inspection_report.md
+!data/adaption_runs_manifest.json
+!data/dataset_licenses.json

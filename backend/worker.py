@@ -11,6 +11,7 @@ import time
 import uuid
 from pathlib import Path, PurePosixPath
 from . import db, providers, sample
+from .agent_context import agent_graph_context
 
 ACTIVE = {'Investigating','Implementing','Verifying'}
 TERMINAL = {'Cancelled','Rejected','Completed'}
@@ -155,6 +156,29 @@ def publish(job_id, token, revision, checks):
                 db.put_in(con,'runs',{**run,'status':'complete','revision_id':revision['id'],'finished_at':db.now()})
         db.put_in(con,'events',{'message':'Patch revision ready for review','job_id':job_id,'repo_id':current['repo_id'],'author':'Duck Tape'})
 
+
+def _graph_context_block(repo, snapshot_id, query, job, *, approved=None, cancel=None):
+    bounded_query = (query or '').strip() or job.get('title') or 'repository maintenance'
+    graph_ctx = agent_graph_context(
+        repo['id'],
+        snapshot_id,
+        bounded_query,
+        budget_tokens=3500,
+        job=job,
+        cancel=cancel,
+    )
+    if approved is not None:
+        allowed_ids = {item['id'] for item in approved if 'id' in item}
+        graph_ctx['approved_knowledge'] = [
+            item for item in graph_ctx.get('approved_knowledge', [])
+            if item.get('id') in allowed_ids
+        ]
+        graph_ctx['context_hash'] = hashlib.sha256(
+            json.dumps({k: v for k, v in graph_ctx.items() if k != 'context_hash'}, sort_keys=True, default=str).encode()
+        ).hexdigest()
+    return f"<graph_context>\n{json.dumps(graph_ctx)}\n</graph_context>"
+
+
 def _process_legacy_fixture(job_id):
     token=str(uuid.uuid4())
     def claim(job):
@@ -179,13 +203,17 @@ def _process_legacy_fixture(job_id):
         knowledge=[k for k in db.list_records('knowledge') if k.get('repo_id')==repo['id'] and k.get('status')=='team-approved']
         decisions=[d for d in db.list_records('decisions') if d.get('job_id')==job_id]
         decisions=[{**d,'selected':job.get('selected_decisions',{}).get(d['id'],d.get('selected'))} for d in decisions]
-        context=retrieve(repo['index'],job['title']+' '+job['description'],knowledge=knowledge)
+        snapshot_id=repo.get('source_snapshot_id') or repo['snapshot']
+        initial_query=job['title']+' '+job['description']
+        context=retrieve(repo['id'],snapshot_id,initial_query,knowledge=knowledge)
         context.update(snapshot=repo['snapshot'],repo_id=repo['id'],overview=repo['index'].get('overview',''))
         knowledge=context.get('knowledge',[])
         run=db.put('runs',{**run,'context':context})
         files={f['path']:f['content'] for f in repo['index']['files'] if f.get('status')=='indexed' and isinstance(f.get('content'),str)}
         fixture=bool(repo.get('is_sample') and job.get('scenario') in {s[0] for s in sample.SCENARIOS})
-        payload={'task':'implementation','job':{k:job.get(k) for k in ('id','title','description','revision_instructions','current_revision')},'snapshot':repo['snapshot'],'context':context,'approved_decisions':decisions,'approved_knowledge':knowledge}
+        job_payload={**{k:job.get(k) for k in ('id','title','description','revision_instructions','current_revision','applicability')},**({'catalogue':job['catalogue']} if 'catalogue' in job else {})}
+        graph_context=_graph_context_block(repo,snapshot_id,initial_query,job,approved=knowledge)
+        payload={'task':'implementation','job':job_payload,'snapshot':repo['snapshot'],'context':context,'approved_decisions':decisions,'approved_knowledge':knowledge,'graph_context':graph_context}
         prior=None
         if job.get('current_revision'):
             prior=db.get('revisions',job['current_revision'])
@@ -204,14 +232,15 @@ def _process_legacy_fixture(job_id):
                     break
                 guard(job_id,token)
                 query=response['request_context']
-                additional=retrieve(repo['index'],query,knowledge=[k for k in db.list_records('knowledge') if k.get('repo_id')==repo['id'] and k.get('status')=='team-approved'])
+                additional=retrieve(repo['id'],snapshot_id,query,knowledge=[k for k in db.list_records('knowledge') if k.get('repo_id')==repo['id'] and k.get('status')=='team-approved'])
                 items={item['path']:item for item in context['items']}
                 items.update({item['path']:item for item in additional['items']})
                 policies={k['id']:k for k in context.get('knowledge',[])}
                 policies.update({k['id']:k for k in additional.get('knowledge',[])})
                 context={**context,'items':list(items.values())[:24],'knowledge':list(policies.values()),'additional_queries':context.get('additional_queries',[])+[query]}
                 context['context_hash']=hashlib.sha256(json.dumps(context,sort_keys=True).encode()).hexdigest()
-                payload.update(context=context,approved_knowledge=context['knowledge'])
+                graph_context=_graph_context_block(repo,snapshot_id,query,job,approved=context['knowledge'])
+                payload.update(context=context,approved_knowledge=context['knowledge'],graph_context=graph_context)
                 run=db.put('runs',{**run,'context':context})
                 requests.append({'query':query,'provider':telemetry})
                 response,telemetry=providers.complete('implementation',payload,job.get('risk','medium'))
@@ -231,7 +260,7 @@ def _process_legacy_fixture(job_id):
             cumulative.update({edit['path']:edit for edit in response['edits']})
             response={**response,'edits':list(cumulative.values())}
         guard(job_id,token,status='Implementing')
-        root=Path(db.DATA_DIR)/'worktrees'/job_id/token
+        root=Path(db.DATA_DIR)/'worktrees'/job_id[:12]/token[:8]
         root.mkdir(parents=True)
         for path,content in files.items():
             target=safe_path(root,path); target.parent.mkdir(parents=True,exist_ok=True); target.write_text(content,encoding='utf-8',newline='')
@@ -284,7 +313,7 @@ def _process_legacy_fixture(job_id):
             changed_paths={f['path'] for f in changed}
             proposed_sources=[{'path':f['path'],'content':f['after'],'origin':'proposed patch'} for f in changed]
             related_sources=[item for item in context['items'] if item['path'] not in changed_paths]
-            review_payload={'task':'review','job':payload['job'],'approved_knowledge':payload['approved_knowledge'],'approved_decisions':decisions,'proposed_sources':proposed_sources,'related_evidence':related_sources,'snapshot':repo['snapshot']}
+            review_payload={'task':'review','job':payload['job'],'approved_knowledge':payload['approved_knowledge'],'approved_decisions':decisions,'proposed_sources':proposed_sources,'related_evidence':related_sources,'graph_context':payload.get('graph_context'),'snapshot':repo['snapshot']}
             review,review_telemetry=providers.complete('review',review_payload,job.get('risk','medium'))
             telemetry['review']=review_telemetry
             run=db.put('runs',{**run,'provider':telemetry,'review':review})
@@ -373,10 +402,14 @@ def process_job(job_id):
         decisions = [record for record in db.list_records('decisions') if record.get('job_id') == job_id]
         decisions = [{**record, 'selected': job.get('selected_decisions', {}).get(record['id'], record.get('selected'))} for record in decisions]
         approved = [record for record in db.list_records('knowledge') if record.get('repo_id') == repo['id'] and record.get('status') == 'team-approved']
-        context = retrieval.retrieve(repo['index'], job['title']+' '+job['description'], knowledge=approved)
+        retrieval_snapshot_id = repo.get('source_snapshot_id') or repo['snapshot']
+        initial_query = job['title']+' '+job['description']
+        context = retrieval.retrieve(repo['id'], retrieval_snapshot_id, initial_query, knowledge=approved, cancel=cancel)
         context.pop('latency_ms',None)
         context.update(snapshot=repo['snapshot'], repo_id=repo['id'])
-        seed = {'job': {key: job.get(key) for key in ('id','title','description','base_snapshot','current_revision','revision_instructions','retry_generation')},
+        seed_job = {**{key: job.get(key) for key in ('id','title','description','base_snapshot','current_revision','revision_instructions','retry_generation','applicability')},
+                    **({'catalogue': job['catalogue']} if 'catalogue' in job else {})}
+        seed = {'job': seed_job,
                 'source_snapshot_id': source_id, 'knowledge': approved,
                 'decisions': [{key: record.get(key) for key in ('id','selected','selected_at','author','rationale','constraint_versions')} for record in decisions if record.get('selected')]}
         workflow_key = workflow.input_fingerprint(seed)
@@ -489,7 +522,7 @@ def process_job(job_id):
             return True
         paths = {item['path'] for item in context['items']}
         if not constraints(paths): return
-        base_payload = {'job':seed['job'],'context':context,'approved_knowledge':approved,'approved_decisions':[record for record in decisions if record.get('selected')], 'snapshot':source_id}
+        base_payload = {'job':seed['job'],'context':context,'approved_knowledge':approved,'approved_decisions':[record for record in decisions if record.get('selected')],'graph_context':_graph_context_block(repo,retrieval_snapshot_id,initial_query,job,approved=approved,cancel=cancel),'snapshot':source_id}
         investigation = call('investigation',base_payload,'investigation')
         save(investigation=investigation)
         plan = call('planning',{**base_payload,'investigation':investigation},'planning')
@@ -497,14 +530,14 @@ def process_job(job_id):
         while 'request_context' in plan and evidence_rounds<2:
             evidence_rounds+=1
             query=plan['request_context']
-            additional=retrieval.retrieve(repo['index'],query,knowledge=approved)
+            additional=retrieval.retrieve(repo['id'],retrieval_snapshot_id,query,knowledge=approved,cancel=cancel)
             additional.pop('latency_ms',None)
             items={(item['path'],item['start_line'],item['end_line']):item for item in context['items']+additional['items']}
             context['items']=list(items.values())
             context['additional_queries']=context.get('additional_queries',[])+[query]
             paths|={item['path'] for item in additional['items']}
             if not constraints(paths): return
-            base_payload.update(context=context,approved_knowledge=approved)
+            base_payload.update(context=context,approved_knowledge=approved,graph_context=_graph_context_block(repo,retrieval_snapshot_id,query,job,approved=approved,cancel=cancel))
             save(context=context,evidence_rounds=evidence_rounds)
             plan=call('planning',{**base_payload,'investigation':investigation},'planning-context-'+str(evidence_rounds))
         save(plan=plan)
@@ -582,13 +615,13 @@ def process_job(job_id):
                     acceptance_commands(coverage,profile,changed_tests)
                     acceptance_sources={reference['path']:changed_tests[reference['path']] for reference in coverage}
             try:
-                check_regression(regression,db.DATA_DIR/'worktrees'/job_id/token/(test_role+'-preflight'))
+                check_regression(regression,db.DATA_DIR/'worktrees'/job_id[:12]/token[:8]/(test_role+'-preflight'))
             except ValueError as exc:
                 save(**{test_role+'_failure':{'output':regression,'error':str(exc)[:1000]}})
                 regression_repairs=1
                 regression=call(test_role,{**regression_payload,'feedback':[{'error':str(exc)[:1000],'previous_edits':regression.get('edits',[])}],
                                               'instruction':'Correct the indicated test references and edit preconditions. Change only test files. Existing supplied test paths need UPDATE with the supplied hash, not CREATE; preserve criterion coverage.'},test_role+'-correction')
-                check_regression(regression,db.DATA_DIR/'worktrees'/job_id/token/(test_role+'-corrected'))
+                check_regression(regression,db.DATA_DIR/'worktrees'/job_id[:12]/token[:8]/(test_role+'-corrected'))
             regression_operations=regression['edits']
             payload['required_'+test_role+'_edits']=regression_operations
             payload['edit_contract']+=' The controller preserves required test edits; focus on source edits and do not remove acceptance or regression assertions.'
@@ -605,14 +638,14 @@ def process_job(job_id):
             while 'request_context' in response and evidence_rounds<2:
                 evidence_rounds+=1
                 query=response['request_context']
-                additional=retrieval.retrieve(repo['index'],query,knowledge=approved)
+                additional=retrieval.retrieve(repo['id'],retrieval_snapshot_id,query,knowledge=approved,cancel=cancel)
                 additional.pop('latency_ms',None)
                 items={(item['path'],item['start_line'],item['end_line']):item for item in context['items']+additional['items']}
                 context['items']=list(items.values())
                 context['additional_queries']=context.get('additional_queries',[])+[query]
                 paths|={item['path'] for item in additional['items']}
                 if not constraints(paths): return
-                payload.update(context=compact_context(),approved_knowledge=approved)
+                payload.update(context=compact_context(),approved_knowledge=approved,graph_context=_graph_context_block(repo,retrieval_snapshot_id,query,job,approved=approved,cancel=cancel))
                 save(context=context,evidence_rounds=evidence_rounds)
                 response=call(task,{**payload,'feedback':feedback},task+'-context-'+str(evidence_rounds))
             if 'request_context' in response: raise ValueError('Evidence request budget exhausted')
@@ -649,7 +682,7 @@ def process_job(job_id):
                     raise ValueError('Newly affected knowledge needs another bounded evidence round before editing')
             attempt_record={'job_id':job_id,'run_id':run['id'],'attempt':attempt,'response':response,'feedback':feedback,'source_snapshot_id':source_id}
             try:
-                candidate=edits.apply(source,response['edits'],db.DATA_DIR/'worktrees'/job_id/token/str(attempt))
+                candidate=edits.apply(source,response['edits'],db.DATA_DIR/'worktrees'/job_id[:12]/token[:8]/str(attempt))
                 if acceptance_coverage:
                     changed_tests={item['path']:item['after'] for item in candidate.files if item.get('hash') and is_test(item['path'])}
                     if any(changed_tests.get(path)!=content for path,content in acceptance_sources.items()):
@@ -702,7 +735,7 @@ def process_job(job_id):
                 else:
                     review_payload={'job':seed['job'],'approved_knowledge':approved,'approved_decisions':payload['approved_decisions'],
                                     'proposed_sources':[{'path':item['path'],'content':item['after']} for item in candidate.files if not item['binary']],
-                                    'checks':result,'patch':candidate.diff,'plan':plan,'acceptance_coverage':acceptance_coverage}
+                                    'checks':result,'patch':candidate.diff,'plan':plan,'acceptance_coverage':acceptance_coverage,'graph_context':payload.get('graph_context')}
                     review=call('review',review_payload,'review-'+str(attempt))
                     save(review=review)
                     references={item['path']:item.get('after') for item in candidate.files}

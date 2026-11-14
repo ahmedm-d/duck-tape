@@ -1,0 +1,60 @@
+{
+  "schema_version": "1.0",
+  "pipeline_part": "1_of_5_wave1_data_prep",
+  "branch": "feat/model-training-pipeline",
+  "training_started": false,
+  "wave_1_datasets": {
+    "router": {
+      "format": "InstructionRow",
+      "train_path": "model-training/data/processed/router.jsonl",
+      "eval_path": "model-training/data/eval/router_eval.jsonl",
+      "train_rows": 1200,
+      "eval_rows": 200,
+      "sources": [
+        "SWE-bench/SWE-smith",
+        "SWE-Gym/SWE-Gym"
+      ],
+      "adaption_run_status": "pending_web_ui_or_wave2_fallback",
+      "notes": "Primary router dataset generated interactively in Adaption Web UI; local 1,200-row backup + 200-row held-out eval ready."
+    },
+    "ticket_parser": {
+      "format": "InstructionRow",
+      "train_path": "model-training/data/processed/ticket_parser.jsonl",
+      "eval_path": "model-training/data/eval/ticket_parser_eval.jsonl",
+      "train_rows": 2500,
+      "eval_rows": 200,
+      "sources": [
+        "princeton-nlp/SWE-bench_Verified",
+        "SWE-Gym/SWE-Gym",
+        "cjsanjay/jira_train_17012024"
+      ],
+      "adaption_run_status": "ready_for_training"
+    },
+    "commit_pr_writer": {
+      "format": "InstructionRow",
+      "train_path": "model-training/data/processed/commit_pr_writer.jsonl",
+      "eval_path": "model-training/data/eval/commit_pr_writer_eval.jsonl",
+      "train_rows": 2500,
+      "eval_rows": 200,
+      "sources": [
+        "bigcode/commitpackft (python, typescript)",
+        "Maxscha/commitbench"
+      ],
+      "adaption_run_status": "ready_for_training"
+    },
+    "log_classifier": {
+      "format": "InstructionRow",
+      "train_path": "model-training/data/processed/log_classifier.jsonl",
+      "eval_path": "model-training/data/eval/log_classifier_eval.jsonl",
+      "train_rows": 2000,
+      "eval_rows": 200,
+      "sources": [
+        "logpai/loghub",
+        "TestingResearchIllinois/idoft",
+        "SWE-Gym/SWE-Gym"
+      ],
+      "adaption_run_status": "ready_for_training"
+    }
+  },
+  "runs": []
+}

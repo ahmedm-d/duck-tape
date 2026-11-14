@@ -311,6 +311,25 @@
           "license": "MIT"
         }
       ]
+    },
+    {
+      "agent": "researcher",
+      "train_file": "model-training/data/processed/researcher.jsonl",
+      "eval_file": "model-training/data/eval/researcher_eval.jsonl",
+      "train_rows": 5000,
+      "eval_rows": 200,
+      "notes": "Function snippets keep the licences of their upstream open-source projects; labels come from fix commits; graph_context is a function-level stub with no fabricated edges.",
+      "sources": [
+        {
+          "id": "colin/PrimeVul",
+          "url": "https://huggingface.co/datasets/colin/PrimeVul",
+          "license": "mit",
+          "verification": "Live GET https://huggingface.co/api/datasets/colin/PrimeVul -> cardData.license",
+          "verified_on": "2026-11-14",
+          "upstream": "https://github.com/DLVulDet/PrimeVul",
+          "upstream_license": "MIT (GitHub repository licence, verified via api.github.com on 2026-11-14)"
+        }
+      ]
     }
   ]
 }

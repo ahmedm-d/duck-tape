@@ -1,0 +1,43 @@
+{
+  "label": "LOCAL FIXTURE: illustrative GlobalEntry records for the bundled Parcel sample. Not OSV data, not a Databricks/Atlas catalogue revision and not evidence of any real vulnerability.",
+  "entries": [
+    {
+      "id": "DUCKTAPE-FIXTURE-CAT-001",
+      "kind": "vulnerability",
+      "revision": 1,
+      "content_hash": "fixture-0000000000000000000000000000000000000000000000000000000001",
+      "source_url": "fixture:DUCKTAPE-FIXTURE-CAT-001",
+      "title": "Fixture: unsafe input handling in fixture-parser",
+      "summary": "Illustrative fixture advisory: fixture-parser before 1.0.1 mishandles malformed input",
+      "status": "active",
+      "published_at": "2026-11-14T00:00:00Z",
+      "retrieved_at": "2026-11-14T00:00:00Z",
+      "affected": [{"ecosystem": "PyPI", "package": "fixture-parser", "ranges": [{"introduced": "0", "fixed": "1.0.1"}]}],
+      "limitations": ["Fixture record for local development only"]
+    },
+    {
+      "id": "DUCKTAPE-FIXTURE-CAT-002",
+      "kind": "vulnerability",
+      "revision": 1,
+      "content_hash": "fixture-0000000000000000000000000000000000000000000000000000000002",
+      "source_url": "fixture:DUCKTAPE-FIXTURE-CAT-002",
+      "title": "Fixture: npm package absent from the sample",
+      "summary": "Illustrative fixture advisory for an npm package the Parcel sample does not use",
+      "status": "active",
+      "affected": [{"ecosystem": "npm", "package": "left-pad", "versions": ["1.3.0"]}],
+      "limitations": ["Fixture record for local development only"]
+    },
+    {
+      "id": "DUCKTAPE-FIXTURE-CAT-003",
+      "kind": "vulnerability",
+      "revision": 1,
+      "content_hash": "fixture-0000000000000000000000000000000000000000000000000000000003",
+      "source_url": "fixture:DUCKTAPE-FIXTURE-CAT-003",
+      "title": "Fixture: unsupported ecosystem",
+      "summary": "Illustrative fixture advisory in an ecosystem Duck Tape cannot resolve",
+      "status": "active",
+      "affected": [{"ecosystem": "crates.io", "package": "serde", "versions": ["1.0.0"]}],
+      "limitations": ["Fixture record for local development only"]
+    }
+  ]
+}

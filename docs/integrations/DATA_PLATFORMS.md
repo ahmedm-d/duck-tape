@@ -185,3 +185,40 @@ handoff; the captain still runs aggregate acceptance on the integrated commit.
 Run `python -m pytest tests/test_data_platforms.py -q`. The tests use local SQLite, a fake MongoDB collection, and `httpx.MockTransport`. They cover disabled/no-network behavior, upload privacy, namespace separation, invalid embeddings, index readiness, exact evidence binding, failed-run inclusion, unknown usage, retries, SQL parameters, and safe cloud errors.
 
 No live cloud accounts are exercised by these tests. Worker retrieval integration, automatic exports, retention/deletion, cloud scheduling, and database migration are outside this initial adapter. Snapshot chunking and operational state remain local. The optional driver pin follows the [official PyMongo 4.20.0 release notes](https://pymongo.readthedocs.io/en/stable/changelog.html).
+
+
+## Integrated public catalogue and live evidence
+
+The C feature branch now mounts **Global catalogue** in Duck Tape. Exact public
+queries use `GET /api/global-catalogue?ecosystem=PyPI&package=requests&limit=25`,
+with `provider=local` by default and explicit `provider=atlas` for the separately
+enabled public cloud reader. `/api/global-catalogue/graph` exposes bounded public
+entry/package/source relationships with attribution and lifecycle evidence.
+No relationship asserts a private repository/version match or grants permissions.
+
+`python scripts/integrations.py catalogue-graph --ecosystem PyPI --package requests`
+returns the same bounded graph; add `--atlas` for explicit cloud lookup. CLI and
+API share `STEWARD_GLOBAL_CATALOGUE_PATH`, defaulting to `data/global/catalogue.sqlite3`.
+Only server configuration controls this path. API inputs enforce 1 to 100 results,
+64-character ecosystems and 256-character package names. Atlas failures return
+503 with unknown coverage instead of pretending the local copy is current.
+
+The earlier unmounted/unconfigured notes describe initial implementation. Current
+live evidence is recorded in `integrations/global/live-databricks-evidence.json`
+and `integrations/global/live-atlas-evidence.json`: real public Databricks curation,
+normalization within a serverless job, repeated publication/restore, Atlas stable
+revision publication and conflict preservation, and scoped publisher/reader access.
+The opt-in production browser check in `frontend/tests/global-live-api.spec.ts`
+requires `STEWARD_GLOBAL_LIVE_UI=1`, `STEWARD_TEST_URL` pointing to a configured
+isolated app, and actual Atlas reader credentials. It does not intercept responses.
+See the workspace checklist for direct cloud-to-cloud/scheduler status and exact
+final checks. The reviewed shared API/navigation files are handed back to B after
+this feature branch; private applicability matching remains outside C's scope.
+
+The live operator relay is also verified: `catalogue-restore --database <isolated-db>`
+reads bounded Databricks Delta history; `catalogue-publish --database <isolated-db>`
+then publishes from the operator's Atlas-enabled environment. See
+`integrations/global/live-relay-evidence.json` and the pipeline README for the exact
+recipe. This is a working Databricks-curated-to-Atlas path, but it does not establish
+direct serverless publication or unattended scheduling. The remote job remains
+paused after TLS connection failures and changing observed outbound IPs.

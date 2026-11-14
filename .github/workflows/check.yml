@@ -19,6 +19,9 @@ jobs:
       - run: npx playwright install --with-deps chromium
         working-directory: frontend
       - run: python scripts/acceptance.py --tier deterministic --output data/acceptance/ci
+      - name: Annotate failed gates and tests
+        if: failure()
+        run: python scripts/ci_annotations.py data/acceptance/ci
       - uses: actions/upload-artifact@v4
         if: always()
         with:

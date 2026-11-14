@@ -94,7 +94,15 @@ def refresh_repo(id, replacement=None, cancel=None, on_publish=None):
             db.put_in(con,'events',{'message':'Snapshot refreshed; dependent knowledge and pending jobs invalidated','repo_id':id,'author':'Duck Tape'})
         if on_publish: on_publish(con,updated)
         return updated
-    return db.atomic(publish)
+    published=db.atomic(publish)
+    sync_to_atlas(id,published)
+    return published
+
+
+def sync_to_atlas(id,repo):
+    """After the local commit: queue the background Atlas sync of the repository's current snapshot."""
+    from . import atlas_autosync
+    atlas_autosync.schedule(id,repo.get('source_snapshot_id') or repo['snapshot'])
 
 
 def scheduler():
@@ -124,6 +132,7 @@ async def lifespan(app):
         db.put('repositories', r)
         db.index_search(r)
         store_snapshot(r)
+        sync_to_atlas(r['id'],r)
     embedded = os.environ.get('STEWARD_EMBEDDED_WORKER') == '1'
     if embedded:
         from .worker import start_worker
@@ -249,7 +258,9 @@ def register_repo(root, name, origin, repo_id=None, cancel=None, on_publish=None
         db.put_in(con,'events',{'message':'Repository imported and indexed','repo_id':repo_id,'author':'Duck Tape'})
         if on_publish: on_publish(con,result)
         return result
-    return db.atomic(publish)
+    imported=db.atomic(publish)
+    sync_to_atlas(repo_id,imported)
+    return imported
 
 
 @app.post('/api/repositories/import',status_code=202)
@@ -600,6 +611,7 @@ def reset_sample():
     repo=seed_sample(force_new=True)
     seed_jobs(repo)
     db.index_search(repo)
+    sync_to_atlas(repo['id'],repo)
     return repo
 
 
@@ -674,11 +686,18 @@ def repository_agent_context(id:str,query:str,budget_tokens:int=3500,job_id:str|
 @app.post('/api/repositories/{id}/atlas-graph-mirror')
 def repository_atlas_graph_mirror(id:str):
     """Explicit opt-in: mirror the current snapshot's graph and approved knowledge to private Atlas."""
-    from . import atlas_graph
+    from . import atlas_autosync, atlas_graph
+    from .atlas_mode import atlas_required
     from .data_platforms import DataPlatformError
     repo=require('repositories',id)
     current=repo.get('source_snapshot_id') or repo['snapshot']
-    try: return atlas_graph.mirror(id,current)
+    try:
+        if atlas_required():
+            # Manual resync: same path as the automatic sync, so status and event are recorded.
+            summary,raw=atlas_autosync.run_sync(id,current)
+            if raw['graph_error'] is not None: raise raw['graph_error']
+            return {**raw['mirror'],'atlas_sync':summary}
+        return atlas_graph.mirror(id,current)
     except atlas_graph.MirrorRefused as exc: raise HTTPException(409,str(exc)) from None
     except DataPlatformError as exc: raise HTTPException(503,str(exc)) from None
 

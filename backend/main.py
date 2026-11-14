@@ -622,6 +622,16 @@ def _current_profile(id:str,snapshot_id:str|None=None):
     return profile_for(id,current)
 
 
+@app.get('/api/repositories/{id}/graph')
+def repository_graph(id:str,engine:str='auto'):
+    """Snapshot-bound knowledge map: Graphify when installed, else the labelled built-in symbol graph."""
+    from .graphify_graph import GraphifyUnavailable, knowledge_graph
+    repo=require('repositories',id)
+    try: return knowledge_graph(id,repo.get('source_snapshot_id') or repo['snapshot'],engine)
+    except GraphifyUnavailable as exc: raise HTTPException(503,str(exc)) from None
+    except ValueError as exc: raise HTTPException(422,str(exc)) from None
+
+
 @app.get('/api/repositories/{id}/profile')
 def repository_profile(id:str):
     return _current_profile(id)

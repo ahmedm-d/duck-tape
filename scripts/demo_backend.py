@@ -63,6 +63,8 @@ def workspace(root: Path):
     atlas = json.loads((root / MANIFEST).read_text(encoding='utf-8')).get('atlas_retrieval', False)
     changes = {'STEWARD_DATA_DIR': str(root / 'store'), 'STEWARD_SANDBOX_STATE': str(root / 'store' / 'sandbox'),
                'STEWARD_GLOBAL_CATALOGUE_PATH': str(root / 'catalogue.sqlite3'),
+               # This controller performs only the explicitly requested, synchronous vector sync.
+               'STEWARD_ATLAS_REQUIRED': '0', 'STEWARD_ATLAS_GRAPH_MIRROR': '0',
                'STEWARD_ATLAS_RETRIEVAL': '1' if atlas else '0', 'STEWARD_GRAPH_ENGINE': 'builtin'}
     if not atlas:
         changes['STEWARD_EMBEDDING_MODEL'] = ''

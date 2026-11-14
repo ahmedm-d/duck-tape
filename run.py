@@ -31,6 +31,10 @@ if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--port',type=int,default=8765)
     args=parser.parse_args()
+    # Option B: Atlas is a compulsory part of repository knowledge. Importing backend.main never runs this check.
+    from backend import atlas_startup
+    try: atlas_startup.check_atlas_ready()
+    except atlas_startup.AtlasStartupError as exc: raise SystemExit('Duck Tape cannot start: '+str(exc)) from None
     stop=threading.Event()
     children=[]
     instance_id=uuid.uuid4().hex

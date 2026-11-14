@@ -1,6 +1,6 @@
 # B's Databricks graph integration boundary
 
-B is implementing Databricks repository processing separately; that code was not present in the fetched branches on 14 November 2026. This contract describes the existing consumers, not proof that a remote graph job ran.
+B's `feat/repo/atlas-required` branch implements automatic private Atlas projection and validated `$graphLookup` traversal. It does not implement a Databricks private-graph producer. The contract below still applies if that producer is added; it is not proof that a remote Databricks graph job ran.
 
 | Consumer | Stable interface |
 | --- | --- |
@@ -18,7 +18,7 @@ Propagate cancellation through polling and check it before publication. Do not h
 
 ## Privacy and shared files
 
-The private graph pipeline is separate from C's public vulnerability curation. Private source, profiles and decisions must never enter `ducktape_public`. Team notes never enter either pipeline or model context. Source-derived uploads need explicit configuration and separate credentials. Atlas remains optional for repository graphs; the mandatory-Atlas request was cancelled.
+The private graph pipeline is separate from C's public vulnerability curation. Private source, profiles and decisions must never enter `ducktape_public`. Team notes never enter either pipeline or model context. The integration request explicitly supersedes the earlier cancelled requirement: Atlas is now required by default. Read the accepted [private projection policy](hackathon/KNOWLEDGE_CONTRACT.md); embeddings, graph metadata and approved knowledge use separate private credentials. Remote embeddings require explicit provider configuration.
 
 B owns producer/retrieval changes. The release branch adds consumer scope checks in `agent_context.py` and `_graphify_edges` in `retrieval.py`; preserve these on merge. Coordinate `main.py`, `data_platforms.py`, `workflow.py`, config and routes with the integration captain. A's worker already consumes this context; do not apply the historical training handoff patch again.
 

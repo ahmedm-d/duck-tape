@@ -48,6 +48,8 @@ Use the existing [Atlas and Databricks setup](BACKEND_DEMO_HANDOFF.md). Public c
 - Run actual Databricks curation, retain its cloud run ID, restore Delta output and publish it to the public Atlas catalogue using the scoped publisher. Configure the app's separate read-only user.
 - Prepare a fresh demo with `--catalogue atlas` instead of `--refresh-public`. Verify its selected entry revision/hash against the cloud curation record.
 - Add `--atlas-retrieval` only after configuring private vector credentials, embedding model/dimensions and index. This explicitly permits source-derived embedding/vector upload for the demo fixtures. The runner requires Atlas evidence in the actual worker context, not just in a separate query.
+
+The isolated demo/qualification controllers suppress background graph autosync even when the operator's normal app requires Atlas. `--atlas-retrieval` performs its explicit synchronous vector upload. This prevents daemon threads outliving a temporary store; separately run the app's required-Atlas startup/projection/graph check for full integration evidence.
 - Add `--export-metrics` to export the exact verified terminal run through the existing retry-safe Databricks MERGE. Export failures stay visible and do not erase successful patch verification.
 - Keep the Databricks curation run evidence with the generated manifest. The runner cannot establish scheduled cloud delivery from a local record or configuration flag.
 

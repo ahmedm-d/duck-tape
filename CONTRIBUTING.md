@@ -65,7 +65,7 @@ python scripts/setup.py
 .venv/bin/python scripts/acceptance.py --tier deterministic
 ```
 
-On Windows use .venv/Scripts/python. The setup builds the frontend; browser checks also need Playwright Chromium (cd frontend && npx playwright install chromium) or STEWARD_BROWSER_EXECUTABLE pointing to installed Chrome. Atlas adds optional requirements-cloud.txt; the offline app needs no cloud account.
+On Windows use .venv/Scripts/python. The setup builds the frontend; browser checks also need Playwright Chromium (cd frontend && npx playwright install chromium) or STEWARD_BROWSER_EXECUTABLE pointing to installed Chrome. Atlas dependencies are pinned in requirements.lock. Normal startup requires the private Atlas configuration; deterministic gates explicitly set STEWARD_ATLAS_REQUIRED=0 and never qualify the live integration.
 
 Report test scope honestly. Mocked HTTP is a contract test, not live integration. Record model ID, provider, snapshot, check results, latency and known usage for real runs. Never claim training or a measured improvement from a health probe.
 

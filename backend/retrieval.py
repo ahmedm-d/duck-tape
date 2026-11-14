@@ -119,7 +119,7 @@ def _cosine(first, second):
     return sum(a*b for a, b in zip(first, second)) / divisor if divisor else 0
 
 
-def _atlas_candidates(repo_id, snapshot_id, query, available, limit, cancel):
+def _atlas_candidates(repo_id, snapshot_id, query, available, limit, cancel, required=False):
     """Opt-in Atlas vector candidates, accepted only when they resolve to local eligible chunks."""
     from . import data_platforms
     _check(cancel)
@@ -130,6 +130,8 @@ def _atlas_candidates(repo_id, snapshot_id, query, available, limit, cancel):
     except Exception as exc:
         _check(cancel)
         reason = str(exc) if isinstance(exc, data_platforms.DataPlatformError) else type(exc).__name__
+        if required:
+            return [], f'Atlas was required but unavailable ({reason}); degraded to local keyword/graph fallback'
         return [], f'Atlas candidates unavailable ({reason}); local keyword/graph fallback'
     _check(cancel)
     hits = [(item['chunk_id'], item['score']) for item in result.get('matches', []) if item.get('chunk_id') in available]
@@ -233,7 +235,9 @@ def retrieve(repo_id, snapshot_id, query=None, budget_tokens=7000, paths=None, *
         except Exception as exc:
             _check(cancel)
             semantic_note = f'Embedding provider unavailable ({type(exc).__name__}); keyword/graph fallback'
-    use_atlas = not legacy and (atlas if atlas is not None else os.getenv('STEWARD_ATLAS_RETRIEVAL') == '1')
+    from .atlas_mode import atlas_required
+    required = atlas is None and atlas_required()
+    use_atlas = not legacy and (atlas if atlas is not None else required or os.getenv('STEWARD_ATLAS_RETRIEVAL') == '1')
     atlas_used, atlas_note = False, None
     by_path = {}
     for key, chunk in available.items():
@@ -274,7 +278,7 @@ def retrieve(repo_id, snapshot_id, query=None, budget_tokens=7000, paths=None, *
                 reasons.setdefault(keys[0], ['repository documentation/configuration context'])
     local_scores = dict(scores)
     if use_atlas and available:
-        hits, atlas_note = _atlas_candidates(repo_id, snapshot_id, query, available, limit, cancel)
+        hits, atlas_note = _atlas_candidates(repo_id, snapshot_id, query, available, limit, cancel, required)
         for key, score in hits:
             scores.setdefault(key, score * 20)
             reasons.setdefault(key, []).append(f'Atlas vector candidate {score:.3f}')

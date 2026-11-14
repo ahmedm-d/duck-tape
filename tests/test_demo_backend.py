@@ -13,6 +13,20 @@ def runner():
     return demo_backend
 
 
+def test_offline_prepare_suppresses_ambient_atlas_autosync(tmp_path, monkeypatch):
+    from backend import atlas_autosync
+    monkeypatch.setenv('STEWARD_ATLAS_REQUIRED', '1')
+    monkeypatch.setenv('STEWARD_ATLAS_GRAPH_MIRROR', '1')
+    monkeypatch.setattr(atlas_autosync, 'RUN_INLINE', True)
+    uploads = []
+    monkeypatch.setattr(atlas_autosync, 'sync_snapshot', lambda *args: uploads.append(args) or {})
+    runner().prepare(tmp_path / 'offline')
+    assert uploads == []
+    import os
+    assert os.environ['STEWARD_ATLAS_REQUIRED'] == '1'
+    assert os.environ['STEWARD_ATLAS_GRAPH_MIRROR'] == '1'
+
+
 def test_prepare_isolated_generic_sources_without_inference_or_execution(tmp_path, monkeypatch):
     def forbidden(*args, **kwargs):
         pytest.fail('Preparation without explicit execution must not call inference or Docker')

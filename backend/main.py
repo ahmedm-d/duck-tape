@@ -94,7 +94,15 @@ def refresh_repo(id, replacement=None, cancel=None, on_publish=None):
             db.put_in(con,'events',{'message':'Snapshot refreshed; dependent knowledge and pending jobs invalidated','repo_id':id,'author':'Duck Tape'})
         if on_publish: on_publish(con,updated)
         return updated
-    return db.atomic(publish)
+    published=db.atomic(publish)
+    sync_to_atlas(id,published)
+    return published
+
+
+def sync_to_atlas(id,repo):
+    """After the local commit: queue the background Atlas sync of the repository's current snapshot."""
+    from . import atlas_autosync
+    atlas_autosync.schedule(id,repo.get('source_snapshot_id') or repo['snapshot'])
 
 
 def scheduler():
@@ -124,6 +132,7 @@ async def lifespan(app):
         db.put('repositories', r)
         db.index_search(r)
         store_snapshot(r)
+        sync_to_atlas(r['id'],r)
     embedded = os.environ.get('STEWARD_EMBEDDED_WORKER') == '1'
     if embedded:
         from .worker import start_worker
@@ -200,8 +209,11 @@ def health():
 def global_catalogue_query(ecosystem: str = Query(min_length=1, max_length=64),
                            package: str = Query(min_length=1, max_length=256),
                            limit: int = Query(default=25, ge=1, le=100),
-                           provider: Literal['local', 'atlas'] = 'local') -> dict:
+                           provider: Literal['local', 'atlas'] | None = None) -> dict:
+    # Resolve at request time so required mode and explicit local readers remain distinct.
+    from .atlas_mode import atlas_required
     from .global_catalogue import Catalogue, default_path
+    provider = provider or ('atlas' if atlas_required() else 'local')
     if provider == 'atlas':
         from .global_pipeline import query_atlas, Error
         try:
@@ -215,7 +227,7 @@ def global_catalogue_query(ecosystem: str = Query(min_length=1, max_length=64),
 def global_catalogue_graph(ecosystem: str = Query(min_length=1, max_length=64),
                            package: str = Query(min_length=1, max_length=256),
                            limit: int = Query(default=25, ge=1, le=100),
-                           provider: Literal['local', 'atlas'] = 'local') -> dict:
+                           provider: Literal['local', 'atlas'] | None = None) -> dict:
     from .global_catalogue import graph_result
     return graph_result(global_catalogue_query(ecosystem, package, limit, provider))
 
@@ -256,7 +268,9 @@ def register_repo(root, name, origin, repo_id=None, cancel=None, on_publish=None
         db.put_in(con,'events',{'message':'Repository imported and indexed','repo_id':repo_id,'author':'Duck Tape'})
         if on_publish: on_publish(con,result)
         return result
-    return db.atomic(publish)
+    imported=db.atomic(publish)
+    sync_to_atlas(repo_id,imported)
+    return imported
 
 
 @app.post('/api/repositories/import',status_code=202)
@@ -631,6 +645,7 @@ def reset_sample():
     repo=seed_sample(force_new=True)
     seed_jobs(repo)
     db.index_search(repo)
+    sync_to_atlas(repo['id'],repo)
     return repo
 
 
@@ -717,11 +732,17 @@ def repository_agent_context(id:str,query:str,budget_tokens:int=3500,job_id:str|
 @app.post('/api/repositories/{id}/atlas-graph-mirror')
 def repository_atlas_graph_mirror(id:str):
     """Explicit opt-in: mirror the current snapshot's graph and approved knowledge to private Atlas."""
-    from . import atlas_graph
+    from . import atlas_autosync, atlas_graph
     from .data_platforms import DataPlatformError
     repo=require('repositories',id)
     current=repo.get('source_snapshot_id') or repo['snapshot']
-    try: return atlas_graph.mirror(id,current)
+    try:
+        if atlas_autosync.should_sync():
+            # Manual resync: same path as the automatic sync, so status and event are recorded.
+            summary,raw=atlas_autosync.run_sync(id,current)
+            if raw['graph_error'] is not None: raise raw['graph_error']
+            return {**raw['mirror'],'atlas_sync':summary}
+        return atlas_graph.mirror(id,current)
     except atlas_graph.MirrorRefused as exc: raise HTTPException(409,str(exc)) from None
     except DataPlatformError as exc: raise HTTPException(503,str(exc)) from None
 
@@ -747,7 +768,7 @@ def repository_applicability(id:str,body:dict):
 def applicability_catalogue(id:str,body:dict):
     """Match the public catalogue against this repository's resolved dependencies; creates no jobs.
 
-    Body: {snapshot_id?, provider: 'local'|'atlas' (default 'local'), limit?: 1..100 per package}.
+    Body: {snapshot_id?, provider: 'local'|'atlas' (default 'atlas' when Atlas is required, else 'local'), limit?: 1..100 per package}.
     provider=atlas sends the exact ecosystem/package names from the private profile to the public
     catalogue cluster, so it is an explicit choice; local reads only the separate local catalogue file.
     An Atlas failure is HTTP 503 with unknown coverage, never a silent local fallback. Coverage is always
@@ -759,7 +780,10 @@ def applicability_catalogue(id:str,body:dict):
 
 def _catalogue_assessment(id,body,*,include_graphs=False,cancel=None,all_entries=False):
     from .applicability import from_global_entry, match
-    provider=body.get('provider','local')
+    from .atlas_mode import atlas_required
+    # Required mode uses the separately configured public catalogue reader.
+    provider=body.get('provider')
+    if provider is None: provider='atlas' if atlas_required() else 'local'
     limit=body.get('limit',25)
     if provider not in ('local','atlas'): raise HTTPException(422,"provider must be 'local' or 'atlas'")
     if type(limit) is not int or not 1<=limit<=100: raise HTTPException(422,'limit must be an integer from 1 to 100')

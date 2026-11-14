@@ -31,6 +31,11 @@ class FakeReplaceOne:
 class FakeCollection:
     def __init__(self):
         self.documents = {}
+        self.indexes = {}
+
+    def create_index(self, keys, name=None):
+        self.indexes[name] = list(keys)
+        return name
 
     def bulk_write(self, operations, ordered=False):
         for operation in operations:
@@ -119,7 +124,7 @@ def test_incomplete_atlas_config_or_public_database_is_refused(atlas, monkeypatc
         atlas_graph.mirror(REPO, 'snap-1')
     enable(monkeypatch)
     monkeypatch.setenv('STEWARD_ATLAS_DATABASE', 'ducktape_public')
-    with pytest.raises(atlas_graph.MirrorRefused, match='private database'):
+    with pytest.raises(atlas_graph.MirrorRefused, match='incomplete or invalid'):
         atlas_graph.mirror(REPO, 'snap-1')
     assert atlas.opened == []
 
@@ -152,6 +157,28 @@ def test_mirror_writes_nodes_edges_and_approved_knowledge_with_expected_fields(a
         'id': 'k1', 'title': 'Title k1', 'content': 'Use integer cents.', 'scope': '*', 'version': 2,
         'updated_at': stored['updated_at']}
     assert 'evidence' not in entry and 'author' not in entry
+
+
+@pytest.mark.parametrize('path,content,expected', [
+    ('code.py', 'def total(items):\n    return PRIVATE_BODY(items)\n', 'def total(items):'),
+    ('code.py', 'def total(items): return PRIVATE_BODY(items)\nPRIVATE_NEXT()\n', 'def total(items):'),
+    ('code.py', 'async def total(\n    items: dict[str, int],\n):\n    return PRIVATE_BODY(items)\n',
+     'async def total( items: dict[str, int], ):'),
+    ('code.py', 'class Total: PRIVATE_BODY()\n', 'class Total:'),
+    ('code.py', 'def total(\n    items, # PRIVATE_HEADER_COMMENT\n):\n    return PRIVATE_BODY(items)\n', None),
+    ('code.js', 'const total = items => PRIVATE_BODY(items);\n', None),
+    ('code.ts', 'export function total(items: number): number { return PRIVATE_BODY(items); }\n', None),
+])
+def test_graph_projection_never_uploads_function_bodies(path, content, expected):
+    graph = {'engine': 'duck-tape-symbols', 'graph_hash': 'h', 'edges': [],
+             'nodes': [{'id': 'symbol:total', 'kind': 'function', 'label': 'total', 'path': path, 'line': 1}]}
+    index = {'files': [{'path': path, 'content': content}]}
+
+    documents, _ = atlas_graph._documents(REPO, 'snap-1', graph, index)
+
+    projected = next(iter(documents['nodes'].values()))
+    assert projected['signature'] == expected
+    assert 'PRIVATE_' not in str(projected)
 
 
 def test_notes_drafts_stale_conflicting_and_other_repositories_are_never_written(atlas, monkeypatch):

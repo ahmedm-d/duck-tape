@@ -1,5 +1,7 @@
 # Duck Tape
 
+Atlas-required integration: [review fixes, release gates and model handoff](docs/ATLAS_INTEGRATION.md).
+
 Backend integration: [repeatable backend demo](docs/BACKEND_DEMO_RUNBOOK.md) | [completion plan](docs/BACKEND_COMPLETION.md) · [frontend API, demo and MongoDB/Databricks/model setup](docs/BACKEND_DEMO_HANDOFF.md). B/C knowledge graphs and catalogue-backed durable scans are connected; currently training Adaption artifacts still require serving and live qualification.
 
 Duck Tape is a local, AI-assisted code-maintenance workspace. It understands a repository, turns maintenance signals into persistent jobs, prepares isolated Git patches, and gives developers a diff with evidence to review.
@@ -24,9 +26,9 @@ Start with the [A/B/C team plan](docs/hackathon/TEAM_PLAN.md), [three copy-paste
 
 **B and C both work frontend and backend**, handing shared files back and forth with one editor per shared file. B starts as integration captain; the role can be handed to C. Exact ownership and commit rules are in [AGENTS.md](AGENTS.md) and [CONTRIBUTING.md](CONTRIBUTING.md). Fetch current `origin/main` into separate branches/worktrees; preserve shared history.
 
-The [internal stack](docs/integrations/README.md) uses **Hugging Face and Adaption for agent inference**, **MongoDB Atlas** for optional private vector search and a separate public catalogue, and **Databricks** for public catalogue curation and explicit terminal-run metrics export. SQLite remains the transactional workflow authority. These services power Duck Tape, never dependencies installed into imported repositories.
+The [internal stack](docs/integrations/README.md) uses **Hugging Face and Adaption for agent inference**, **MongoDB Atlas** for the required private repository knowledge projection and a separate public catalogue, and **Databricks** for public catalogue curation and explicit terminal-run metrics export. SQLite remains the transactional workflow authority. These services power Duck Tape, never dependencies installed into imported repositories.
 
-**Implemented:** B/C repository profiles, local applicability matching, catalogue-backed scheduled scans, atomic evidence binding, snapshot-scoped graph/context APIs, optional Atlas vectors and graph projection, public Delta-to-Atlas publication and typed model/worker execution. **External qualification pending:** currently training Adaption artifacts, fresh cloud-account execution and B's new Databricks private-graph implementation. Existing cloud evidence is historical; direct Databricks-to-Atlas publication/scheduling is not claimed working. See [release plan](docs/BACKEND_RELEASE_PLAN.md), [B's graph boundary](docs/REPO_GRAPH_HANDOFF.md) and [operator setup](docs/BACKEND_DEMO_HANDOFF.md).
+**Implemented:** B/C repository profiles, local applicability matching, catalogue-backed scheduled scans, atomic evidence binding, snapshot-scoped graph/context APIs, automatic private Atlas projection and validated Atlas graph traversal, public Delta-to-Atlas publication and typed model/worker execution. **External qualification pending:** currently training Adaption artifacts and fresh cloud-account execution on the integrated version. B's Atlas branch does not implement a Databricks private-graph producer. Existing cloud evidence is historical; direct Databricks-to-Atlas publication/scheduling is not claimed working. See [release plan](docs/BACKEND_RELEASE_PLAN.md), [B's graph boundary](docs/REPO_GRAPH_HANDOFF.md) and [operator setup](docs/BACKEND_DEMO_HANDOFF.md).
 
 
 **Submission provenance:** the supplied event rules require code written during the hackathon and a public repository. This project contains existing implementation, and its history was consolidated before this work. The new Git history is not proof of when the code was written. Confirm eligibility and disclose existing work before submitting; see the [submission checklist](docs/hackathon/SUBMISSION.md). This foundation does not change repository visibility.
@@ -65,7 +67,7 @@ See [verification and limitations](docs/VERIFICATION.md), the [14-journey accept
 | Persistence | SQLite for repositories, snapshots, graph/index records, knowledge, jobs, revisions, checks and audit events |
 | Execution | Separate supervised worker, durable work items, leases, checkpoints and cancellation |
 | Agent inference | Hugging Face open-weight inference and Adaption Responses; server-side routing, validation and a separate review pass |
-| Repository memory | MongoDB Atlas vector projection with repository/snapshot filters and local source evidence; SQLite local fallback |
+| Repository memory | Required private Atlas graph, approved knowledge and vector projection; repository/snapshot filters, validated local evidence and labelled retrieval fallback |
 | Agent evaluation | Databricks SQL export of measured terminal-run outcomes, verification and usage; unknown values remain unknown |
 | Knowledge map | Graphify 0.9.108 (Apache-2.0) code-only AST graph per immutable snapshot, revalidated against indexed files and cached in SQLite; built-in parser graph as labelled fallback |
 | Global knowledge | Local applicability and catalogue scans implemented; Databricks public curation and explicit Atlas publication adapters; [B/C contract](docs/hackathon/KNOWLEDGE_CONTRACT.md) |
@@ -75,7 +77,7 @@ Source lives in `backend/`, `frontend/`, `scripts/`, `sandbox/` and `tests/`. Ru
 
 ## Start
 
-Prerequisites: Python 3.13+, Node 22.12+ and Git. From this directory:
+Prerequisites: Python 3.13+, Node 22.12+, Git and the private Atlas configuration in [operator setup](docs/BACKEND_DEMO_HANDOFF.md). Copy `.env.example` to an ignored `.env` and configure Atlas before starting. From this directory:
 
 ```powershell
 python scripts/setup.py
@@ -86,7 +88,7 @@ Open **http://127.0.0.1:8765**. On macOS/Linux use `.venv/bin/python`. One start
 
 For sandbox execution, install a working Linux Docker runtime and build the pinned images with `python scripts/setup.py --sandbox`. The optional setup command performs no privileged installation. If Docker is unavailable, repository analysis and patch export still work; only the reviewed sample fixtures can execute through the restricted host fallback.
 
-Configure an open-weight Ollama or OpenAI-compatible endpoint in Settings or the project's `.env` (see [.env.example](.env.example)). Credentials belong only in the server environment. No proprietary model, account or paid service is required. Run `.venv/Scripts/python scripts/doctor.py` to inspect actual local capabilities.
+Configure an open-weight Ollama or OpenAI-compatible endpoint in Settings or the project's `.env` (see [.env.example](.env.example)). Credentials belong only in the server environment. No proprietary inference model is required. Atlas is required by default: startup performs a TLS-verified ping; complete vector sync also needs a configured embedding model and matching search index. `STEWARD_ATLAS_REQUIRED=0` is the explicit isolated test/demo escape hatch, not proof of Atlas operation. Run `.venv/Scripts/python scripts/doctor.py` to inspect actual local capabilities.
 
 ## Demo walkthrough
 

@@ -29,11 +29,13 @@ def local_url(value):
 
 def commands(tier,output,url=None):
     output=Path(output).resolve(); gates=[]
-    clean={**dict.fromkeys(SWITCHES,'0'),'STEWARD_TEST_URL':None,'PYTEST_DISABLE_PLUGIN_AUTOLOAD':'1',
+    # STEWARD_ATLAS_REQUIRED=0 is the test/CI escape hatch: gates (including the run.py restart gate) never contact Atlas.
+    clean={**dict.fromkeys(SWITCHES,'0'),'STEWARD_ATLAS_REQUIRED':'0','STEWARD_TEST_URL':None,'PYTEST_DISABLE_PLUGIN_AUTOLOAD':'1',
            'PYTHONPATH':os.pathsep.join(filter(None,[str(ROOT),str(ROOT/'vendor-current'),os.environ.get('PYTHONPATH')]))}
     npm=shutil.which('npm.cmd' if os.name=='nt' else 'npm') or 'npm'
     def add(identity,group,argv,needs=(),env=None,cwd=ROOT,timeout=600,**artifacts):
-        gates.append({'id':identity,'tier':group,'argv':argv,'cwd':str(cwd),'env':{**clean,**(env or {})},'prerequisites':list(needs),'required':True,'timeout_seconds':timeout,**artifacts})
+        offline=dict.fromkeys(('STEWARD_ATLAS_ENABLED','STEWARD_ATLAS_GRAPH_MIRROR','STEWARD_ATLAS_RETRIEVAL'),'0') if group=='deterministic' else {}
+        gates.append({'id':identity,'tier':group,'argv':argv,'cwd':str(cwd),'env':{**clean,**offline,**(env or {})},'prerequisites':list(needs),'required':True,'timeout_seconds':timeout,**artifacts})
     def pytest(identity,group,paths,needs=(),env=None,timeout=600,extra=()):
         junit=str(output/(identity+'.xml'))
         add(identity,group,[sys.executable,'-m','pytest',*paths,*extra,'-q','-p','no:cacheprovider','--junitxml='+junit],needs,env,timeout=timeout,junit=junit,allow_skips=group=='deterministic')

@@ -14,6 +14,7 @@ import re
 from collections import Counter
 
 from . import db, graphify_graph, retrieval
+from .atlas_mode import atlas_required
 from .symbols import JS_SUFFIXES
 
 SCHEMA = 'graph_context v1'
@@ -148,7 +149,8 @@ def _catalogue_match(index: dict, found: dict, entry_id: str, revision, kind) ->
             'usage': usage}
 
 
-def _blast(index, graph, focal_paths, focal_symbols):
+def _local_blast(index, graph, focal_paths):
+    """Dependent files, linked tests and communities from this snapshot's own static edges (full, untruncated)."""
     edges = [edge for edge in index.get('edges', []) if edge.get('kind') in FILE_EDGES]
     category = {item['path']: item.get('category') for item in index.get('files', []) if item.get('path')}
     dependents = sorted({edge['source'] for edge in edges if edge.get('target') in focal_paths and edge.get('source') not in focal_paths})
@@ -158,12 +160,68 @@ def _blast(index, graph, focal_paths, focal_symbols):
     if graph['engine'] == 'graphify':
         touched = {node['community'] for node in graph['nodes'] if node.get('path') in set(focal_paths) | set(dependents) and type(node.get('community')) is int}
         communities = len(touched) or None
+    return dependents, tests, communities
+
+
+def _blast_result(dependents, tests, communities, focal_symbols, note='', transitive=None):
     high = any(item.get('high_degree') for item in focal_symbols)
     risk = 'high' if high or len(dependents) >= 5 or (communities or 0) > 2 else 'medium' if len(dependents) >= 2 else 'low'
     basis = (f'Heuristic from static edges in this snapshot: {len(dependents)} dependent file(s), high-degree focal symbol: {"yes" if high else "no"}'
-             + (f', {communities} community(ies) touched' if communities else '') + '. Dynamic dispatch is not counted.')
-    return {'dependent_files': dependents[:20], 'communities_touched': communities, 'linked_test_files': tests[:20],
-            'structural_risk': risk, 'basis': basis}
+             + (f', {communities} community(ies) touched' if communities else '') + '. Dynamic dispatch is not counted.' + note)
+    result = {'dependent_files': dependents[:20], 'communities_touched': communities, 'linked_test_files': tests[:20],
+              'structural_risk': risk, 'basis': basis}
+    if transitive is not None:
+        result['transitive_dependent_files'] = transitive[:20]
+    return result
+
+
+def _atlas_wanted() -> bool:
+    return atlas_required() or os.getenv('STEWARD_ATLAS_GRAPH_MIRROR') == '1'
+
+
+def _atlas_blast(repo_id, snapshot_id, graph, focal_paths, focal, local):
+    """Ask Atlas ($graphLookup over the mirrored edges); return (blast result or None, scope.atlas, gap or None).
+
+    Atlas data is used only when the mirror holds exactly this snapshot and agrees with the local graph.
+    Anything else keeps the local values and records a precise gap; a stale snapshot is never served.
+    """
+    scope = {'served': False, 'collections': ['repo_nodes', 'repo_edges'], 'snapshot_id': snapshot_id}
+    if not _atlas_wanted():
+        return None, {**scope, 'reason': 'Atlas is not required and the graph mirror is not enabled'}, None
+    if not focal_paths:
+        return None, {**scope, 'reason': 'no focal files to look up'}, None
+    from . import atlas_graph
+    from .data_platforms import DataPlatformError
+    ids = {node['path']: node['id'] for node in graph['nodes'] if node.get('kind') == 'file' and node.get('path') in set(focal_paths)}
+    node_ids = [ids.get(path, 'file:' + path) for path in focal_paths] + [item['node_id'] for item in focal]
+    try:
+        found = atlas_graph.atlas_blast_radius(repo_id, snapshot_id, focal_paths, node_ids)
+    except DataPlatformError as exc:
+        reason = str(exc)[:160]
+        return None, {**scope, 'reason': reason}, f'Atlas blast radius unavailable ({reason}); local graph used'
+    if not found or not found.get('served'):
+        reason = (found or {}).get('reason') or 'no result'
+        return None, {**scope, 'reason': reason}, f'Atlas blast radius unavailable ({reason}); local graph used'
+    dependents, tests, communities = local
+    # Validate the same two reverse hops locally before treating remote paths as snapshot evidence.
+    frontier = set(node_ids)
+    for _ in range(2):
+        frontier = {edge['source'] for edge in graph['edges']
+                    if edge.get('relation') in FILE_EDGES and edge.get('target') in frontier}
+    transitive = {node['path'] for node in graph['nodes'] if node['id'] in frontier and node.get('path')}
+    transitive -= set(dependents) | set(focal_paths)
+    differences = []
+    for label, mine, theirs in (('dependent', dependents, found['dependent_files']), ('test', tests, found['linked_test_files']),
+                               ('transitive', transitive, found['transitive_dependent_files'])):
+        extra, missing = sorted(set(theirs) - set(mine)), sorted(set(mine) - set(theirs))
+        if extra or missing:
+            differences.append(f'{label} files +{len(extra)}/-{len(missing)}')
+    if found['communities_touched'] != communities:
+        differences.append(f'communities {found["communities_touched"]} vs {communities}')
+    if differences:
+        reason = 'differs from local graph: ' + ', '.join(differences)
+        return None, {**scope, 'reason': reason}, f'Atlas blast radius differs from local graph: {"; ".join(differences)}; local used'
+    return found, {**scope, 'served': True, 'database': found['database']}, None
 
 
 def agent_graph_context(repo_id: str, snapshot_id: str, query: str, budget_tokens: int = 3500, *, job: dict | None = None,
@@ -230,6 +288,18 @@ def agent_graph_context(repo_id: str, snapshot_id: str, query: str, budget_token
                           'suggestion_only': bool(edge.get('suggestion_only')), 'evidence': edge.get('evidence')})
     edges.sort(key=lambda item: (item['confidence'] != 'EXTRACTED', item['relation'], item['source'], item['target']))
 
+    dependents, tests, communities = local = _local_blast(index, graph, focal_paths)
+    served, atlas_scope, atlas_gap = _atlas_blast(repo_id, snapshot_id, graph, focal_paths, focal, local)
+    if atlas_gap:
+        gaps.append(atlas_gap)
+    if served:
+        note = (f' Computed in MongoDB Atlas with $graphLookup over {served["database"]}.repo_edges (snapshot {snapshot_id}), '
+                f'{served["hops"]} hops; it agrees with the local graph.')
+        blast = _blast_result(served['dependent_files'], served['linked_test_files'], served['communities_touched'], focal, note,
+                              served['transitive_dependent_files'])
+    else:
+        blast = _blast_result(dependents, tests, communities, focal)
+
     matches = []
     if job and isinstance(job.get('catalogue'), dict) and isinstance(job.get('applicability'), dict):
         if job['catalogue'].get('snapshot_id') not in (None, snapshot_id):
@@ -246,9 +316,9 @@ def agent_graph_context(repo_id: str, snapshot_id: str, query: str, budget_token
     result = {
         'schema': SCHEMA,
         'scope': {'repo_id': repo_id, 'snapshot_id': snapshot_id, 'engine': graph['engine'], 'engine_version': graph.get('engine_version'),
-                  'graph_hash': graph.get('graph_hash')},
+                  'graph_hash': graph.get('graph_hash'), 'atlas': atlas_scope},
         'focal_symbols': focal, 'edges': edges[:60],
-        'blast_radius': _blast(index, graph, focal_paths, focal),
+        'blast_radius': blast,
         'catalogue_matches': matches,
         'approved_knowledge': [{key: record.get(key) for key in ('id', 'title', 'content', 'scope', 'version')} for record in context.get('knowledge', [])],
         'gaps': list(dict.fromkeys(gaps)),

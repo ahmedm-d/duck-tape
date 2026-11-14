@@ -92,6 +92,22 @@ def _invalidate(con, repo_id, scopes):
         if job.get('repo_id') == repo_id and job.get('status') in ACTIVE and (not paths or any(_scoped(scope, paths) for scope in scopes)):
             db.put_in(con, 'jobs', {**job, 'status': 'Failed', 'approval': None, 'lease_token': None,
                                   'lease_until': 0, 'error': 'Applicable approved knowledge changed; retry with current decisions.'})
+    _dirty_atlas(con, repo_id)
+
+
+def _dirty_atlas(con, repo_id):
+    repo = db.get_in(con, 'repositories', repo_id)
+    repo['atlas_knowledge_revision'] = repo.get('atlas_knowledge_revision', 0) + 1
+    if repo.get('atlas_sync'):
+        repo['atlas_sync'] = {**repo['atlas_sync'], 'status': 'pending'}
+    db.put_in(con, 'repositories', repo)
+
+
+def _schedule_atlas(repo_id):
+    from . import atlas_autosync
+    repo = db.get('repositories', repo_id)
+    if repo:
+        atlas_autosync.schedule(repo_id, repo.get('source_snapshot_id') or repo['snapshot'])
 
 
 def create(body):
@@ -112,7 +128,10 @@ def create(body):
             _invalidate(con, repo['id'], [entry['scope']])
         db.put_in(con, 'events', {'message': 'Knowledge created: ' + entry['title'], 'repo_id': repo['id'], 'author': entry['author']})
         return result
-    return db.atomic(save)
+    result = db.atomic(save)
+    if result['status'] == 'team-approved':
+        _schedule_atlas(result['repo_id'])
+    return result
 
 
 def history(entry_id):
@@ -141,11 +160,15 @@ def revise(entry_id, changes, expected_version=None, expected_snapshot=None):
         entry.update(version=previous.get('version', 1) + 1, last_validated_snapshot=repo['snapshot'], author='Alex · demo member',
                      approval_state='approved' if entry['status'] == 'team-approved' else 'pending')
         result = _save(con, entry)
-        if previous.get('status') == 'team-approved' or entry['status'] == 'team-approved':
+        needs_sync = previous.get('status') == 'team-approved' or entry['status'] == 'team-approved'
+        if needs_sync:
             _invalidate(con, entry['repo_id'], [previous.get('scope', '*'), entry['scope']])
         db.put_in(con, 'events', {'message': 'Knowledge revised: ' + entry['title'], 'repo_id': entry['repo_id'], 'author': entry['author']})
-        return result
-    return db.atomic(save)
+        return result, needs_sync
+    result, needs_sync = db.atomic(save)
+    if needs_sync:
+        _schedule_atlas(result['repo_id'])
+    return result
 
 
 def approve(entry_id, version, snapshot_id):
@@ -178,6 +201,7 @@ def invalidate_snapshot(repo_id, old_index, current_index, con=None, changed_pat
     current = {f['path']: f.get('hash') for f in current_index['files'] if f.get('status') == 'indexed'}
     changed = changed_paths if changed_paths is not None else [path for path in old.keys() | current.keys() if old.get(path) != current.get(path)]
     def invalidate(con):
+        needs_sync = False
         for row in con.execute("SELECT data FROM records WHERE kind='knowledge'").fetchall():
             entry = json.loads(row[0])
             if entry.get('repo_id') != repo_id or entry.get('status') in {'rejected', 'stale'}:
@@ -189,10 +213,17 @@ def invalidate_snapshot(repo_id, old_index, current_index, con=None, changed_pat
             affected = bool(cited.intersection(changed)) or (bool(changed) and _scoped(entry.get('scope', '*'), changed)
                 and (entry.get('scope', '*') not in {'*', 'repository', 'global'} or not cited))
             if affected:
+                needs_sync = needs_sync or entry.get('status') == 'team-approved'
                 _save(con, entry)
                 _save(con, {**entry, 'status': 'stale', 'approval_state': 'pending', 'version': entry.get('version', 1) + 1,
                             'stale_reason': 'A scoped file or cited evidence changed'})
-    return invalidate(con) if con is not None else db.atomic(invalidate)
+        if needs_sync:
+            _dirty_atlas(con, repo_id)
+        return needs_sync
+    if con is not None:
+        invalidate(con)  # The caller schedules after committing the new snapshot.
+    elif db.atomic(invalidate):
+        _schedule_atlas(repo_id)
 
 
 def promote(job_id, discussion_id):

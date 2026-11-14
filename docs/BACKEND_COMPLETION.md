@@ -4,7 +4,7 @@
 
 Prepare Duck Tape's existing backend for a real GitHub import, repository and public security knowledge, sourced jobs, and a checked patch once the currently training Adaption models can be served. Frontend belongs to the teammate. Training is underway per the operator; checked-in training manifests are historical, not live status.
 
-Extend existing FastAPI/SQLite/worker boundaries. Do not replace the workflow database with Atlas or duplicate B/C graphs. Keep private graph projection opt-in and public catalogue processing free of repository source. Downloaded LoRA artifacts still need a compatible base model and inference server; a download alone is not an inference endpoint.
+Extend existing FastAPI/SQLite/worker boundaries. Do not replace the workflow database with Atlas or duplicate B/C graphs. The later B integration request supersedes opt-in graph projection: private Atlas is now required by default; public catalogue processing stays free of repository source. Downloaded LoRA artifacts still need a compatible base model and inference server; a download alone is not an inference endpoint. See [Atlas integration gates](ATLAS_INTEGRATION.md).
 
 ## Plan and ownership
 
@@ -18,7 +18,7 @@ Extend existing FastAPI/SQLite/worker boundaries. Do not replace the workflow da
 
 ## Release checks
 
-Public GitHub import must finish with real commit/snapshot identity. Both graphs must derive from indexed/source records. Repeating scans must preserve job deduplication and rejected decisions. Catalogue failures must remain visible; absence of catalogue records is never a clean security bill. No cloud call without explicit provider selection. Cancelling scan must prevent subsequent intake. Stale snapshot and catalogue changes must invalidate approvals. Source notes remain outside model evidence.
+Public GitHub import must finish with real commit/snapshot identity. Both graphs must derive from indexed/source records. Repeating scans must preserve job deduplication and rejected decisions. Catalogue failures must remain visible; absence of catalogue records is never a clean security bill. Cloud calls follow the accepted required-Atlas policy and explicit configuration for other providers. Cancelling scan must prevent subsequent intake. Stale snapshot and catalogue changes must invalidate approvals. Source notes remain outside model evidence.
 
 ## External gate
 

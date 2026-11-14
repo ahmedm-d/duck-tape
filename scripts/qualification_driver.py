@@ -338,7 +338,10 @@ def driver(task):
     workspace.mkdir(parents=True)
     context=Qualification(task,workspace)
     passed=False; error=None
+    # Temporary qualification stores must not leave cloud-sync threads using a restored store.
+    cloud_flags={key:os.environ.get(key) for key in ('STEWARD_ATLAS_REQUIRED','STEWARD_ATLAS_GRAPH_MIRROR')}
     try:
+        os.environ.update(dict.fromkeys(cloud_flags,'0'))
         db.DATA_DIR=workspace;db.init()
         db.put('provider_settings',{'id':'default',**config})
         context.setup();passed=context.journey()
@@ -364,4 +367,7 @@ def driver(task):
         artifact={'task':task,'result':result,'jobs':db.list_records('jobs'),'runs':db.list_records('runs'),'stages':stages,'checks':db.list_records('checks'),'revisions':db.list_records('revisions'),'candidates':db.list_records('candidate_attempts'),'decisions':db.list_records('decisions'),'knowledge':db.list_records('knowledge')}
         (workspace/'qualification-result.json').write_text(json.dumps(artifact,indent=2),encoding='utf-8')
         db.DATA_DIR=previous
+        for key,value in cloud_flags.items():
+            if value is None: os.environ.pop(key,None)
+            else: os.environ[key]=value
     return result

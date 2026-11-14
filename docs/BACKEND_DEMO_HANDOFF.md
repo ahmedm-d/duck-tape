@@ -63,7 +63,7 @@ Jobs use existing endpoints: `GET /api/jobs?repo_id=...`, `GET /api/jobs/{id}` a
 
 1. In your existing Atlas project, create **database users**: a publisher with `readWrite` only on `ducktape_public`, and an app reader with `read` only on that database. Keep private repository projection credentials separate.
 2. Add the laptop's trusted public IP to the Atlas IP access list. Keep TLS verification enabled. Use the existing cluster's Drivers connection string; put passwords in local `.env` or secret storage, never in frontend settings or command history.
-3. Install optional driver: `python -m pip install -r requirements-cloud.txt` in the backend environment. With an administrator, review/run `integrations/global/atlas-setup.js` to create the exact-package and revision indexes.
+3. Install the pinned dependencies: `python -m pip install -r requirements.lock` in the backend environment. With an administrator, review/run `integrations/global/atlas-setup.js` to create the exact-package and revision indexes.
 4. Set app-reader configuration in ignored `.env`:
 
 ```dotenv
@@ -80,7 +80,9 @@ python scripts/integrations.py catalogue-publish --database data/global-public.s
 python scripts/integrations.py catalogue-query --atlas --ecosystem PyPI --package requests
 ```
 
-6. Select `catalogue_atlas` only after the query succeeds. Local graphs and local catalogue matching need no Atlas account. Optional private graph projection additionally needs `STEWARD_ATLAS_ENABLED=1`, a separate `STEWARD_ATLAS_URI`, `STEWARD_ATLAS_DATABASE=ducktape`, and `STEWARD_ATLAS_GRAPH_MIRROR=1`, then explicit `POST /api/repositories/{id}/atlas-graph-mirror`. This sends source-derived paths/symbols and approved knowledge. It is not required for local graph retrieval. Private vector search additionally requires embeddings and its own Atlas vector index; follow [data platform guide](integrations/DATA_PLATFORMS.md).
+6. Normal app startup now requires `STEWARD_ATLAS_REQUIRED=1` (default), `STEWARD_ATLAS_ENABLED=1`, a separate private `STEWARD_ATLAS_URI`, `STEWARD_ATLAS_DATABASE=ducktape` and `STEWARD_ATLAS_DIMENSIONS`. Give that user access only to the private projection database. Configure an embedding model and the matching vector index using the [data platform guide](integrations/DATA_PLATFORMS.md). Import, refresh and approved-knowledge changes schedule projection automatically; `POST /api/repositories/{id}/atlas-graph-mirror` retries manually. Check `atlas_sync.status` on `/api/repositories`, then `scope.atlas.served` on `/api/repositories/{id}/agent-context?query=quote%20total%20tax`. A successful startup ping alone does not prove projection or retrieval.
+
+7. Public catalogue routes and applicability default to `provider=atlas` in required mode, so configure the separate read-only public user above too. An explicit `provider=local` remains supported. Scheduled scans retain the explicit `security_source` choice. Deterministic gates and isolated demo controllers disable required mode; those runs are not live Atlas evidence. Never disable TLS verification; the pinned truststore package uses the OS CA store.
 
 Official configuration: [database users](https://www.mongodb.com/docs/atlas/security-add-mongodb-users/) and [IP access lists](https://www.mongodb.com/docs/atlas/security/ip-access-list/).
 

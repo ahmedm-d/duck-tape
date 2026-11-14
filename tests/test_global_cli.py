@@ -76,3 +76,12 @@ def test_partial_publication_is_a_failed_cli_operation(tmp_path, monkeypatch, ca
         'published': 1, 'failed': 1, 'results': [{'status': 'failed'}]})
     assert integrations.main(['catalogue-publish', '--database', str(tmp_path / 'c.sqlite3')]) == 1
     assert json.loads(capsys.readouterr().out)['failed'] == 1
+
+
+def test_graph_cli_honors_isolated_default_path(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(integrations, 'load_environment', lambda: None)
+    monkeypatch.setenv('STEWARD_GLOBAL_CATALOGUE_PATH', str(tmp_path / 'graph.sqlite3'))
+    assert integrations.main(['catalogue-graph', '--ecosystem', 'PyPI', '--package', 'unknown']) == 0
+    result = json.loads(capsys.readouterr().out)
+    assert result['coverage'] == 'unknown' and result['edges'] == []
+    assert (tmp_path / 'graph.sqlite3').exists()

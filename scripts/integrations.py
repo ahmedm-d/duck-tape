@@ -27,11 +27,11 @@ def main(argv=None) -> int:
     commands.add_parser("databricks-sync", help="Upload one terminal run's allowlisted metrics").add_argument("--run", required=True)
     commands.add_parser("databricks-summary", help="Query measured metrics in the configured table")
     commands.add_parser("catalogue-status", help="Inspect public pipeline configuration without connecting")
-    for name in ("catalogue-query", "catalogue-ingest-osv", "catalogue-ingest-improvement",
+    for name in ("catalogue-query", "catalogue-graph", "catalogue-ingest-osv", "catalogue-ingest-improvement",
                  "catalogue-import", "catalogue-publish", "catalogue-curate", "catalogue-operations"):
         command = commands.add_parser(name, help="Explicit public catalogue operation")
-        command.add_argument("--database", type=Path, default=ROOT / "data" / "global" / "catalogue.sqlite3")
-        if name == "catalogue-query":
+        command.add_argument("--database", type=Path)
+        if name in ("catalogue-query", "catalogue-graph"):
             command.add_argument("--ecosystem", required=True)
             command.add_argument("--package", required=True)
             command.add_argument("--limit", type=int, default=20, choices=range(1, 101), metavar="1..100")
@@ -73,16 +73,25 @@ def catalogue_command(args: argparse.Namespace) -> dict:
     if args.command == "catalogue-status":
         from backend.global_pipeline import status
         return status()
-    if args.command == "catalogue-query" and args.atlas:
+    if args.command in ("catalogue-query", "catalogue-graph") and args.atlas:
         from backend.global_pipeline import query_atlas
-        return query_atlas(args.ecosystem, args.package, limit=args.limit)
+        result = query_atlas(args.ecosystem, args.package, limit=args.limit)
+        if args.command == "catalogue-graph":
+            from backend.global_catalogue import graph_result
+            return graph_result(result)
+        return result
     from backend.global_catalogue import Catalogue
+    if args.database is None:
+        from backend.global_catalogue import default_path
+        args.database = default_path()
     catalogue = Catalogue(args.database)
     if args.command == "catalogue-operations":
         from backend.global_pipeline import operation_status
         return {'operations': operation_status(catalogue)}
     if args.command == "catalogue-query":
         return catalogue.query(args.ecosystem, args.package, limit=args.limit)
+    if args.command == "catalogue-graph":
+        return catalogue.graph(args.ecosystem, args.package, limit=args.limit)
     if args.command in ("catalogue-import", "catalogue-ingest-improvement"):
         with args.record.open('rb') as source:
             raw = source.read(1024 * 1024 + 1)

@@ -1,6 +1,7 @@
 """Public evidence only: bounded records and an isolated revisioned catalogue."""
 from __future__ import annotations
 
+from contextlib import contextmanager
 import hashlib
 import ipaddress
 import json
@@ -8,7 +9,7 @@ from pathlib import Path
 import re
 import sqlite3
 from datetime import datetime, timedelta, timezone
-from typing import Literal
+from typing import Iterator, Literal
 from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -120,6 +121,12 @@ class GlobalEntry(PublicRecord):
     def bounded_record(self) -> GlobalEntry:
         if len(self.model_dump_json().encode()) > 256 * 1024:
             raise ValueError('Public entry exceeds 256 KiB')
+        retrieved = datetime.fromisoformat(self.retrieved_at)
+        tolerance = timedelta(minutes=5)
+        if retrieved > datetime.now(timezone.utc) + tolerance:
+            raise ValueError('Source retrieval timestamp is in the future')
+        if self.source_modified_at and datetime.fromisoformat(self.source_modified_at) > retrieved + tolerance:
+            raise ValueError('Source modification timestamp is later than retrieval')
         return self
 
     @field_validator('aliases', 'conditions', 'evidence', 'limitations')
@@ -189,8 +196,14 @@ class Catalogue:
                 CREATE INDEX IF NOT EXISTS global_package_lookup ON global_packages(ecosystem,package);
             ''')
 
-    def _connect(self) -> sqlite3.Connection:
-        return sqlite3.connect(self.path, timeout=15)
+    @contextmanager
+    def _connect(self) -> Iterator[sqlite3.Connection]:
+        connection = sqlite3.connect(self.path, timeout=15)
+        try:
+            with connection:
+                yield connection
+        finally:
+            connection.close()
 
     def record_operation(self, operation: str, identity: str, state: str, detail: str) -> None:
         with self._connect() as connection:

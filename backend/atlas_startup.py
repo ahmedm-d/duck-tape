@@ -13,17 +13,25 @@ class AtlasStartupError(RuntimeError):
     """Atlas is required but not ready; the message tells the operator what to fix."""
 
 
+_TRUSTSTORE_INJECTED = False
+
+
 def use_system_trust_store() -> bool:
     """Make Python TLS use the OS trust store when `truststore` is installed.
 
     Needed where antivirus or a corporate proxy re-signs HTTPS with a certificate only the OS trusts.
     Verification stays on; this only changes which CA store is consulted. Returns whether it was injected.
     """
+    global _TRUSTSTORE_INJECTED
+    if _TRUSTSTORE_INJECTED:
+        return True
     try:
         import truststore
     except ImportError:
         return False
+    # Must run before pymongo/httpx build SSL contexts: injecting after pymongo is imported recurses.
     truststore.inject_into_ssl()
+    _TRUSTSTORE_INJECTED = True
     return True
 
 

@@ -34,69 +34,69 @@ Keep attribution to each source (PrimeVul: Ding et al.) in any model card.
 
 Train vulnerable share: 60.0% (target 60%). Eval is balanced 50/50 with twins together.
 
-Pipeline: pairs read per source: {'colin/PrimeVul': 4682, 'hitoshura25/crossvul': 752, 'starsofchance/CVEfixes_v1.0.8': 2500};
-1847 pairs skipped (no parseable signature, identical code, scrub/length limits or prompt over
-6000 estimated tokens), 117 pairs removed as duplicates on normalised code,
-5970 usable pairs. Secret redactions are applied per function before any diff or row is built.
+Pipeline: pairs read per source: {'colin/PrimeVul': 4682, 'hitoshura25/crossvul': 752, 'starsofchance/CVEfixes_v1.0.8': 1487};
+449 pairs skipped (no parseable signature, identical code, scrub/length limits or prompt over
+6000 estimated tokens), 199 pairs removed as duplicates on normalised code,
+6273 usable pairs. Secret redactions are applied per function before any diff or row is built.
 
 Rows by source:
 
 | Source | Split | Rows |
 | --- | --- | --- |
-| colin/PrimeVul | train | 1924 |
+| colin/PrimeVul | train | 1382 |
 | hitoshura25/crossvul | train | 1386 |
-| starsofchance/CVEfixes_v1.0.8 | train | 1690 |
-| colin/PrimeVul | eval | 188 |
-| starsofchance/CVEfixes_v1.0.8 | eval | 12 |
+| starsofchance/CVEfixes_v1.0.8 | train | 2232 |
+| colin/PrimeVul | eval | 124 |
+| starsofchance/CVEfixes_v1.0.8 | eval | 76 |
 
 ## Language mix
 
 | Split | Language | Rows |
 | --- | --- | --- |
-| train | javascript | 2252 |
-| train | c | 1330 |
-| train | python | 734 |
-| train | c/c++ | 358 |
-| train | c++ | 236 |
-| train | typescript | 90 |
-| eval | c | 124 |
-| eval | c++ | 32 |
-| eval | c/c++ | 32 |
-| eval | python | 6 |
-| eval | typescript | 6 |
+| train | python | 1740 |
+| train | javascript | 1586 |
+| train | c | 972 |
+| train | typescript | 292 |
+| train | c/c++ | 257 |
+| train | c++ | 153 |
+| eval | c | 80 |
+| eval | python | 62 |
+| eval | c/c++ | 36 |
+| eval | javascript | 14 |
+| eval | c++ | 8 |
 
 ## Top 10 CWEs (train, vulnerable rows)
 
 | CWE | Rows |
 | --- | --- |
-| CWE-79 | 921 |
-| CWE-20 | 193 |
-| CWE-125 | 171 |
-| CWE-119 | 167 |
-| CWE-787 | 135 |
-| CWE-200 | 115 |
-| CWE-476 | 110 |
-| CWE-703 | 71 |
-| CWE-416 | 65 |
-| CWE-264 | 63 |
+| CWE-79 | 433 |
+| CWE-20 | 250 |
+| CWE-119 | 147 |
+| CWE-125 | 130 |
+| CWE-200 | 109 |
+| CWE-787 | 108 |
+| CWE-22 | 82 |
+| CWE-476 | 79 |
+| CWE-352 | 71 |
+| CWE-74 | 67 |
 
 Priority of train vulnerable rows (deterministic CWE table, default medium):
 
 | Priority | Rows |
 | --- | --- |
-| critical | 354 |
-| high | 1600 |
-| low | 9 |
-| medium | 1037 |
+| critical | 418 |
+| high | 1334 |
+| low | 27 |
+| medium | 1221 |
 
 Localisation of train vulnerable rows (`changed` = replaced/removed lines, `inserted` = fix only adds code, mapped to
 the surrounding lines, `whole` = no non-trivial hunk mapped):
 
 | Mode | Rows |
 | --- | --- |
-| changed | 2376 |
-| inserted | 613 |
-| whole | 11 |
+| changed | 2434 |
+| inserted | 542 |
+| whole | 24 |
 
 ## Eval/train group-overlap check
 
@@ -111,7 +111,7 @@ of the sources that carry CVE ids (components with at most 12 pairs), so twins s
 
 ## Limitations
 
-- **Language coverage: 3076 of 5000 train rows are Python/JavaScript/TypeScript; the rest are C/C++ or other.** Transfer to the Python/TypeScript repositories Duck Tape reviews is
+- **Language coverage: 3618 of 5000 train rows are Python/JavaScript/TypeScript; the rest are C/C++ or other.** Transfer to the Python/TypeScript repositories Duck Tape reviews is
   expected to be weak when the mix is C/C++-heavy; treat eval scores as in-domain behaviour, not Python/TypeScript
   performance. Sources without a CVE id cannot be held out by CVE/project group, so they only contribute train rows.
 - **Labels come from fix commits.** A "vulnerable" function is the pre-fix version and a "fixed" one the post-fix version.

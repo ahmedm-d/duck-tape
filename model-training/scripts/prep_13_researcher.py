@@ -45,6 +45,7 @@ MAX_TRAIN_ROWS = 5000
 MIN_TRAIN_ROWS = 1000
 EVAL_PAIRS = 100  # 100 vulnerable + 100 fixed = 200 eval rows
 VULN_SHARE = 0.60
+MAX_CWE_SHARE = 0.15  # no single CWE above 15% of vulnerable train rows (unless needed to reach the target)
 MAX_PROMPT_TOKENS = 6000  # estimated as chars / 4
 MAX_LINE_CHARS = 500  # longer lines mean minified or generated code
 MAX_EVAL_COMPONENT_PAIRS = 12  # larger project/CVE components stay in train
@@ -1071,7 +1072,19 @@ def select_train_pairs(train_pairs: list[Pair], total_rows: int, seed: int = SEE
 
     preferred = [p for p in ordered if p.language in PREFERRED_LANGUAGES]
     rest = [p for p in ordered if p.language not in PREFERRED_LANGUAGES]
-    chosen = (round_robin(preferred) + round_robin(rest))[:n_vuln]
+    candidates = round_robin(preferred) + round_robin(rest)
+    # Diversity: no CWE may exceed MAX_CWE_SHARE of the vulnerable rows; overflow is used only to reach the target.
+    cap = max(1, int(n_vuln * MAX_CWE_SHARE))
+    per_cwe: Counter[str] = Counter()
+    kept: list[Pair] = []
+    overflow: list[Pair] = []
+    for pair in candidates:
+        if per_cwe[pair.cwe] < cap:
+            per_cwe[pair.cwe] += 1
+            kept.append(pair)
+        else:
+            overflow.append(pair)
+    chosen = (kept + overflow)[:n_vuln]
     return [(pair, index < n_fixed) for index, pair in enumerate(chosen)]
 
 

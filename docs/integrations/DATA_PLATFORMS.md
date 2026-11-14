@@ -68,6 +68,157 @@ Databricks Free Edition is suitable for non-commercial experiments, has one 2X-S
 
 ## Local validation and next scope
 
+## Public global catalogue (Part C)
+
+The public catalogue is separate from repository vectors and run metrics. Its strict
+`GlobalEntry` contract is implemented in `backend/global_catalogue.py`; local state
+lives in `data/global/catalogue.sqlite3` by default. No repository profile, approved
+decision or team note is an ingestion input. The CLI does not create proposals or
+change execution permissions. B owns local applicability matching and snapshot-bound
+proposal invalidation.
+
+```sh
+python scripts/integrations.py catalogue-status
+python scripts/integrations.py catalogue-ingest-osv --id GHSA-9wx4-h78v-vm56
+python scripts/integrations.py catalogue-ingest-improvement --record integrations/global/python313-improvement.json
+python scripts/integrations.py catalogue-query --ecosystem PyPI --package requests --limit 10
+python scripts/integrations.py catalogue-operations
+```
+
+For a repeatable two-record demonstration, use a dedicated database:
+
+```sh
+python integrations/global/demo.py --database data/global-fixture-demo/catalogue.sqlite3
+python integrations/global/demo.py --database data/global-live-demo/catalogue.sqlite3 --live-public
+```
+
+The first command uses labelled fixtures. The second fetches real public OSV and
+Python documentation, ingests each twice and asserts stable material revisions,
+then performs bounded exact-package lookups. Neither command contacts cloud services.
+`integrations/global/live-public-evidence.json` records the actual public-source
+run, hashes and retrieval timestamps; it is not Databricks or Atlas evidence.
+
+Each local command accepts `--database PATH` for an isolated catalogue (except
+configuration-only `catalogue-status`). Repeat ingestion keeps the material revision
+when only retrieval time or source bytes change without changing normalized facts.
+Aliases resolve to the existing canonical identity; conflicting identities fail
+instead of silently merging unrelated records. Queries return bounded exact package
+results, partial/unknown coverage, freshness and unsupported version-rule status.
+An empty result never establishes that a dependency is safe. Withdrawal remains
+visible evidence for B to re-assess, not permission to prepare another patch.
+
+`catalogue-import --record PATH` imports one validated public `GlobalEntry`, including
+labelled development fixtures. It does not fetch or verify that record's source.
+Cloud publication rejects fixture-labelled entries. Live source ingestion performs
+bounded HTTPS fetches against a fixed public host allowlist, refuses redirects,
+validates public DNS and pins the connection to a validated address. Failures retain
+previous valid catalogue content and are available through `catalogue-operations`.
+
+Public cloud operations require separate explicit opt-in:
+
+| Variable | Meaning |
+| --- | --- |
+| `STEWARD_GLOBAL_ATLAS_ENABLED` | Exactly `1` permits explicit public Atlas operations |
+| `STEWARD_GLOBAL_ATLAS_URI` | Dedicated Atlas credential; never reuse a broad private-vector role |
+| `STEWARD_GLOBAL_DATABRICKS_ENABLED` | Exactly `1` permits explicit public Databricks operations |
+
+Public Atlas uses `ducktape_public.global_entries`, separate from the configured
+private database. Public Databricks uses `workspace.default.ducktape_global_revisions`,
+separate from the metrics table, with the existing server-side Databricks host/token/
+warehouse settings. See `integrations/global/` for public pipeline artifacts and
+least-privilege setup. Nothing provisions a paid service or creates accounts.
+
+```sh
+python scripts/integrations.py catalogue-curate
+python scripts/integrations.py catalogue-publish
+python scripts/integrations.py catalogue-query --atlas --ecosystem PyPI --package requests --limit 10
+```
+
+These are explicit cloud operations, not startup hooks. Batches are bounded and
+publication retries are idempotent; failed writes preserve the previous complete
+published entry. Partial publication returns a nonzero CLI exit status with safe
+per-record failures. The
+frontend component and exact integration instructions live in
+`frontend/src/components/GlobalCatalogue.tsx` and
+`integrations/global/frontend-handoff.md`; shared application routes/navigation
+remain B's integration handoff.
+
+Configuration inspection in the isolated Part C workspace found both services
+disabled/unconfigured, with no local `.env`. Live public-source fetches succeeded;
+Databricks execution and Atlas publication/query remain unqualified without actual
+account evidence. Local SQLite, fixture and mocked transport tests do not establish
+cloud connectivity or qualification. The maintained workspace checklist records
+exact checks and remaining blockers.
+
+### Part C verification, 14 November 2026
+
+Python used the existing interpreter at
+`C:/Users/ahmed/Projects/ducktape/steward/.venv/Scripts/python.exe`, with
+`PYTHONPATH=<this worktree>;C:/Users/ahmed/Projects/ducktape/steward/vendor-current`
+and `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1`. Imports were verified to resolve to this
+worktree. Test/runtime data stayed under this worktree's ignored `data/` directory.
+
+| Check | Actual result |
+| --- | --- |
+| `python -m pytest tests/test_global_catalogue.py tests/test_global_pipeline.py tests/test_global_cli.py tests/test_signals.py tests/test_data_platforms.py -q -p no:cacheprovider` | 80 passed after all review fixes |
+| `python -m pytest -m 'not live' -q -p no:cacheprovider` | 560 passed, 18 skipped, 5 deselected; one existing Starlette/httpx deprecation warning. Collected before the final review regressions; the affected run above covers the final changes. |
+| `npm run build` in `frontend/` | Passed TypeScript and production build |
+| `npx playwright test tests/global-catalogue.spec.ts --workers=1`, with `STEWARD_BROWSER_EXECUTABLE=C:/Program Files/Google/Chrome/Application/chrome.exe` | 3 passed; fixture-response component/browser checks |
+| `python integrations/global/demo.py --database data/part-c-fixture/catalogue.sqlite3` | Two labelled fixtures; repeat revisions and bounded queries passed |
+| Same demo with `--database data/part-c-live/catalogue.sqlite3 --live-public` | Two real public HTTPS sources; repeated ingestion stayed at revision 1; no cloud calls |
+
+Independent reviewers checked catalogue lifecycle, cloud adapters, CLI behavior
+and frontend contracts. Their fixes cover connection closure, future timestamp
+rejection, alias-safe Delta restore, fractional timestamp ordering, concurrent
+publication, a transfer deadline and nonzero CLI exit on partial publication.
+HTTP transfer is capped at 30 seconds after public DNS validation; the existing OS
+resolver has its own timeout, so total invocation time can exceed that deadline.
+
+Unqualified external behavior: live Databricks processing/publication and Atlas
+queries. Integration limits: one curation producer, at most 100 restored revisions,
+and Atlas-only readers must consult job outcomes for recent source failures.
+The shared route/navigation mount and private applicability lifecycle remain B's
+handoff; the captain still runs aggregate acceptance on the integrated commit.
+
+### Existing adapter validation
+
 Run `python -m pytest tests/test_data_platforms.py -q`. The tests use local SQLite, a fake MongoDB collection, and `httpx.MockTransport`. They cover disabled/no-network behavior, upload privacy, namespace separation, invalid embeddings, index readiness, exact evidence binding, failed-run inclusion, unknown usage, retries, SQL parameters, and safe cloud errors.
 
 No live cloud accounts are exercised by these tests. Worker retrieval integration, automatic exports, retention/deletion, cloud scheduling, and database migration are outside this initial adapter. Snapshot chunking and operational state remain local. The optional driver pin follows the [official PyMongo 4.20.0 release notes](https://pymongo.readthedocs.io/en/stable/changelog.html).
+
+
+## Integrated public catalogue and live evidence
+
+The C feature branch now mounts **Global catalogue** in Duck Tape. Exact public
+queries use `GET /api/global-catalogue?ecosystem=PyPI&package=requests&limit=25`,
+with `provider=local` by default and explicit `provider=atlas` for the separately
+enabled public cloud reader. `/api/global-catalogue/graph` exposes bounded public
+entry/package/source relationships with attribution and lifecycle evidence.
+No relationship asserts a private repository/version match or grants permissions.
+
+`python scripts/integrations.py catalogue-graph --ecosystem PyPI --package requests`
+returns the same bounded graph; add `--atlas` for explicit cloud lookup. CLI and
+API share `STEWARD_GLOBAL_CATALOGUE_PATH`, defaulting to `data/global/catalogue.sqlite3`.
+Only server configuration controls this path. API inputs enforce 1 to 100 results,
+64-character ecosystems and 256-character package names. Atlas failures return
+503 with unknown coverage instead of pretending the local copy is current.
+
+The earlier unmounted/unconfigured notes describe initial implementation. Current
+live evidence is recorded in `integrations/global/live-databricks-evidence.json`
+and `integrations/global/live-atlas-evidence.json`: real public Databricks curation,
+normalization within a serverless job, repeated publication/restore, Atlas stable
+revision publication and conflict preservation, and scoped publisher/reader access.
+The opt-in production browser check in `frontend/tests/global-live-api.spec.ts`
+requires `STEWARD_GLOBAL_LIVE_UI=1`, `STEWARD_TEST_URL` pointing to a configured
+isolated app, and actual Atlas reader credentials. It does not intercept responses.
+See the workspace checklist for direct cloud-to-cloud/scheduler status and exact
+final checks. The reviewed shared API/navigation files are handed back to B after
+this feature branch; private applicability matching remains outside C's scope.
+
+The live operator relay is also verified: `catalogue-restore --database <isolated-db>`
+reads bounded Databricks Delta history; `catalogue-publish --database <isolated-db>`
+then publishes from the operator's Atlas-enabled environment. See
+`integrations/global/live-relay-evidence.json` and the pipeline README for the exact
+recipe. This is a working Databricks-curated-to-Atlas path, but it does not establish
+direct serverless publication or unattended scheduling. The remote job remains
+paused after TLS connection failures and changing observed outbound IPs.

@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Literal
 from urllib.parse import urlparse
 
-from fastapi import FastAPI, HTTPException, UploadFile, File, Request
+from fastapi import FastAPI, HTTPException, UploadFile, File, Request, Query
 from fastapi.responses import FileResponse, Response, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
@@ -194,6 +194,30 @@ def health():
     worker=db.get('services','worker') or {}
     active=worker.get('status')=='running' and worker.get('heartbeat','')>(datetime.now(timezone.utc)-timedelta(seconds=15)).isoformat()
     return {'status':'ok','workspace':'local','worker':'running' if active else 'stopped','monitoring':'running' if active and not poll_stop.is_set() else 'stopped'}
+
+
+@app.get('/api/global-catalogue')
+def global_catalogue_query(ecosystem: str = Query(min_length=1, max_length=64),
+                           package: str = Query(min_length=1, max_length=256),
+                           limit: int = Query(default=25, ge=1, le=100),
+                           provider: Literal['local', 'atlas'] = 'local') -> dict:
+    from .global_catalogue import Catalogue, default_path
+    if provider == 'atlas':
+        from .global_pipeline import query_atlas, Error
+        try:
+            return query_atlas(ecosystem, package, limit=limit)
+        except Error:
+            raise HTTPException(503, 'Public Atlas unavailable; coverage remains unknown.') from None
+    return {**Catalogue(default_path()).query(ecosystem, package, limit=limit), 'provider': 'local'}
+
+
+@app.get('/api/global-catalogue/graph')
+def global_catalogue_graph(ecosystem: str = Query(min_length=1, max_length=64),
+                           package: str = Query(min_length=1, max_length=256),
+                           limit: int = Query(default=25, ge=1, le=100),
+                           provider: Literal['local', 'atlas'] = 'local') -> dict:
+    from .global_catalogue import graph_result
+    return graph_result(global_catalogue_query(ecosystem, package, limit, provider))
 
 
 @app.get('/api/repositories')

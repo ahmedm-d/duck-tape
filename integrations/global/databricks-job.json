@@ -1,0 +1,43 @@
+{
+  "name": "Duck Tape public catalogue refresh",
+  "description": "Public OSV and attributed improvement ingestion, revisioned Delta curation, optional separate public Atlas publication. Paused until a real run is verified.",
+  "max_concurrent_runs": 1,
+  "timeout_seconds": 900,
+  "schedule": {
+    "quartz_cron_expression": "0 0 7 * * ?",
+    "timezone_id": "UTC",
+    "pause_status": "PAUSED"
+  },
+  "tasks": [
+    {
+      "task_key": "public_catalogue",
+      "timeout_seconds": 900,
+      "max_retries": 0,
+      "disable_auto_optimization": true,
+      "environment_key": "public_pipeline",
+      "notebook_task": {
+        "notebook_path": "/Workspace/Shared/duck-tape-public/integrations/global/scheduled_notebook",
+        "source": "WORKSPACE",
+        "base_parameters": {
+          "host": "https://dbc-a762c421-e9f8.cloud.databricks.com",
+          "warehouse_id": "710499d60f04f73d",
+          "secret_scope": "ducktape-public",
+          "warehouse_auth": "notebook",
+          "publish": "false"
+        }
+      }
+    }
+  ],
+  "environments": [
+    {
+      "environment_key": "public_pipeline",
+      "spec": {
+        "environment_version": "4",
+        "dependencies": [
+          "-r /Workspace/Shared/duck-tape-public/requirements.txt",
+          "-r /Workspace/Shared/duck-tape-public/requirements-cloud.txt"
+        ]
+      }
+    }
+  ]
+}

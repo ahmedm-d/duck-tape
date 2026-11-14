@@ -1,0 +1,171 @@
+{
+  "checked_at": "2026-11-14T16:39:22.789852+00:00",
+  "evidence_kind": "live_databricks_public_pipeline",
+  "workspace_host": "https://dbc-a762c421-e9f8.cloud.databricks.com",
+  "warehouse_id": "710499d60f04f73d",
+  "local_normalization_cloud_curation": {
+    "result": "passed",
+    "first_curated": 2,
+    "repeat_curated": 2,
+    "restored_revisions": 2,
+    "revision_counts": [
+      [
+        "CVE-2024-35195",
+        "1",
+        "1"
+      ],
+      [
+        "improvement:cpython-313-free-threading",
+        "1",
+        "1"
+      ]
+    ],
+    "entries": [
+      {
+        "canonical_id": "CVE-2024-35195",
+        "material_revision": 1,
+        "material_hash": "8f0db7efda7f87e272d3e87803653c55ccd057461be8e673be16768d63a079c9",
+        "source_url": "https://osv.dev/vulnerability/GHSA-9wx4-h78v-vm56"
+      },
+      {
+        "canonical_id": "improvement:cpython-313-free-threading",
+        "material_revision": 1,
+        "material_hash": "5a2433607e6fed00dead6ffc6581670fc8a217f65a4485a9d9c2024bf8515530",
+        "source_url": "https://docs.python.org/3.13/whatsnew/3.13.html"
+      }
+    ]
+  },
+  "databricks_normalization_job": {
+    "job_id": 486190608689437,
+    "run_id": 283630747207922,
+    "task_run_id": 371918000941002,
+    "run_url": "https://dbc-a762c421-e9f8.cloud.databricks.com/?o=7474650090762920#job/486190608689437/run/283630747207922",
+    "result": "RunResultState.SUCCESS",
+    "trigger": "manual",
+    "schedule_state": "PAUSED",
+    "cron": "0 0 7 * * ?",
+    "timezone": "UTC",
+    "warehouse_auth": "notebook-native ephemeral bearer",
+    "pipeline_result": {
+      "restored_revisions": 2,
+      "ingestion_failed": 0,
+      "curation": {
+        "provider": "databricks",
+        "curated": 2,
+        "failed": 0,
+        "results": [
+          {
+            "canonical_id": "CVE-2024-35195",
+            "material_revision": 1,
+            "status": "curated",
+            "attempts": 1
+          },
+          {
+            "canonical_id": "improvement:cpython-313-free-threading",
+            "material_revision": 1,
+            "status": "curated",
+            "attempts": 1
+          }
+        ]
+      },
+      "publication": {
+        "state": "not_requested"
+      },
+      "operations": [
+        {
+          "operation": "databricks",
+          "identity": "improvement:cpython-313-free-threading",
+          "state": "curated",
+          "detail": "Public revision curated.",
+          "attempted_at": "2026-11-14T16:38:02.386244+00:00"
+        },
+        {
+          "operation": "databricks",
+          "identity": "CVE-2024-35195",
+          "state": "curated",
+          "detail": "Public revision curated.",
+          "attempted_at": "2026-11-14T16:37:59.913949+00:00"
+        },
+        {
+          "operation": "ingest",
+          "identity": "https://docs.python.org/3.13/whatsnew/3.13.html",
+          "state": "succeeded",
+          "detail": "Attributed public improvement retrieved and validated.",
+          "attempted_at": "2026-11-14T16:37:57.153568+00:00"
+        },
+        {
+          "operation": "ingest",
+          "identity": "https://api.osv.dev/v1/vulns/GHSA-9wx4-h78v-vm56",
+          "state": "succeeded",
+          "detail": "Public OSV source retrieved and validated.",
+          "attempted_at": "2026-11-14T16:37:56.884951+00:00"
+        }
+      ]
+    }
+  },
+  "source_hashes": {
+    "backend/global_pipeline.py": "0ea111be138f56223bda97f3bb2c876a0bf7a7eaf6e60499cf47a17b57047a2a",
+    "backend/global_catalogue.py": "eaf80757ccf9221094a360c668b4c3b213162eb567aad4f7a50b51e089b96cd5",
+    "integrations/global/databricks_job.py": "3910c24065c64cb8206752c4e8360646f2696174564078666ea3135d042a1f0d",
+    "integrations/global/scheduled_notebook.py": "aef02c7094c20f7e9fd6f7d29d0f7118cdd9b1293401af365a4eb0749693452a"
+  },
+  "limits": [
+    "Live local Atlas publication is recorded separately in live-atlas-evidence.json. Databricks-to-Atlas publication has not succeeded.",
+    "Manual runs do not prove a scheduled trigger fired.",
+    "Schedule remains paused because the direct Atlas network path is unresolved. No paid resources were provisioned and no broad network allowlist was added."
+  ],
+  "publication_attempts": [
+    {
+      "run_id": 636075658422585,
+      "result": "FAILED",
+      "trigger": "manual",
+      "note": "Initial scoped-secret publication failed; serverless auto-optimization retried despite max_retries=0."
+    },
+    {
+      "run_id": 994468391849329,
+      "task_run_id": 586824766521247,
+      "result": "FAILED",
+      "trigger": "manual",
+      "network_allowlist": "3.145.247.177/32 active",
+      "disable_auto_optimization": true,
+      "note": "Single attempt failed with sanitized pipeline error after narrow allowlist activation."
+    }
+  ],
+  "network_diagnostic": {
+    "run_id": 888354868771453,
+    "task_run_id": 51210731691695,
+    "result": {
+      "proxy_environment_present": false,
+      "direct_https_egress": "3.145.247.155",
+      "srv_records": 3,
+      "direct_mongo_transport": {
+        "index": 0,
+        "port": 27017,
+        "tcp_connected": true,
+        "error_class": "SSLError",
+        "markers": [
+          "ssl"
+        ],
+        "elapsed_seconds": 0.22
+      },
+      "atlas_ping": {
+        "error_class": "ServerSelectionTimeoutError",
+        "markers": [
+          "timeout",
+          "ssl"
+        ]
+      },
+      "ping_elapsed_seconds": 10.51
+    },
+    "earlier_https_egress": "3.145.247.177",
+    "interpretation": "Observed HTTPS egress changed across runs. DNS and TCP27017 succeeded, but TLS and scoped Atlas ping failed. Exact TLS cause remains unproven; no TLS checks or network controls were bypassed."
+  },
+  "current_schedule": {
+    "job_id": 486190608689437,
+    "cron": "0 0 7 * * ?",
+    "timezone": "UTC",
+    "pause_status": "PAUSED",
+    "publish_default": false,
+    "disable_auto_optimization": true
+  }
+}

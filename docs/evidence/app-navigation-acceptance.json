@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "tier": "deterministic",
+  "status": "passed",
+  "recorded_at": "2026-11-14T15:56:29.772486+00:00",
+  "results": [
+    {
+      "id": "backend",
+      "tier": "deterministic",
+      "argv": [
+        "C:\\Users\\ahmed\\.paseo\\worktrees\\38qfwmxf\\duck-tape-app-navigation\\.venv\\Scripts\\python.exe",
+        "-m",
+        "pytest",
+        "tests",
+        "--ignore=tests/live",
+        "-m",
+        "not live",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=C:\\Users\\ahmed\\.paseo\\worktrees\\38qfwmxf\\duck-tape-app-navigation\\data\\app-navigation\\acceptance\\20261114T154420Z-8c80f730\\backend.xml"
+      ],
+      "cwd": "C:\\Users\\ahmed\\.paseo\\worktrees\\38qfwmxf\\duck-tape-app-navigation",
+      "required": true,
+      "status": "passed",
+      "exit_code": 0,
+      "artifacts": [
+        "C:\\Users\\ahmed\\.paseo\\worktrees\\38qfwmxf\\duck-tape-app-navigation\\data\\app-navigation\\acceptance\\20261114T154420Z-8c80f730\\backend.log",
+        "C:\\Users\\ahmed\\.paseo\\worktrees\\38qfwmxf\\duck-tape-app-navigation\\data\\app-navigation\\acceptance\\20261114T154420Z-8c80f730\\backend.xml"
+      ],
+      "counts": {
+        "total": 558,
+        "skipped": 0,
+        "failed": 0,
+        "passed": 558
+      },
+      "duration_seconds": 498.775
+    },
+    {
+      "id": "restart",
+      "tier": "deterministic",
+      "argv": [
+        "C:\\Users\\ahmed\\.paseo\\worktrees\\38qfwmxf\\duck-tape-app-navigation\\.venv\\Scripts\\python.exe",
+        "scripts/check_restart.py"
+      ],
+      "cwd": "C:\\Users\\ahmed\\.paseo\\worktrees\\38qfwmxf\\duck-tape-app-navigation",
+      "required": true,
+      "status": "passed",
+      "exit_code": 0,
+      "artifacts": [
+        "C:\\Users\\ahmed\\.paseo\\worktrees\\38qfwmxf\\duck-tape-app-navigation\\data\\app-navigation\\acceptance\\20261114T154420Z-8c80f730\\restart.log"
+      ],
+      "duration_seconds": 195.729
+    },
+    {
+      "id": "frontend-build",
+      "tier": "deterministic",
+      "argv": [
+        "C:\\Program Files\\nodejs\\npm.cmd",
+        "run",
+        "build"
+      ],
+      "cwd": "C:\\Users\\ahmed\\.paseo\\worktrees\\38qfwmxf\\duck-tape-app-navigation\\frontend",
+      "required": true,
+      "status": "passed",
+      "exit_code": 0,
+      "artifacts": [
+        "C:\\Users\\ahmed\\.paseo\\worktrees\\38qfwmxf\\duck-tape-app-navigation\\data\\app-navigation\\acceptance\\20261114T154420Z-8c80f730\\frontend-build.log"
+      ],
+      "duration_seconds": 8.731
+    },
+    {
+      "id": "browser-fixtures",
+      "tier": "deterministic",
+      "argv": [
+        "C:\\Program Files\\nodejs\\npm.cmd",
+        "run",
+        "test:browser",
+        "--",
+        "tests/navigation.spec.ts",
+        "tests/imported-workflows.spec.ts",
+        "tests/evidence.spec.ts",
+        "tests/summaries.spec.ts",
+        "tests/settings.spec.ts",
+        "tests/workspace.spec.ts",
+        "--project=chromium",
+        "--reporter=json",
+        "--output=C:\\Users\\ahmed\\.paseo\\worktrees\\38qfwmxf\\duck-tape-app-navigation\\data\\app-navigation\\acceptance\\20261114T154420Z-8c80f730\\browser-fixtures-artifacts"
+      ],
+      "cwd": "C:\\Users\\ahmed\\.paseo\\worktrees\\38qfwmxf\\duck-tape-app-navigation\\frontend",
+      "required": true,
+      "status": "passed",
+      "exit_code": 0,
+      "artifacts": [
+        "C:\\Users\\ahmed\\.paseo\\worktrees\\38qfwmxf\\duck-tape-app-navigation\\data\\app-navigation\\acceptance\\20261114T154420Z-8c80f730\\browser-fixtures.log",
+        "C:\\Users\\ahmed\\.paseo\\worktrees\\38qfwmxf\\duck-tape-app-navigation\\data\\app-navigation\\acceptance\\20261114T154420Z-8c80f730\\browser-fixtures.json"
+      ],
+      "counts": {
+        "startTime": "2026-11-14T15:56:05.600Z",
+        "duration": 24094.140000000003,
+        "expected": 25,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "duration_seconds": 26.055
+    }
+  ],
+  "scope": "A tier pass proves only that tier. Full live release additionally requires the documented acceptance matrix and independent reviews.",
+  "capabilities": {
+    "git": {
+      "available": true,
+      "reason": "Git executable is required"
+    },
+    "frontend": {
+      "available": true,
+      "reason": "Install Node, npm and frontend dependencies; install Playwright Chromium separately"
+    }
+  },
+  "artifact_directory": "C:\\Users\\ahmed\\.paseo\\worktrees\\38qfwmxf\\duck-tape-app-navigation\\data\\app-navigation\\acceptance\\20261114T154420Z-8c80f730",
+  "complete": true
+}

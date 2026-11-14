@@ -48,4 +48,17 @@ npx playwright test tests/global-api.spec.ts --workers=1
 
 Result: **1 passed** in 20.1 seconds. No API responses were intercepted. The journey confirmed fixture lookup through the real API, mounted navigation, original-source attribution, a 3-node/2-edge public graph, unknown empty results, disabled Atlas returning an error, and no browser runtime errors. Desktop/light and narrow/dark screenshots are written under ignored `frontend/test-results/global-api-*/`; the narrow screenshot was visually inspected and had no horizontal overflow.
 
-Skipped: live Databricks/Atlas qualification and B's private repository applicability/proposal lifecycle. The integrated browser test proves the local API and production UI with labelled fixture data, not live public ingestion or cloud service operation.
+## Live Atlas reader verification
+
+On 14 November 2026, the coordinator configured a dedicated read-only Atlas user on the isolated backend at port 8768. After its access changes completed, the separate opt-in browser journey passed against the real public Atlas catalogue and production UI:
+
+```powershell
+$env:STEWARD_TEST_URL='http://127.0.0.1:8768'
+$env:STEWARD_GLOBAL_LIVE_UI='1'
+$env:STEWARD_BROWSER_EXECUTABLE='C:/Program Files/Google/Chrome/Application/chrome.exe'
+npx playwright test tests/global-live-api.spec.ts --workers=1
+```
+
+Result: **1 passed** in 12.5 seconds. No responses were intercepted. Selecting Atlas issued no request until Search was submitted. The real lookup returned `CVE-2024-35195`, material revision 1, nonfixture provenance, an original-source link, unsupported version rules and unknown coverage. The graph returned 3 nodes and 2 relationships with current lifecycle labels. An unrelated package returned no entries with unknown coverage. No browser runtime errors or mobile horizontal overflow occurred. Desktop/light and narrow/dark screenshots are saved under ignored `frontend/test-results/global-live-api-*/`; the narrow screenshot was visually inspected.
+
+This establishes a bounded live Atlas read through the app, separately from the labelled fixture checks above. It does not qualify private repository matching, vulnerability exploitability, or live Databricks processing. Those remain outside this frontend verification.

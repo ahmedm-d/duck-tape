@@ -146,6 +146,86 @@ def _entry(entry: dict) -> dict:
     return entry
 
 
+SUPPORTED_RANGES = {'ECOSYSTEM', 'SEMVER'}
+BOUNDS = ('introduced', 'fixed', 'last_affected')
+
+
+def _intervals(rule_range) -> list[dict] | None:
+    """Flatten one OSV-style `{type, events}` range into matcher intervals; None when it cannot be read safely."""
+    if not isinstance(rule_range, dict) or rule_range.get('type') not in SUPPORTED_RANGES or not isinstance(rule_range.get('events'), list):
+        return None
+    intervals, current = [], None
+    for event in rule_range['events']:
+        if not isinstance(event, dict):
+            return None
+        given = {key: event[key] for key in (*BOUNDS, 'limit') if event.get(key) is not None}
+        if len(given) != 1 or not isinstance(next(iter(given.values())), str) or 'limit' in given:
+            return None
+        key, value = next(iter(given.items()))
+        if key == 'introduced':
+            if current is not None:
+                intervals.append(current)
+            current = {'introduced': value}
+        elif current is None:
+            return None
+        else:
+            intervals.append({**current, key: value})
+            current = None
+    if current is not None:
+        intervals.append(current)
+    return intervals or None
+
+
+def _global_rule(rule):
+    """Map one catalogue AffectedPackage; a range that cannot be read becomes a boundless marker, so the matcher says unknown."""
+    if not isinstance(rule, dict):
+        return rule
+    ranges = []
+    for item in rule.get('ranges') or []:
+        flattened = _intervals(item)
+        if flattened is None:
+            kind = item.get('type') if isinstance(item, dict) else None
+            ranges.append({'unsupported': f'{str(kind)[:64]} range cannot be evaluated locally'})
+        else:
+            ranges += flattened
+    return {'ecosystem': rule.get('ecosystem'), 'package': rule.get('package'),
+            'versions': list(rule.get('versions') or []), 'ranges': ranges}
+
+
+def from_global_entry(entry: dict) -> dict:
+    """Convert a public catalogue entry (`GlobalEntry` dump or `Catalogue.query`/`query_atlas` item) to matcher shape.
+
+    Identity is bound as id=canonical_id, revision=material_revision, content_hash=source_content_hash.
+    Status is `withdrawn`, else `stale` when freshness is not `fresh` or the last source refresh failed,
+    else `active`. Ranges are flattened from OSV events; unsupported range types stay unsupported (unknown,
+    never not_matched). The catalogue schema has no CWE or symbol fields, so none are carried.
+    `match` and `intake_payloads` remain the validators; this adapter only renames and reshapes.
+    """
+    if not isinstance(entry, dict):
+        raise ValueError('Global entry must be an object')
+    if entry.get('withdrawn_at'):
+        status = 'withdrawn'
+    elif entry.get('source_status') == 'failed' or entry.get('freshness', 'fresh') != 'fresh':
+        status = 'stale'
+    else:
+        status = 'active'
+    affected = entry.get('affected') or []
+    limitations = [str(item) for item in entry.get('limitations') or []]
+    limitations += [f'Public condition: {item}' for item in entry.get('conditions') or []]
+    if status == 'stale':
+        limitations.append('Catalogue retrieval is stale or its last source refresh failed; revalidate before proposing.')
+    return {'id': entry.get('canonical_id'), 'revision': entry.get('material_revision'), 'content_hash': entry.get('source_content_hash'),
+            'kind': entry.get('kind'), 'source_url': entry.get('source_url'), 'title': entry.get('title'), 'summary': entry.get('summary'),
+            'aliases': list(entry.get('aliases') or []), 'status': status, 'limitations': limitations,
+            'retrieved_at': entry.get('retrieved_at'), 'source_quality': entry.get('source_quality'),
+            'affected': [_global_rule(rule) for rule in affected] if isinstance(affected, list) else affected}
+
+
+def catalogue_entry(entry):
+    """Accept either shape: catalogue records (they carry `canonical_id`) are converted, matcher records pass through."""
+    return from_global_entry(entry) if isinstance(entry, dict) and 'canonical_id' in entry else entry
+
+
 CWE = re.compile(r'CWE-\d{1,5}')
 SYMBOL = re.compile(r'[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*){0,8}')
 

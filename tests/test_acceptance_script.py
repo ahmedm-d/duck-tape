@@ -12,6 +12,7 @@ def test_deterministic_commands_exclude_opt_in_tests_and_inherited_live_configur
     for gate in gates:
         assert gate['env']['STEWARD_LIVE_TESTS']=='0'
         assert gate['env']['STEWARD_TEST_URL'] is None
+        assert gate['env']['STEWARD_ATLAS_REQUIRED']=='0'
     browser=next(gate for gate in gates if gate['id']=='browser-fixtures')
     assert not any('live-ui' in arg or 'completion-review' in arg for arg in browser['argv'])
 

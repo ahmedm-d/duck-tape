@@ -49,7 +49,7 @@ def seed_sample(force_new=False):
         path.write_text(content, encoding='utf-8',newline='')
     git(root, 'init', '-b', 'main')
     git(root, 'add', '.')
-    git(root, '-c', 'user.name=Steward demo', '-c', 'user.email=demo@localhost', 'commit', '-m', 'Reviewed sample baseline')
+    git(root, '-c', 'user.name=Duck Tape demo', '-c', 'user.email=demo@localhost', 'commit', '-m', 'Reviewed sample baseline')
     origin={'source':'fixture://parcel','branch':'main','commit':git(root,'rev-parse','HEAD').strip()}
     source=snapshots.capture(rid,root,origin)
     index = repository.index_repository(root,repo_id=rid,source_snapshot_id=source['id'])

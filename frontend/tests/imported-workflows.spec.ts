@@ -12,7 +12,7 @@ for(const previousRevision of [false,true])test(`unverified candidate exports ex
  await expect(page.getByLabel('Patch diff')).toContainText('value = 2');
  await expect(page.getByRole('button',{name:/Approve revision|Apply to managed branch/})).toHaveCount(0);
  const download=page.waitForEvent('download');await page.getByRole('button',{name:'Export unverified patch'}).click();
- const result=await download;expect(result.suggestedFilename()).toContain('unverified');
+ const result=await download;expect(result.suggestedFilename()).toBe('duck-tape-unverified-run-one.patch');
  expect(fs.readFileSync((await result.path())!,'utf8')).toBe(diff);
  await page.getByRole('button',{name:'Split view',exact:true}).click();
  await expect(page.locator('.split-diff')).toContainText('value = 1');

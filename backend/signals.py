@@ -126,7 +126,7 @@ def query_osv(package):
     raw_socket=socket.create_connection((addresses[0],443),timeout=10)
     try:
         connection.sock=ssl.create_default_context().wrap_socket(raw_socket,server_hostname=parsed.hostname)
-        connection.request('POST','/v1/query',body=payload,headers={'Content-Type':'application/json','User-Agent':'Steward-local/2'})
+        connection.request('POST','/v1/query',body=payload,headers={'Content-Type':'application/json','User-Agent':'Duck-Tape-local/2'})
         response=connection.getresponse()
         if response.status!=200: raise ValueError(f'OSV returned HTTP {response.status}')
         raw=response.read(2_000_001)

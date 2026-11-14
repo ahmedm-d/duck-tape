@@ -89,9 +89,9 @@
       "journey": "revision",
       "mandatory": true,
       "seeded_unsafe": false,
-      "instruction": "First change default greeting to Hello Steward, approve the reviewable patch, then request revision to Hello Team and rerun.",
+      "instruction": "First change default greeting to Hello Duck Tape, approve the reviewable patch, then request revision to Hello Team and rerun.",
       "expected_behavior": {
-        "first_default": "Hello Steward",
+        "first_default": "Hello Duck Tape",
         "revision_default": "Hello Team"
       },
       "required_evidence": "A new reviewable revision uses latest feedback, prior revision remains available, stale approval cannot apply.",
@@ -111,9 +111,9 @@
       "journey": "knowledge",
       "mandatory": true,
       "seeded_unsafe": false,
-      "instruction": "Make default greeting Hello Steward while following approved knowledge: preserve explicit-name greetings and the public greet signature.",
+      "instruction": "Make default greeting Hello Duck Tape while following approved knowledge: preserve explicit-name greetings and the public greet signature.",
       "expected_behavior": {
-        "default_greeting": "Hello Steward",
+        "default_greeting": "Hello Duck Tape",
         "named_greeting": "Hello Ada"
       },
       "required_evidence": "Knowledge version appears in exact run inputs; changed approved knowledge invalidates stale results.",
@@ -220,9 +220,9 @@
       "journey": "revision",
       "mandatory": true,
       "seeded_unsafe": false,
-      "instruction": "First change default greeting to Hello Steward, approve the reviewable patch, then request revision to Hello Team and rerun.",
+      "instruction": "First change default greeting to Hello Duck Tape, approve the reviewable patch, then request revision to Hello Team and rerun.",
       "expected_behavior": {
-        "first_default": "Hello Steward",
+        "first_default": "Hello Duck Tape",
         "revision_default": "Hello Team"
       },
       "required_evidence": "A new reviewable revision uses latest feedback, prior revision remains available, stale approval cannot apply.",
@@ -242,9 +242,9 @@
       "journey": "knowledge",
       "mandatory": true,
       "seeded_unsafe": false,
-      "instruction": "Make default greeting Hello Steward while following approved knowledge: preserve explicit-name greetings and the public greet signature.",
+      "instruction": "Make default greeting Hello Duck Tape while following approved knowledge: preserve explicit-name greetings and the public greet signature.",
       "expected_behavior": {
-        "default_greeting": "Hello Steward",
+        "default_greeting": "Hello Duck Tape",
         "named_greeting": "Hello Ada"
       },
       "required_evidence": "Knowledge version appears in exact run inputs; changed approved knowledge invalidates stale results.",

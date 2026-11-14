@@ -1,5 +1,5 @@
 {
-  "name": "steward-eval-ts",
+  "name": "duck-tape-eval-ts",
   "version": "1.0.0",
   "private": true,
   "type": "module",

@@ -14,7 +14,7 @@ pytestmark=[pytest.mark.live,pytest.mark.skipif(os.getenv('STEWARD_LIVE_SANDBOX'
 def npm_lock(root,framework,version):
     """Resolve only an exact, reviewed manifest; do not install or execute packages."""
     root.mkdir()
-    package={'name':'steward-reviewed-'+framework,'version':'1.0.0','private':True,'devDependencies':{framework:version},'scripts':{'test':framework+' run' if framework=='vitest' else 'jest --runInBand'}}
+    package={'name':'duck-tape-reviewed-'+framework,'version':'1.0.0','private':True,'devDependencies':{framework:version},'scripts':{'test':framework+' run' if framework=='vitest' else 'jest --runInBand'}}
     if framework=='vitest': package['type']='module'
     text=json.dumps(package)
     (root/'package.json').write_text(text,encoding='utf-8')
@@ -63,8 +63,8 @@ def test_actual_framework_exact_acceptance_target(framework,version,tmp_path,mon
         files.update(manifests)
     base={'id':'framework-'+framework,'files':files}
     profile=execution_profiles.discover(base)[0]
-    after_source=files[source].replace('Hello world','Hello Steward')
-    after_tests=files[test].replace('Hello world','Hello Steward')
+    after_source=files[source].replace('Hello world','Hello Duck Tape')
+    after_tests=files[test].replace('Hello world','Hello Duck Tape')
     reference={'criterion_id':'requested','path':test,'test':name}
     command=worker.acceptance_commands([reference],profile,{test:after_tests})[0]
     plan={**profile,'commands':[*profile['commands'],command]}

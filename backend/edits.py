@@ -140,7 +140,7 @@ def apply(snapshot, operations: list[EditOperation], destination: Path) -> Candi
     snapshots.materialize(snapshot_id, destination)
     sample.git(destination, 'init', '-b', 'main')
     _stage(destination, before, before_modes)
-    sample.git(destination, '-c', 'user.name=Steward', '-c', 'user.email=steward@localhost', 'commit', '--allow-empty', '-m', 'Immutable snapshot base')
+    sample.git(destination, '-c', 'user.name=Duck Tape', '-c', 'user.email=duck-tape@localhost', 'commit', '--allow-empty', '-m', 'Immutable snapshot base')
     for path in sorted(changed - set(contents), reverse=True):
         target = destination.joinpath(*path.split('/'))
         target.unlink()

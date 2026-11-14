@@ -91,7 +91,7 @@ def refresh_repo(id, replacement=None, cancel=None, on_publish=None):
                 job=json.loads(row[0])
                 if job.get('repo_id') == id and job.get('status') not in TERMINAL:
                     db.put_in(con,'jobs',{**job,'status':'Failed','error':'Repository changed. Retry to investigate the new snapshot.','approval':None,'stale':True,'lease_token':None,'lease_until':0})
-            db.put_in(con,'events',{'message':'Snapshot refreshed; dependent knowledge and pending jobs invalidated','repo_id':id,'author':'Steward'})
+            db.put_in(con,'events',{'message':'Snapshot refreshed; dependent knowledge and pending jobs invalidated','repo_id':id,'author':'Duck Tape'})
         if on_publish: on_publish(con,updated)
         return updated
     return db.atomic(publish)
@@ -143,7 +143,7 @@ async def lifespan(app):
         stop_operations()
 
 
-app = FastAPI(title='Steward', lifespan=lifespan)
+app = FastAPI(title='Duck Tape', lifespan=lifespan)
 
 
 @app.middleware('http')
@@ -222,7 +222,7 @@ def register_repo(root, name, origin, repo_id=None, cancel=None, on_publish=None
         if db.get_in(con,'repositories',repo_id): raise ValueError('Repository identity already exists')
         result=db.put_in(con,'repositories',repo)
         db.index_search(result,con)
-        db.put_in(con,'events',{'message':'Repository imported and indexed','repo_id':repo_id,'author':'Steward'})
+        db.put_in(con,'events',{'message':'Repository imported and indexed','repo_id':repo_id,'author':'Duck Tape'})
         if on_publish: on_publish(con,result)
         return result
     return db.atomic(publish)
@@ -377,7 +377,7 @@ def create_job(body:JobInput):
         job=db.put_in(con,'jobs',record)
         signal=db.put_in(con,'signals',{'job_id':job['id'],'repo_id':repo['id'],'source':body.source,'original':body.description,'source_url':body.source_url,'source_identity':identity,'evidence_fingerprint':fingerprint,'dedup_key':key,'retrieved_at':db.now()})
         job=db.put_in(con,'jobs',{**job,'signal_id':signal['id']})
-        db.put_in(con,'events',{'message':'Signal qualified; '+job['status'].lower(),'job_id':job['id'],'repo_id':repo['id'],'author':'Steward'})
+        db.put_in(con,'events',{'message':'Signal qualified; '+job['status'].lower(),'job_id':job['id'],'repo_id':repo['id'],'author':'Duck Tape'})
         return job
     return db.atomic(create)
 
@@ -433,14 +433,14 @@ def get_revision(id,rid):
 @app.get('/api/jobs/{id}/patch')
 def export_patch(id:str,revision_id:str|None=None):
     revision=get_revision(id,revision_id)
-    return Response(revision['diff'],media_type='text/x-diff',headers={'Content-Disposition':f'attachment; filename="steward-{id[:8]}.patch"'})
+    return Response(revision['diff'],media_type='text/x-diff',headers={'Content-Disposition':f'attachment; filename="duck-tape-{id[:8]}.patch"'})
 
 
 @app.get('/api/jobs/{id}/files')
 def export_files(id:str,revision_id:str|None=None):
     revision=get_revision(id,revision_id)
     from . import integration
-    return Response(integration.export_files(revision['id']),media_type='application/zip',headers={'Content-Disposition':f'attachment; filename="steward-{id[:8]}.zip"'})
+    return Response(integration.export_files(revision['id']),media_type='application/zip',headers={'Content-Disposition':f'attachment; filename="duck-tape-{id[:8]}.zip"'})
 
 
 @app.get('/api/knowledge')
@@ -623,4 +623,4 @@ if DIST.exists():
 def frontend(path:str):
     if path.startswith('api/'): raise HTTPException(404,'Unknown API route')
     if (DIST/'index.html').exists(): return FileResponse(DIST/'index.html')
-    return {'message':'Steward backend ready. Build frontend: cd frontend && npm install && npm run build'}
+    return {'message':'Duck Tape backend ready. Build frontend: cd frontend && npm install && npm run build'}

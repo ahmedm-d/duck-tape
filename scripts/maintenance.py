@@ -68,7 +68,7 @@ def rows(connection):
 def offline(data):
     data = regular_path(data)
     if not data.is_dir() or not (data / DATABASE).is_file():
-        raise ValueError('An existing Steward SQLite workspace is required')
+        raise ValueError('An existing Duck Tape SQLite workspace is required')
     regular_path(data / DATABASE)
     connection = sqlite3.connect(data / DATABASE, timeout=2)
     try:

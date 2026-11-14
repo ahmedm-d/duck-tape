@@ -44,7 +44,7 @@ def fetch_public(url, max_bytes=MAX_ARCHIVE, *, provenance=None):
         raw = socket.create_connection((addresses[0], 443), timeout=20)
         try:
             connection.sock = ssl.create_default_context().wrap_socket(raw, server_hostname=p.hostname)
-            connection.request('GET', p.path + ('?' + p.query if p.query else '') or '/', headers={'User-Agent': 'Steward-local-prototype/1', 'Accept': '*/*'})
+            connection.request('GET', p.path + ('?' + p.query if p.query else '') or '/', headers={'User-Agent': 'Duck-Tape-local-prototype/1', 'Accept': '*/*'})
             response = connection.getresponse()
             if response.status in (301, 302, 303, 307, 308):
                 url = urljoin(url, response.getheader('Location', ''))

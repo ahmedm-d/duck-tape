@@ -49,7 +49,7 @@ if __name__=='__main__':
                 try: process.wait(timeout=12)
                 except subprocess.TimeoutExpired: process.terminate(); process.wait(timeout=5)
                 return
-            print(f'Steward worker exited ({process.returncode}); restarting in {delay}s',flush=True)
+            print(f'Duck Tape worker exited ({process.returncode}); restarting in {delay}s',flush=True)
             stop.wait(delay)
             delay=1 if time.monotonic()-started>60 else min(30,delay*2)
     supervisor=threading.Thread(target=supervise,name='worker-supervisor',daemon=True)

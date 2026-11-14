@@ -14,7 +14,7 @@ def main():
     index=repository.index_repository(repo_root)
     repo=db.put('repositories',{'name':'Live transport smoke (second repository)','root':str(repo_root),'is_sample':False,'snapshot':index['snapshot'],'index':index})
     db.put('knowledge',{'repo_id':repo['id'],'title':'Greeting contract','content':'greet must remain a no-argument function returning a string.','scope':'greeting.py','status':'team-approved','version':1})
-    job=db.put('jobs',{'repo_id':repo['id'],'title':'Change greeting','description':'In greeting.py replace Hello world with Hello Steward. Keep the function named greet.','risk':'low','status':'Queued','base_snapshot':repo['snapshot'],'source':'request'})
+    job=db.put('jobs',{'repo_id':repo['id'],'title':'Change greeting','description':'In greeting.py replace Hello world with Hello Duck Tape. Keep the function named greet.','risk':'low','status':'Queued','base_snapshot':repo['snapshot'],'source':'request'})
     worker.process_job(job['id'])
     result=db.get('jobs',job['id'])
     evidence={'health':providers.health(),'job':result,'revisions':db.list_records('revisions'),'checks':db.list_records('checks'),'runs':db.list_records('runs')}
@@ -22,7 +22,7 @@ def main():
     output.write_text(json.dumps(evidence,indent=2),encoding='utf-8')
     assert result['status']=='Ready for review',result.get('error')
     revision=evidence['revisions'][0]
-    assert any(f['path']=='greeting.py' and 'Hello Steward' in f['after'] for f in revision['files'])
+    assert any(f['path']=='greeting.py' and 'Hello Duck Tape' in f['after'] for f in revision['files'])
     assert revision['provider']['mode']=='live'
     assert revision['review']['approved']
     assert evidence['checks'][0]['status']=='unavailable'

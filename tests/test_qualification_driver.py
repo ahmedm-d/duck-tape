@@ -10,8 +10,8 @@ def test_manifest_behavior_contract_covers_bugs_and_greeting_journeys(language):
     assert bug=={'average_empty':0,'average_2_4':3,'default_greeting':'Hello world','named_greeting':'Hello Ada'}
     feature=driver.behavior_cases({'language':language,'journey':'decision-feature','expected_behavior':{'selected_option_label':'Welcome','formal_greeting':'Welcome Ada','default_greeting':'Hello world'}})
     assert feature['formal_greeting']=='Welcome Ada' and feature['named_greeting']=='Hello Ada'
-    revision={'language':language,'journey':'revision','expected_behavior':{'first_default':'Hello Steward','revision_default':'Hello Team'}}
-    assert driver.behavior_cases(revision,'first')['default_greeting']=='Hello Steward'
+    revision={'language':language,'journey':'revision','expected_behavior':{'first_default':'Hello Duck Tape','revision_default':'Hello Team'}}
+    assert driver.behavior_cases(revision,'first')['default_greeting']=='Hello Duck Tape'
     assert driver.behavior_cases(revision)['default_greeting']=='Hello Team'
 
 def test_independent_behavior_requires_actual_values_not_only_passing_exit_code():

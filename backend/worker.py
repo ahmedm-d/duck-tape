@@ -153,7 +153,7 @@ def publish(job_id, token, revision, checks):
             run=json.loads(row[0])
             if run.get('job_id')==job_id and run.get('lease_token')==token and run.get('status')=='running':
                 db.put_in(con,'runs',{**run,'status':'complete','revision_id':revision['id'],'finished_at':db.now()})
-        db.put_in(con,'events',{'message':'Patch revision ready for review','job_id':job_id,'repo_id':current['repo_id'],'author':'Steward'})
+        db.put_in(con,'events',{'message':'Patch revision ready for review','job_id':job_id,'repo_id':current['repo_id'],'author':'Duck Tape'})
 
 def _process_legacy_fixture(job_id):
     token=str(uuid.uuid4())
@@ -237,7 +237,7 @@ def _process_legacy_fixture(job_id):
             target=safe_path(root,path); target.parent.mkdir(parents=True,exist_ok=True); target.write_text(content,encoding='utf-8',newline='')
         sample.git(root,'init','-b','prepared')
         sample.git(root,'add','.')
-        sample.git(root,'-c','user.name=Steward','-c','user.email=demo@localhost','commit','--allow-empty','-m','Indexed snapshot '+repo['snapshot'])
+        sample.git(root,'-c','user.name=Duck Tape','-c','user.email=demo@localhost','commit','--allow-empty','-m','Indexed snapshot '+repo['snapshot'])
         trusted=fixture and sample.trusted_tree(root)
         if trusted:
             checks.append(check(job_id,token,root,'baseline',TEST_SCRIPT,'python -m unittest discover -s tests -v'))
@@ -292,7 +292,7 @@ def _process_legacy_fixture(job_id):
                 raise ValueError('Independent model review requested changes: '+'; '.join(str(f) for f in review['findings'])[:700])
         guard(job_id,token)
         number=1+max([r['number'] for r in db.list_records('revisions') if r['job_id']==job_id] or [0])
-        revision={'id':str(uuid.uuid4()),'job_id':job_id,'number':number,'diff':diff,'files':changed,'explanation':response['explanation'],'base_snapshot':repo['snapshot'],'patch_hash':hashlib.sha256(diff.encode()).hexdigest(),'context':context,'confidence':'Supported by executed fixture checks' if trusted else 'Limited: execution unavailable','uncertainty':['No constrained sandbox for arbitrary code'] if not trusted else ['Fixture scenario only; not arbitrary model verification'],'provider':telemetry,'review':review,'worktree':str(root),'created_at':db.now(),'author':'Steward'}
+        revision={'id':str(uuid.uuid4()),'job_id':job_id,'number':number,'diff':diff,'files':changed,'explanation':response['explanation'],'base_snapshot':repo['snapshot'],'patch_hash':hashlib.sha256(diff.encode()).hexdigest(),'context':context,'confidence':'Supported by executed fixture checks' if trusted else 'Limited: execution unavailable','uncertainty':['No constrained sandbox for arbitrary code'] if not trusted else ['Fixture scenario only; not arbitrary model verification'],'provider':telemetry,'review':review,'worktree':str(root),'created_at':db.now(),'author':'Duck Tape'}
         for item in checks:
             item.update(revision_id=revision['id'],base_snapshot=repo['snapshot'],patch_hash=revision['patch_hash'])
         publish(job_id,token,revision,checks)
@@ -725,7 +725,7 @@ def process_job(job_id):
                                   'base_snapshot':repo['snapshot'],'source_snapshot_id':source_id,'input_fingerprint':workflow_key,'worktree':candidate.worktree,
                                   'context':context,'provider':run.get('provider',{}),'review':review,'explanation':response['explanation'],
                                   'assessment':assessment,'acceptance_coverage':acceptance_coverage,
-                                  'confidence':'Supported by sandbox checks and separate model review','uncertainty':assessment['limitations'],'created_at':db.now(),'author':'Steward'}
+                                  'confidence':'Supported by sandbox checks and separate model review','uncertainty':assessment['limitations'],'created_at':db.now(),'author':'Duck Tape'}
                         for item in result: item.update(revision_id=revision['id'],base_snapshot=repo['snapshot'])
                         publish(job_id,token,revision,result)
                         return

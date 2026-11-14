@@ -91,7 +91,7 @@ def _complete(operation):
         result=db.put_in(con,'jobs',{**job,'status':'Completed','applied_commit':commit,
             'integration_branch':'steward/integration','integration_root':str(root),'applied_at':db.now()})
         db.put_in(con,'applications',{**current_operation,'status':'complete','commit':commit,'lease_until':0})
-        db.put_in(con,'events',{'message':'Approved revision applied to managed local branch','job_id':job['id'],'repo_id':job['repo_id'],'author':'Steward'})
+        db.put_in(con,'events',{'message':'Approved revision applied to managed local branch','job_id':job['id'],'repo_id':job['repo_id'],'author':'Duck Tape'})
         return result
     return db.atomic(complete)
 
@@ -115,7 +115,7 @@ def recover_pending():
                 if current and current.get('lease_until',0)<=time.time() and current.get('status')!='complete':
                     db.put_in(con,'applications',{**current,'status':'needs attention','error':str(exc)[:2000]})
                     db.put_in(con,'events',{'message':'Managed application needs review: '+str(exc)[:500],
-                        'job_id':operation['job_id'],'author':'Steward'})
+                        'job_id':operation['job_id'],'author':'Duck Tape'})
             db.atomic(record)
 
 
@@ -163,7 +163,7 @@ def apply(job_id, revision_id, expected_input_fingerprint=None):
             modes={f['path']:f['mode'] for f in source['files'] if f['status']=='included'}
             edits._stage(staging,snapshots.read_files(source_id),modes)
             _owned(operation)
-            sample.git(staging,'-c','user.name=Steward','-c','user.email=local@steward','commit','--allow-empty','-m','Managed immutable baseline')
+            sample.git(staging,'-c','user.name=Duck Tape','-c','user.email=local@duck-tape','commit','--allow-empty','-m','Managed immutable baseline')
             staging.rename(root)
         head=sample.git(root,'rev-parse','HEAD').strip()
         marker='Steward-Revision: '+revision_id
@@ -210,7 +210,7 @@ def apply(job_id, revision_id, expected_input_fingerprint=None):
         _validate(db.get('jobs',job_id),db.get('revisions',revision_id),db.get('repositories',repo['id']),expected_input_fingerprint)
         _source_is_current(db.get('repositories',repo['id']),source_id)
         _owned(operation)
-        sample.git(root,'-c','user.name=Steward','-c','user.email=local@steward','commit','-m',marker)
+        sample.git(root,'-c','user.name=Duck Tape','-c','user.email=local@duck-tape','commit','-m','Duck Tape revision '+revision_id,'-m',marker)
         return _complete(operation)
     except BaseException:
         def release(con):
@@ -239,6 +239,6 @@ def export_files(revision_id):
                 data=file['after'].encode() if file.get('after') is not None else (Path(revision['worktree'])/path).read_bytes()
                 if file.get('hash') and _sha(data)!=file['hash']: raise workflow.Conflict('Candidate export bytes changed')
                 archive.writestr('files/'+path,data)
-        archive.writestr('steward-changes.json',json.dumps({'revision_id':revision_id,'base_snapshot':revision['base_snapshot'],'patch_hash':revision['patch_hash'],'changes':changes},indent=2))
-        archive.writestr('steward.patch',revision['diff'])
+        archive.writestr('duck-tape-changes.json',json.dumps({'revision_id':revision_id,'base_snapshot':revision['base_snapshot'],'patch_hash':revision['patch_hash'],'changes':changes},indent=2))
+        archive.writestr('duck-tape.patch',revision['diff'])
     return buffer.getvalue()

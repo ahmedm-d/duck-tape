@@ -3,6 +3,9 @@ import {fixture} from './fixtures';
 
 test('deep routes survive reload and browser back',async({page})=>{
  await fixture(page);await page.goto('/#/repositories/repo-one/knowledge');
+ await expect(page).toHaveTitle('Duck Tape — Repository maintenance');
+ await expect(page.locator('.brand')).toContainText('Duck Tape');
+ await expect(page.locator('footer')).toContainText('Duck Tape');
  await expect(page.getByRole('heading',{name:'Knowledge',exact:true})).toBeVisible();
  await page.reload();await expect(page.getByRole('heading',{name:'Knowledge',exact:true})).toBeVisible();
  await page.getByRole('button',{name:'Jobs',exact:true}).click();

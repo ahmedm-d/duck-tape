@@ -214,7 +214,7 @@ class Qualification:
 
     def create(self):
         journey=self.task['journey']; instruction=self.task['instruction']
-        if journey=='revision': instruction='Change greet() default output to Hello Steward. Preserve greet("Ada")=="Hello Ada" and average behavior. Update the existing greeting assertion to match the requested new default; keep all tests.'
+        if journey=='revision': instruction='Change greet() default output to Hello Duck Tape. Preserve greet("Ada")=="Hello Ada" and average behavior. Update the existing greeting assertion to match the requested new default; keep all tests.'
         elif journey=='cancellation-restart': instruction='Make average([]) return 0 and preserve average([2,4])==3 and greeting behavior. Add an empty-input regression test to existing tests without removing tests.'
         elif journey=='decision-feature': instruction+=' Use greet(name, style="plain"); formal style is greet("Ada","formal"). Ask the product choice before implementing.'
         elif journey=='bug-regression': instruction+=' Add an empty-input regression to existing tests and run it against unchanged implementation first. Preserve all existing tests and greeting behavior.'

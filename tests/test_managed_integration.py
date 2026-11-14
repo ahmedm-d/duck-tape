@@ -22,20 +22,23 @@ def prepared(tmp_path, monkeypatch):
 
 
 def test_apply_imported_snapshot_and_export_deletion_manifest(prepared):
-    from backend import integration
+    from backend import integration, sample
     import io, zipfile, json
     repo, revision = prepared
     result = integration.apply('job', revision['id'], 'inputs')
     assert result['status'] == 'Completed' and result['applied_commit']
     assert (Path(repo['root']) / 'old.py').exists() and not (Path(repo['root']) / 'new.py').exists()
     target = Path(result['integration_root'])
+    assert sample.git(target, 'log', '-1', '--format=%an').strip() == 'Duck Tape'
+    assert sample.git(target, 'log', '-1', '--format=%s').strip() == 'Duck Tape revision '+revision['id']
+    assert 'Steward-Revision: '+revision['id'] in sample.git(target, 'log', '-1', '--format=%B')
     assert not (target / 'old.py').exists() and (target / 'new.py').read_bytes() == b'value = 1\n'
     assert (target / 'keep.txt').read_bytes() == b'unchanged\r\n'
     assert integration.apply('job', revision['id'], 'inputs')['applied_commit'] == result['applied_commit']
     with zipfile.ZipFile(io.BytesIO(integration.export_files(revision['id']))) as archive:
-        manifest = json.loads(archive.read('steward-changes.json'))
+        manifest = json.loads(archive.read('duck-tape-changes.json'))
         assert any(item['path'] == 'old.py' and item['operation'] == 'delete' for item in manifest['changes'])
-        assert archive.read('steward.patch').decode() == revision['diff']
+        assert archive.read('duck-tape.patch').decode() == revision['diff']
 
 
 def test_stale_source_and_approval_are_rejected(prepared):
@@ -48,14 +51,19 @@ def test_stale_source_and_approval_are_rejected(prepared):
         integration.apply('job', revision['id'], 'inputs')
 
 
-def test_commit_before_database_completion_is_reconciled(prepared, monkeypatch):
-    from backend import integration
+@pytest.mark.parametrize('legacy_subject', [False, True])
+def test_commit_before_database_completion_is_reconciled(prepared, monkeypatch, legacy_subject):
+    from backend import integration, sample
     repo, revision = prepared
     original = integration._complete
     monkeypatch.setattr(integration, '_complete', lambda operation: (_ for _ in ()).throw(RuntimeError('crashed after commit')))
     with pytest.raises(RuntimeError):
         integration.apply('job', revision['id'], 'inputs')
     assert db.get('jobs', 'job')['status'] == 'Ready for review'
+    if legacy_subject:
+        root = Path(db.get('applications', revision['id'])['root'])
+        sample.git(root, '-c', 'user.name=Steward', '-c', 'user.email=local@steward',
+                   'commit', '--amend', '-m', 'Steward-Revision: '+revision['id'])
     monkeypatch.setattr(integration, '_complete', original)
     integration.recover_pending()
     recovered = db.get('jobs', 'job')
@@ -84,9 +92,9 @@ def test_export_metadata_names_cannot_replace_source_files(prepared):
     from backend import integration
     _, revision = prepared
     db.put('revisions', {**revision, 'files':[
-        {'path':'steward.patch','before':None,'after':'user patch'},
-        {'path':'steward-changes.json','before':None,'after':'user manifest'}]})
+        {'path':'duck-tape.patch','before':None,'after':'user patch'},
+        {'path':'duck-tape-changes.json','before':None,'after':'user manifest'}]})
     with zipfile.ZipFile(io.BytesIO(integration.export_files(revision['id']))) as archive:
         assert len(archive.namelist()) == len(set(archive.namelist()))
-        assert archive.read('files/steward.patch') == b'user patch'
-        assert archive.read('files/steward-changes.json') == b'user manifest'
+        assert archive.read('files/duck-tape.patch') == b'user patch'
+        assert archive.read('files/duck-tape-changes.json') == b'user manifest'

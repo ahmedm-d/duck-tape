@@ -109,7 +109,7 @@ def delete(kind, id):
 
 
 def event(message, job_id=None, repo_id=None):
-    return put('events', {'message': message, 'job_id': job_id, 'repo_id': repo_id, 'author': 'Steward'})
+    return put('events', {'message': message, 'job_id': job_id, 'repo_id': repo_id, 'author': 'Duck Tape'})
 
 
 def index_search(repo, con=None):

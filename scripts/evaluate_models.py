@@ -44,10 +44,10 @@ def smoke():
     edit_engine.read_file(snapshot['id'], 'greeting.py', hashlib.sha256(original.encode()).hexdigest())
     cases = [
         ('investigation', {'question': 'What does greet return?', 'files': [{'path': 'greeting.py', 'content': original}]}, None),
-        ('planning', {'job': 'Change greet() to return Hello Steward.', 'files': [{'path': 'greeting.py', 'content': original}]}, None),
-        ('implementation', {'job': 'Change greet() to return Hello Steward, preserve its signature.', 'files': [{'path': 'greeting.py', 'hash': hashlib.sha256(original.encode()).hexdigest(), 'complete': True, 'content': original}]}, None),
-        ('review', {'job': {'description': 'greet must remain a no-argument function and return Hello Steward.'}, 'proposed_sources': [{'path': 'greeting.py', 'content': 'def greet():\n    return "Hello Steward"\n'}], 'approved_knowledge': []}, True),
-        ('review', {'job': {'description': 'greet must return Hello Steward.'}, 'proposed_sources': [{'path': 'greeting.py', 'content': 'def greet():\n    return "Goodbye"\n'}], 'approved_knowledge': []}, False),
+        ('planning', {'job': 'Change greet() to return Hello Duck Tape.', 'files': [{'path': 'greeting.py', 'content': original}]}, None),
+        ('implementation', {'job': 'Change greet() to return Hello Duck Tape, preserve its signature.', 'files': [{'path': 'greeting.py', 'hash': hashlib.sha256(original.encode()).hexdigest(), 'complete': True, 'content': original}]}, None),
+        ('review', {'job': {'description': 'greet must remain a no-argument function and return Hello Duck Tape.'}, 'proposed_sources': [{'path': 'greeting.py', 'content': 'def greet():\n    return "Hello Duck Tape"\n'}], 'approved_knowledge': []}, True),
+        ('review', {'job': {'description': 'greet must return Hello Duck Tape.'}, 'proposed_sources': [{'path': 'greeting.py', 'content': 'def greet():\n    return "Goodbye"\n'}], 'approved_knowledge': []}, False),
     ]
     records = []
     for task, payload, approved in cases:
@@ -57,11 +57,11 @@ def smoke():
             passed = result.output.get('approved') == approved if approved is not None else True
             if task == 'implementation':
                 edits = result.output.get('edits', [])
-                passed = bool(edits) and any('Hello Steward' in str(edit.get('content')) or 'Hello Steward' in str(edit.get('replacements')) for edit in edits)
+                passed = bool(edits) and any('Hello Duck Tape' in str(edit.get('content')) or 'Hello Duck Tape' in str(edit.get('replacements')) for edit in edits)
                 passed = passed and all(edit['path'] == 'greeting.py' and edit['expected_hash'] == hashlib.sha256(original.encode()).hexdigest() for edit in edits)
                 if passed:
                     candidate = edit_engine.apply(snapshot, edits, scratch/'candidate')
-                    passed = (Path(candidate.worktree)/'greeting.py').read_bytes() == b'def greet():\n    return "Hello Steward"\n'
+                    passed = (Path(candidate.worktree)/'greeting.py').read_bytes() == b'def greet():\n    return "Hello Duck Tape"\n'
             if task == 'planning' and 'steps' in result.output:
                 passed = all(path == 'greeting.py' for step in result.output['steps'] for path in step['paths'])
             references = result.output.get('evidence', []) + [finding['reference'] for finding in result.output.get('findings', [])]

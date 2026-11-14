@@ -1,4 +1,4 @@
-﻿# Steward frontend
+﻿# Duck Tape frontend
 
 React, TypeScript and Vite. The production bundle is served by FastAPI at the same origin. Development uses `npm run dev` with an API proxy to `http://127.0.0.1:8765`.
 

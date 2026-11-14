@@ -18,9 +18,9 @@ def test_feature_selection_runs_only_after_candidate_and_observes_target(languag
     test='tests/test_service.py' if language=='python' else 'service.test.ts'
     name='test_greet' if language=='python' else 'greeting'
     before=files[source].decode()
-    after=before.replace('name="world"','name="Steward"') if language=='python' else before.replace('= "world"','= "Steward"')
+    after=before.replace('name="world"','name="Duck Tape"') if language=='python' else before.replace('= "world"','= "Duck Tape"')
     assert after!=before
-    tests=files[test].decode().replace('Hello world','Hello Steward')
+    tests=files[test].decode().replace('Hello world','Hello Duck Tape')
     base={'id':'feature-'+language,'files':files}
     profile=execution_profiles.discover(base)[0]
     coverage=[{'criterion_id':'criterion-1','path':test,'test':name}]

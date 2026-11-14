@@ -14,6 +14,26 @@ def client(tmp_path, monkeypatch):
     return TestClient(app)
 
 
+def test_duck_tape_api_activity_and_download_branding(client, monkeypatch, tmp_path):
+    from backend import main
+    monkeypatch.setattr(main, 'DIST', tmp_path / 'missing-frontend')
+    assert client.get('/openapi.json').json()['info']['title'] == 'Duck Tape'
+    assert client.get('/').json()['message'].startswith('Duck Tape backend ready.')
+    assert db.event('Ready')['author'] == 'Duck Tape'
+    job = client.post('/api/jobs', json={'repo_id':'repo','title':'A useful request'}).json()
+    assert all(event['author'] == 'Duck Tape' for event in db.list_records('events'))
+    db.put('jobs', {**job, 'current_revision':'revision'})
+    db.put('revisions', {'id':'revision','job_id':job['id'],'base_snapshot':'s1',
+                        'patch_hash':'hash','diff':'sample patch','files':[]})
+    patch = client.get(f"/api/jobs/{job['id']}/patch")
+    assert patch.headers['content-disposition'] == f'attachment; filename="duck-tape-{job["id"][:8]}.patch"'
+    assert patch.text == 'sample patch'
+    files = client.get(f"/api/jobs/{job['id']}/files")
+    assert files.headers['content-disposition'] == f'attachment; filename="duck-tape-{job["id"][:8]}.zip"'
+    with zipfile.ZipFile(io.BytesIO(files.content)) as archive:
+        assert set(archive.namelist()) == {'duck-tape.patch', 'duck-tape-changes.json'}
+
+
 def test_approval_separate_from_patch_approval_and_idempotent(client):
     payload = {'repo_id':'repo','title':'Fix a thing','description':'Specific requirement','source':'ticket'}
     job = client.post('/api/jobs',json=payload).json()

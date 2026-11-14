@@ -119,7 +119,24 @@ def _cosine(first, second):
     return sum(a*b for a, b in zip(first, second)) / divisor if divisor else 0
 
 
-def retrieve(repo_id, snapshot_id, query=None, budget_tokens=7000, paths=None, *, knowledge=None, limit=12, graph=True, semantic=None, cancel=None):
+def _atlas_candidates(repo_id, snapshot_id, query, available, limit, cancel):
+    """Opt-in Atlas vector candidates, accepted only when they resolve to local eligible chunks."""
+    from . import data_platforms
+    _check(cancel)
+    encoded = query.encode()
+    bounded = encoded[:12000].decode('utf-8', errors='ignore') if len(encoded) > 12000 else query
+    try:
+        result = data_platforms.atlas_search(repo_id, snapshot_id, bounded, limit=min(24, limit * 2))
+    except Exception as exc:
+        _check(cancel)
+        reason = str(exc) if isinstance(exc, data_platforms.DataPlatformError) else type(exc).__name__
+        return [], f'Atlas candidates unavailable ({reason}); local keyword/graph fallback'
+    _check(cancel)
+    hits = [(item['chunk_id'], item['score']) for item in result.get('matches', []) if item.get('chunk_id') in available]
+    return hits, f'Atlas candidates: {len(hits)} validated against local snapshot chunks; source text from local evidence'
+
+
+def retrieve(repo_id, snapshot_id, query=None, budget_tokens=7000, paths=None, *, knowledge=None, limit=12, graph=True, semantic=None, atlas=None, cancel=None):
     started = time.perf_counter()
     legacy = isinstance(repo_id, dict)
     if legacy:
@@ -186,6 +203,14 @@ def retrieve(repo_id, snapshot_id, query=None, budget_tokens=7000, paths=None, *
         except Exception as exc:
             _check(cancel)
             semantic_note = f'Embedding provider unavailable ({type(exc).__name__}); keyword/graph fallback'
+    use_atlas = not legacy and (atlas if atlas is not None else os.getenv('STEWARD_ATLAS_RETRIEVAL') == '1')
+    atlas_used, atlas_note = False, None
+    if use_atlas and available:
+        hits, atlas_note = _atlas_candidates(repo_id, snapshot_id, query, available, limit, cancel)
+        for key, score in hits:
+            scores[key] = scores.get(key, 0) + score * 20
+            reasons.setdefault(key, []).append(f'Atlas vector candidate {score:.3f}')
+        atlas_used = bool(hits)
     by_path = {}
     for key, chunk in available.items():
         by_path.setdefault(chunk['path'], []).append(key)
@@ -221,6 +246,8 @@ def retrieve(repo_id, snapshot_id, query=None, budget_tokens=7000, paths=None, *
     missing = list(index.get('gaps', [])) + metadata.get('gaps', [])
     if graph or use_semantic:
         missing.append(semantic_note)
+    if atlas_note:
+        missing.append(atlas_note)
     if len(missing) > 32:
         missing = missing[:32] + [f'{len(missing) - 32} further inventory gaps available in the source index']
     overview = index.get('overview', '')[:1000]
@@ -234,7 +261,7 @@ def retrieve(repo_id, snapshot_id, query=None, budget_tokens=7000, paths=None, *
         scope = record.get('scope') or '*'
         if scope in {'*', 'repository', 'global'} or any(fnmatch.fnmatchcase(path, scope) or path.startswith(scope.rstrip('/') + '/') for path in selected_paths):
             policies.append({key: record[key] for key in ['id', 'title', 'content', 'scope', 'version', 'updated_at'] if key in record})
-    mode = 'keyword' + (' + semantic' if semantic_used else '') + (' + graph' if graph else ' only' if not semantic_used else '')
+    mode = 'keyword' + (' + semantic' if semantic_used else '') + (' + atlas' if atlas_used else '') + (' + graph' if graph else ' only' if not (semantic_used or atlas_used) else '')
     # shortcut: UTF-8 bytes bound tokens conservatively; use model tokenization when available.
     base_fields = {'missing': missing, 'overview': overview, 'repo_id': repo_id, 'snapshot': snapshot_id, 'snapshot_id': snapshot_id,
                    'mode': mode, 'context_hash': '0' * 64, 'token_estimate': budget_tokens, 'latency_ms': 99999999,

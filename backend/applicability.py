@@ -146,6 +146,25 @@ def _entry(entry: dict) -> dict:
     return entry
 
 
+CWE = re.compile(r'CWE-\d{1,5}')
+SYMBOL = re.compile(r'[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*){0,8}')
+
+
+def _cwe_ids(entry: dict) -> list[str]:
+    """Optional public CWE identifiers (e.g. GHSA database_specific.cwe_ids); evidence only."""
+    values = entry.get('cwe_ids') or []
+    return sorted({item for item in values if isinstance(item, str) and CWE.fullmatch(item)})[:20] if isinstance(values, list) else []
+
+
+def _affected_symbols(entry: dict) -> list[str]:
+    """Optional public vulnerable symbols (entry-level or OSV-style rule `symbols`); never reachability by themselves."""
+    values = list(entry.get('affected_symbols') or []) if isinstance(entry.get('affected_symbols'), list) else []
+    for rule in entry.get('affected') or []:
+        if isinstance(rule, dict) and isinstance(rule.get('symbols'), list):
+            values += rule['symbols']
+    return sorted({item for item in values if isinstance(item, str) and len(item) <= 200 and SYMBOL.fullmatch(item)})[:50]
+
+
 def match(profile: dict, entry: dict) -> dict:
     """Decide matched / not_matched / unknown for one public entry against one private profile."""
     entry = _entry(entry)
@@ -191,6 +210,7 @@ def match(profile: dict, entry: dict) -> dict:
         criteria.append('Existing checks still pass on the candidate' if vulnerability
                         else 'A measured before/after comparison supports the claimed improvement')
     return {'kind': 'applicability_match', 'version': PROFILE_VERSION, 'status': status,
+            'cwe_ids': _cwe_ids(entry), 'affected_symbols': _affected_symbols(entry),
             'repo_id': profile['repo_id'], 'snapshot_id': profile['snapshot_id'], 'profile_hash': profile['profile_hash'],
             'entry_id': entry['id'], 'entry_revision': entry['revision'], 'entry_hash': entry['content_hash'],
             'entry_kind': entry['kind'], 'entry_status': entry_status, 'evidence': evidence,

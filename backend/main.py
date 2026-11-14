@@ -632,6 +632,21 @@ def repository_graph(id:str,engine:str='auto'):
     except ValueError as exc: raise HTTPException(422,str(exc)) from None
 
 
+@app.get('/api/repositories/{id}/agent-context')
+def repository_agent_context(id:str,query:str,budget_tokens:int=3500,job_id:str|None=None,snapshot_id:str|None=None):
+    """graph_context v1 for agents and the UI: local, snapshot-bound, null means unknown."""
+    from .agent_context import agent_graph_context
+    repo=require('repositories',id)
+    current=repo.get('source_snapshot_id') or repo['snapshot']
+    if snapshot_id not in (None,current,repo['snapshot']): raise HTTPException(409,'Snapshot is not current; rebuild the graph context')
+    job=None
+    if job_id:
+        job=require('jobs',job_id)
+        if job.get('repo_id')!=id: raise HTTPException(404,'Job not found in this repository')
+    try: return agent_graph_context(id,current,query,budget_tokens,job=job)
+    except ValueError as exc: raise HTTPException(422,str(exc)) from None
+
+
 @app.get('/api/repositories/{id}/profile')
 def repository_profile(id:str):
     return _current_profile(id)
@@ -681,7 +696,7 @@ def applicability_intake(id:str,body:dict):
         return {'match':found,'jobs':[],'invalidated':stale,'detail':str(exc)}
     binding={'entry_id':found['entry_id'],'entry_revision':found['entry_revision'],'entry_hash':found['entry_hash'],'entry_kind':found['entry_kind'],
              'match_key':found['match_key'],'profile_hash':found['profile_hash'],'snapshot_id':found['snapshot_id']}
-    evidence={key:found[key] for key in ('status','evidence','citations','rationale','acceptance_criteria','limitations')}
+    evidence={key:found[key] for key in ('status','evidence','citations','rationale','acceptance_criteria','limitations','cwe_ids','affected_symbols')}
     def bind(job):
         if job.get('status') in TERMINAL|{'Failed'} or job.get('catalogue')==binding: return job
         bound={**job,'catalogue':binding,'applicability':evidence}

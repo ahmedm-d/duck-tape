@@ -128,6 +128,8 @@ def _atlas_collection(config):
         from pymongo import MongoClient
     except ImportError:
         raise DataPlatformError('Atlas requires the optional requirements-cloud.txt dependencies') from None
+    from .atlas_startup import use_system_trust_store
+    use_system_trust_store()  # OS trust store when truststore is installed; verification stays on (antivirus re-signs HTTPS)
     try:
         with MongoClient(config['uri'], tls=True, tlsAllowInvalidCertificates=False,
                          tlsAllowInvalidHostnames=False, serverSelectionTimeoutMS=5000,

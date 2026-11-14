@@ -1,0 +1,9 @@
+{
+  "id": "DUCKTAPE-FIXTURE-OSV-1",
+  "aliases": ["DUCKTAPE-FIXTURE-ALIAS-1"],
+  "summary": "Labelled fixture: example dependency advisory",
+  "details": "Synthetic public-shape test data. This is not a real advisory or evidence of live OSV, Databricks or Atlas execution.",
+  "published": "2026-01-01T00:00:00Z",
+  "modified": "2026-01-01T00:00:00Z",
+  "affected": [{"package": {"ecosystem": "PyPI", "name": "duck-tape-fixture"}, "ranges": [{"type": "ECOSYSTEM", "events": [{"introduced": "0"}, {"fixed": "2.0"}]}], "versions": ["1.0"]}]
+}

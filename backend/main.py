@@ -671,6 +671,18 @@ def repository_agent_context(id:str,query:str,budget_tokens:int=3500,job_id:str|
     except ValueError as exc: raise HTTPException(422,str(exc)) from None
 
 
+@app.post('/api/repositories/{id}/atlas-graph-mirror')
+def repository_atlas_graph_mirror(id:str):
+    """Explicit opt-in: mirror the current snapshot's graph and approved knowledge to private Atlas."""
+    from . import atlas_graph
+    from .data_platforms import DataPlatformError
+    repo=require('repositories',id)
+    current=repo.get('source_snapshot_id') or repo['snapshot']
+    try: return atlas_graph.mirror(id,current)
+    except atlas_graph.MirrorRefused as exc: raise HTTPException(409,str(exc)) from None
+    except DataPlatformError as exc: raise HTTPException(503,str(exc)) from None
+
+
 @app.get('/api/repositories/{id}/profile')
 def repository_profile(id:str):
     return _current_profile(id)

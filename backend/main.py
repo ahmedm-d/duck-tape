@@ -691,13 +691,60 @@ def repository_profile(id:str):
 @app.post('/api/repositories/{id}/applicability')
 def repository_applicability(id:str,body:dict):
     """Match public catalogue entries locally; nothing is uploaded or queued."""
-    from .applicability import match
+    from .applicability import catalogue_entry, match
     entries=body.get('entries')
     if not isinstance(entries,list) or not 1<=len(entries)<=100: raise HTTPException(422,'Provide 1 to 100 catalogue entries')
     profile=_current_profile(id,body.get('snapshot_id'))
-    try: matches=[match(profile,entry) for entry in entries]
+    try: matches=[match(profile,catalogue_entry(entry)) for entry in entries]
     except ValueError as exc: raise HTTPException(422,str(exc)) from None
     return {'profile':{key:profile[key] for key in ('repo_id','snapshot_id','profile_hash','gaps','capabilities')},'matches':matches}
+
+
+@app.post('/api/repositories/{id}/applicability/catalogue')
+def applicability_catalogue(id:str,body:dict):
+    """Match the public catalogue against this repository's resolved dependencies; creates no jobs.
+
+    Body: {snapshot_id?, provider: 'local'|'atlas' (default 'local'), limit?: 1..100 per package}.
+    provider=atlas sends the exact ecosystem/package names from the private profile to the public
+    catalogue cluster, so it is an explicit choice; local reads only the separate local catalogue file.
+    An Atlas failure is HTTP 503 with unknown coverage, never a silent local fallback. Coverage is always
+    unknown: no entry is not safe. `entries` carries the matcher-shape entry for each matched record,
+    ready for the explicit /applicability/intake route.
+    """
+    from .applicability import from_global_entry, match
+    provider=body.get('provider','local')
+    limit=body.get('limit',25)
+    if provider not in ('local','atlas'): raise HTTPException(422,"provider must be 'local' or 'atlas'")
+    if type(limit) is not int or not 1<=limit<=100: raise HTTPException(422,'limit must be an integer from 1 to 100')
+    profile=_current_profile(id,body.get('snapshot_id'))
+    names=sorted({(item['ecosystem'],item['name']) for item in profile['packages']})
+    queried,errors,limitations,found,truncated=[],[],[],{},False
+    from .global_pipeline import Error, query_atlas
+    if provider=='local':
+        from .global_catalogue import Catalogue, default_path
+        catalogue=Catalogue(default_path())
+    for ecosystem,package in names[:200]:
+        try:
+            if provider=='atlas': result=query_atlas(ecosystem,package,limit=limit)
+            else: result=catalogue.query(ecosystem,package,limit=limit)
+        except Error: raise HTTPException(503,'Public Atlas unavailable; coverage remains unknown.') from None
+        except ValueError as exc:
+            errors.append({'ecosystem':ecosystem,'package':package,'detail':str(exc)[:300]})
+            continue
+        queried.append({'ecosystem':ecosystem,'package':package,'entries':len(result['entries']),'truncated':result['truncated']})
+        limitations+=result['limitations']
+        for record in result['entries']: found.setdefault((record['canonical_id'],record['material_revision']),record)
+        truncated=truncated or result['truncated']
+    if len(names)>200: limitations.append(f'Only the first 200 of {len(names)} resolved packages were queried.')
+    if truncated: limitations.append('At least one package has more catalogue entries than the limit; raise limit or narrow the query.')
+    if profile['gaps']: limitations.append(f'{len(profile["gaps"])} unresolved manifest gap(s) in the profile; absence of a match is not absence of exposure.')
+    if provider=='atlas': limitations.append("Atlas readers cannot see another machine's failed source refresh; stored freshness is the only freshness shown.")
+    entries=[from_global_entry(record) for record in found.values()]
+    try: matches=[match(profile,entry) for entry in entries]
+    except ValueError as exc: raise HTTPException(422,str(exc)) from None
+    return {'profile':{**{key:profile[key] for key in ('repo_id','snapshot_id','profile_hash','gaps','capabilities')},'package_count':len(profile['packages'])},
+            'provider':provider,'queried':queried,'matches':matches,'entries':[entry for entry,item in zip(entries,matches) if item['status']=='matched'],
+            'coverage':'unknown','limitations':list(dict.fromkeys(limitations+['Catalogue coverage is partial; no match does not mean unaffected.'])),'errors':errors}
 
 
 def _invalidate_catalogue_jobs(repo_id:str,entry_id:str,current:set[str],reason:str):
@@ -722,11 +769,13 @@ def applicability_intake(id:str,body:dict):
     Open jobs created from an earlier revision, or from an entry that is now withdrawn or no
     longer matches, are invalidated; rejected/snoozed decisions on unchanged evidence are kept.
     """
-    from .applicability import intake_payloads, match
+    from .applicability import catalogue_entry, intake_payloads, match
     profile=_current_profile(id,body.get('snapshot_id'))
-    try: found=match(profile,body.get('entry'))
+    try:
+        entry=catalogue_entry(body.get('entry'))
+        found=match(profile,entry)
     except ValueError as exc: raise HTTPException(422,str(exc)) from None
-    try: payloads=intake_payloads(found,body['entry'])
+    try: payloads=intake_payloads(found,entry)
     except ValueError as exc:
         stale=_invalidate_catalogue_jobs(id,found['entry_id'],set(),f'Catalogue entry is no longer a current match ({exc}); re-assess applicability.')
         return {'match':found,'jobs':[],'invalidated':stale,'detail':str(exc)}

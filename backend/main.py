@@ -200,8 +200,11 @@ def health():
 def global_catalogue_query(ecosystem: str = Query(min_length=1, max_length=64),
                            package: str = Query(min_length=1, max_length=256),
                            limit: int = Query(default=25, ge=1, le=100),
-                           provider: Literal['local', 'atlas'] = 'local') -> dict:
+                           provider: Literal['local', 'atlas'] | None = None) -> dict:
+    # Option B: default resolved at request time (atlas when Atlas is required). C (catalogue owner) to confirm this default change.
+    from .atlas_mode import atlas_required
     from .global_catalogue import Catalogue, default_path
+    provider = provider or ('atlas' if atlas_required() else 'local')
     if provider == 'atlas':
         from .global_pipeline import query_atlas, Error
         try:
@@ -215,7 +218,7 @@ def global_catalogue_query(ecosystem: str = Query(min_length=1, max_length=64),
 def global_catalogue_graph(ecosystem: str = Query(min_length=1, max_length=64),
                            package: str = Query(min_length=1, max_length=256),
                            limit: int = Query(default=25, ge=1, le=100),
-                           provider: Literal['local', 'atlas'] = 'local') -> dict:
+                           provider: Literal['local', 'atlas'] | None = None) -> dict:
     from .global_catalogue import graph_result
     return graph_result(global_catalogue_query(ecosystem, package, limit, provider))
 
@@ -704,7 +707,7 @@ def repository_applicability(id:str,body:dict):
 def applicability_catalogue(id:str,body:dict):
     """Match the public catalogue against this repository's resolved dependencies; creates no jobs.
 
-    Body: {snapshot_id?, provider: 'local'|'atlas' (default 'local'), limit?: 1..100 per package}.
+    Body: {snapshot_id?, provider: 'local'|'atlas' (default 'atlas' when Atlas is required, else 'local'), limit?: 1..100 per package}.
     provider=atlas sends the exact ecosystem/package names from the private profile to the public
     catalogue cluster, so it is an explicit choice; local reads only the separate local catalogue file.
     An Atlas failure is HTTP 503 with unknown coverage, never a silent local fallback. Coverage is always
@@ -712,7 +715,10 @@ def applicability_catalogue(id:str,body:dict):
     ready for the explicit /applicability/intake route.
     """
     from .applicability import from_global_entry, match
-    provider=body.get('provider','local')
+    from .atlas_mode import atlas_required
+    # Option B: Atlas by default in required mode; C (catalogue owner) to confirm this default change.
+    provider=body.get('provider')
+    if provider is None: provider='atlas' if atlas_required() else 'local'
     limit=body.get('limit',25)
     if provider not in ('local','atlas'): raise HTTPException(422,"provider must be 'local' or 'atlas'")
     if type(limit) is not int or not 1<=limit<=100: raise HTTPException(422,'limit must be an integer from 1 to 100')

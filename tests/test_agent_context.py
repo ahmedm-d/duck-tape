@@ -80,6 +80,8 @@ def test_sample_context_is_bounded_cited_and_honest(parcel):
     assert context['blast_radius']['structural_risk'] in {'low', 'medium', 'high'} and 'Heuristic' in context['blast_radius']['basis']
     assert all(edge['confidence'] in {'EXTRACTED', 'INFERRED'} for edge in context['edges'])
     assert context['catalogue_matches'] == []
+    assert context['scope']['atlas'] == {'served': False, 'collections': ['repo_nodes', 'repo_edges'], 'snapshot_id': repo['source_snapshot_id'],
+                                         'reason': 'Atlas is not required and the graph mirror is not enabled'}
 
 
 def test_catalogue_match_reports_lockfile_pin_without_reachability(parcel):

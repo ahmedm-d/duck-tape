@@ -31,6 +31,11 @@ class FakeReplaceOne:
 class FakeCollection:
     def __init__(self):
         self.documents = {}
+        self.indexes = {}
+
+    def create_index(self, keys, name=None):
+        self.indexes[name] = list(keys)
+        return name
 
     def bulk_write(self, operations, ordered=False):
         for operation in operations:

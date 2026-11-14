@@ -317,6 +317,10 @@ def configure_repo(id:str,body:dict):
             r['policies']={**r.get('policies',{}),**body['policies']}
         if 'monitoring' in body: r['monitoring']=bool(body['monitoring'])
         if 'poll_interval' in body: r['poll_interval']=max(30,min(86400,int(body['poll_interval'])))
+        if 'security_source' in body:
+            if body['security_source'] not in ('osv','catalogue_local','catalogue_atlas'):
+                raise HTTPException(422,'security_source must be osv, catalogue_local or catalogue_atlas')
+            r['security_source']=body['security_source']
         return r
     require('repositories',id)
     return db.mutate('repositories',id,update)
@@ -374,30 +378,47 @@ def jobs(repo_id:str|None=None,summary:bool=False):
 @app.post('/api/jobs')
 @app.post('/api/intake')
 def create_job(body:JobInput):
+    return _create_job(body)
+
+
+def _create_job(body, *, enrich=None, expected_snapshot=None, catalogue_binding=None, cancel=None):
     from .retrieval import retrieve
     evidence_repo=require('repositories',body.repo_id)
     context=retrieve({**evidence_repo['index'],'snapshot':evidence_repo['snapshot'],'repo_id':evidence_repo['id']},body.title+' '+body.description,semantic=False)
     affected=list(dict.fromkeys(item['path'] for item in context['items']))
     def create(con):
+        if cancel: cancel.raise_if_cancelled()
         repo=db.get_in(con,'repositories',body.repo_id)
         if not repo: raise HTTPException(404,'Repository not found')
         if repo['snapshot']!=evidence_repo['snapshot']: raise HTTPException(409,'Repository changed during intake; retry')
+        if expected_snapshot and (repo.get('source_snapshot_id') or repo['snapshot'])!=expected_snapshot:
+            raise HTTPException(409,'Repository changed during catalogue matching; re-assess applicability')
+        existing=[json.loads(row[0]) for row in con.execute("SELECT data FROM records WHERE kind='jobs'").fetchall()]
+        if catalogue_binding:
+            _check_catalogue_observation(con,body.repo_id,catalogue_binding)
+            for previous in existing:
+                bound=previous.get('catalogue') or {}
+                if previous.get('repo_id')!=body.repo_id or bound.get('entry_id')!=catalogue_binding['entry_id']: continue
+                if (bound.get('entry_revision',0)>catalogue_binding['entry_revision'] or
+                    (bound.get('entry_revision')==catalogue_binding['entry_revision'] and bound.get('entry_hash')!=catalogue_binding['entry_hash'])):
+                    raise HTTPException(409,'Newer or conflicting catalogue evidence already exists; re-assess applicability')
         if body.scenario and not repo.get('is_sample'): raise HTTPException(422,'Fixture scenarios require a sample repository')
         identity=body.source_key or f'{body.title.strip().lower()}|{body.description.strip()}'
         fingerprint=hashlib.sha256(json.dumps([body.title,body.description,body.source_url,body.type],ensure_ascii=False).encode()).hexdigest()
         evidence_version=fingerprint if body.source_key else repo['snapshot']
         key=hashlib.sha256(f'{body.repo_id}|{body.source}|{identity}|{evidence_version}'.encode()).hexdigest()
         automatic=repo.get('policies',{}).get(body.source)=='automatic'
-        for row in con.execute("SELECT data FROM records WHERE kind='jobs'").fetchall():
-            job=json.loads(row[0])
+        for job in existing:
             same_source=body.source_key and job.get('repo_id')==body.repo_id and job.get('source')==body.source and job.get('source_key')==body.source_key
             if job.get('dedup_key')==key or (same_source and job.get('evidence_fingerprint',fingerprint)==fingerprint):
                 if job.get('snoozed_until') and job['snoozed_until']<=db.now() and job['status']=='Rejected':
                     job.update(status='Queued' if automatic else 'Awaiting approval',snoozed_until=None,preparation_approved=automatic,approval=None)
+                if enrich: job=enrich(job)
                 return db.put_in(con,'jobs',{**job,'evidence_fingerprint':fingerprint})
         record=body.model_dump()
         record.update(status='Queued' if automatic else 'Awaiting approval',source_snapshot_id=repo.get('source_snapshot_id'),base_snapshot=repo['snapshot'],dedup_key=key,evidence_fingerprint=fingerprint,risk='Unassessed',rationale='Explicit request scoped to this repository; investigation must establish supporting evidence.',qualification='request' if body.source in {'ticket','request'} else 'hypothesis',acceptance_criteria=[body.description or body.title],approach='Retrieve related implementation, tests and constraints; prepare a bounded patch and record checks.',affected_areas=[],approval=None,author='Alex · demo member',requires_approval=not automatic,preparation_approved=automatic)
         record.update(affected_areas=affected,rationale='Source matched repository evidence in '+', '.join(affected[:6])+'. Applicability still requires investigation.' if affected else 'No direct repository match; investigation must establish applicability.',qualification_context=context)
+        if enrich: record=enrich(record)
         job=db.put_in(con,'jobs',record)
         signal=db.put_in(con,'signals',{'job_id':job['id'],'repo_id':repo['id'],'source':body.source,'original':body.description,'source_url':body.source_url,'source_identity':identity,'evidence_fingerprint':fingerprint,'dedup_key':key,'retrieved_at':db.now()})
         job=db.put_in(con,'jobs',{**job,'signal_id':signal['id']})
@@ -613,12 +634,24 @@ def scan_repo(id:str):
 def run_scan(id:str,cancel=None):
     from .signals import scan
     repo=refresh_repo(id,cancel=cancel)
-    results=scan(repo,cancel=cancel)
+    security_source=repo.get('security_source','osv')
+    results=scan(repo,cancel=cancel,include_security=security_source=='osv')
+    catalogue=None
+    if security_source!='osv':
+        catalogue=_catalogue_assessment(id,{'provider':'atlas' if security_source=='catalogue_atlas' else 'local'},cancel=cancel,all_entries=True)
     if cancel: cancel.raise_if_cancelled()
     with intake_lock:
         created=[]
+        if catalogue:
+            for entry in catalogue['entries']:
+                if cancel: cancel.raise_if_cancelled()
+                outcome=_applicability_intake(id,{'entry':entry,'snapshot_id':catalogue['profile']['snapshot_id']},cancel=cancel)
+                created.extend(outcome['jobs'])
+            results['catalogue']=catalogue
+            results['gaps']+=catalogue['limitations']
+            results['complete']=False  # A bounded catalogue never proves complete vulnerability coverage.
         for signal in results['signals']:
-            created.append(create_job(JobInput(repo_id=id,**signal)))
+            created.append(_create_job(JobInput(repo_id=id,**signal),cancel=cancel))
         interval=repo.get('poll_interval',300)
         db.mutate('repositories',id,lambda r:{**r,'last_scan':db.now(),'last_success':db.now() if results.get('complete') else r.get('last_success'),'last_error':None if results.get('complete') else '; '.join(results.get('gaps',[]))[:2000],'next_scan':(datetime.now(timezone.utc)+timedelta(seconds=interval)).isoformat(),'scan_report':results})
         db.event(f'Scan finished: {len(created)} sourced findings (deduplicated intake)',repo_id=id)
@@ -711,6 +744,10 @@ def applicability_catalogue(id:str,body:dict):
     unknown: no entry is not safe. `entries` carries the matcher-shape entry for each matched record,
     ready for the explicit /applicability/intake route.
     """
+    return _catalogue_assessment(id,body)
+
+
+def _catalogue_assessment(id,body,*,include_graphs=False,cancel=None,all_entries=False):
     from .applicability import from_global_entry, match
     provider=body.get('provider','local')
     limit=body.get('limit',25)
@@ -719,11 +756,13 @@ def applicability_catalogue(id:str,body:dict):
     profile=_current_profile(id,body.get('snapshot_id'))
     names=sorted({(item['ecosystem'],item['name']) for item in profile['packages']})
     queried,errors,limitations,found,truncated=[],[],[],{},False
+    graphs=[]
     from .global_pipeline import Error, query_atlas
     if provider=='local':
         from .global_catalogue import Catalogue, default_path
         catalogue=Catalogue(default_path())
     for ecosystem,package in names[:200]:
+        if cancel: cancel.raise_if_cancelled()
         try:
             if provider=='atlas': result=query_atlas(ecosystem,package,limit=limit)
             else: result=catalogue.query(ecosystem,package,limit=limit)
@@ -733,6 +772,9 @@ def applicability_catalogue(id:str,body:dict):
             continue
         queried.append({'ecosystem':ecosystem,'package':package,'entries':len(result['entries']),'truncated':result['truncated']})
         limitations+=result['limitations']
+        if include_graphs:
+            from .global_catalogue import graph_result
+            graphs.append(graph_result(result))
         for record in result['entries']: found.setdefault((record['canonical_id'],record['material_revision']),record)
         truncated=truncated or result['truncated']
     if len(names)>200: limitations.append(f'Only the first 200 of {len(names)} resolved packages were queried.')
@@ -742,17 +784,38 @@ def applicability_catalogue(id:str,body:dict):
     entries=[from_global_entry(record) for record in found.values()]
     try: matches=[match(profile,entry) for entry in entries]
     except ValueError as exc: raise HTTPException(422,str(exc)) from None
-    return {'profile':{**{key:profile[key] for key in ('repo_id','snapshot_id','profile_hash','gaps','capabilities')},'package_count':len(profile['packages'])},
-            'provider':provider,'queried':queried,'matches':matches,'entries':[entry for entry,item in zip(entries,matches) if item['status']=='matched'],
+    return {**({'graphs':graphs} if include_graphs else {}),'profile':{**{key:profile[key] for key in ('repo_id','snapshot_id','profile_hash','gaps','capabilities')},'package_count':len(profile['packages'])},
+            'provider':provider,'queried':queried,'matches':matches,'entries':[entry for entry,item in zip(entries,matches) if all_entries or item['status']=='matched'],
             'coverage':'unknown','limitations':list(dict.fromkeys(limitations+['Catalogue coverage is partial; no match does not mean unaffected.'])),'errors':errors}
 
 
-def _invalidate_catalogue_jobs(repo_id:str,entry_id:str,current:set[str],reason:str):
+def _check_catalogue_observation(con,repo_id,binding,*,observe=False):
+    key=hashlib.sha256(json.dumps([repo_id,binding['entry_id']]).encode()).hexdigest()
+    previous=db.get_in(con,'catalogue_observations',key)
+    if previous and (previous['entry_revision']>binding['entry_revision'] or
+                     (previous['entry_revision']==binding['entry_revision'] and previous['entry_hash']!=binding['entry_hash'])):
+        raise HTTPException(409,'Newer or conflicting catalogue evidence already observed; re-assess applicability')
+    if observe:
+        db.put_in(con,'catalogue_observations',{'id':key,'repo_id':repo_id,**binding})
+
+
+def _invalidate_catalogue_jobs(repo_id:str,entry_id:str,current:set[str],reason:str,*,expected_snapshot=None,cancel=None,revision=None,entry_hash=None):
     """Fail open jobs for this catalogue entry whose evidence no longer matches the current revision/match."""
     def invalidate(con):
+        if cancel: cancel.raise_if_cancelled()
+        repo=db.get_in(con,'repositories',repo_id)
+        if expected_snapshot and (repo.get('source_snapshot_id') or repo['snapshot'])!=expected_snapshot:
+            raise HTTPException(409,'Repository changed during catalogue matching; re-assess applicability')
+        if entry_hash:
+            _check_catalogue_observation(con,repo_id,{'entry_id':entry_id,'entry_revision':revision,'entry_hash':entry_hash})
         stale=[]
         for row in con.execute("SELECT data FROM records WHERE kind='jobs'").fetchall():
             job=json.loads(row[0])
+            if revision is not None and (job.get('catalogue') or {}).get('entry_revision',0)>revision:
+                continue
+            bound=job.get('catalogue') or {}
+            if entry_hash and job.get('repo_id')==repo_id and bound.get('entry_id')==entry_id and bound.get('entry_revision')==revision and bound.get('entry_hash')!=entry_hash:
+                raise HTTPException(409,'Conflicting catalogue evidence; re-assess applicability')
             if (job.get('repo_id')==repo_id and job.get('status') not in TERMINAL|{'Failed'} and job.get('source') in {'security','analysis','research'}
                     and str(job.get('source_key') or '').startswith(entry_id+':') and job.get('evidence_fingerprint') not in current):
                 db.put_in(con,'jobs',{**job,'status':'Failed','error':reason,'approval':None,'stale':True,'lease_token':None,'lease_until':0})
@@ -769,28 +832,66 @@ def applicability_intake(id:str,body:dict):
     Open jobs created from an earlier revision, or from an entry that is now withdrawn or no
     longer matches, are invalidated; rejected/snoozed decisions on unchanged evidence are kept.
     """
+    return _applicability_intake(id,body)
+
+
+def _applicability_intake(id,body,*,cancel=None):
     from .applicability import catalogue_entry, intake_payloads, match
+    if cancel: cancel.raise_if_cancelled()
     profile=_current_profile(id,body.get('snapshot_id'))
     try:
         entry=catalogue_entry(body.get('entry'))
         found=match(profile,entry)
     except ValueError as exc: raise HTTPException(422,str(exc)) from None
+    def observe(con):
+        if cancel: cancel.raise_if_cancelled()
+        repo=db.get_in(con,'repositories',id)
+        if (repo.get('source_snapshot_id') or repo['snapshot'])!=profile['snapshot_id']:
+            raise HTTPException(409,'Repository changed during catalogue matching; re-assess applicability')
+        _check_catalogue_observation(con,id,{key:found[key] for key in ('entry_id','entry_revision','entry_hash')},observe=True)
+    db.atomic(observe)
     try: payloads=intake_payloads(found,entry)
     except ValueError as exc:
-        stale=_invalidate_catalogue_jobs(id,found['entry_id'],set(),f'Catalogue entry is no longer a current match ({exc}); re-assess applicability.')
+        stale=_invalidate_catalogue_jobs(id,found['entry_id'],set(),f'Catalogue entry is no longer a current match ({exc}); re-assess applicability.',
+                                         expected_snapshot=profile['snapshot_id'],cancel=cancel,revision=found['entry_revision'],entry_hash=found['entry_hash'])
         return {'match':found,'jobs':[],'invalidated':stale,'detail':str(exc)}
     binding={'entry_id':found['entry_id'],'entry_revision':found['entry_revision'],'entry_hash':found['entry_hash'],'entry_kind':found['entry_kind'],
              'match_key':found['match_key'],'profile_hash':found['profile_hash'],'snapshot_id':found['snapshot_id']}
     evidence={key:found[key] for key in ('status','evidence','citations','rationale','acceptance_criteria','limitations','cwe_ids','affected_symbols')}
     def bind(job):
-        if job.get('status') in TERMINAL|{'Failed'} or job.get('catalogue')==binding: return job
+        if job.get('status') in TERMINAL: return job
+        if job.get('status')=='Failed' and job.get('stale'):
+            return {**job,'catalogue':binding,'applicability':evidence,'stale':False,'approval':None}
+        if job.get('status')=='Failed' or job.get('catalogue')==binding: return job
         bound={**job,'catalogue':binding,'applicability':evidence}
         if not job.get('plan_hash'): bound.update(rationale=found['rationale'],acceptance_criteria=found['acceptance_criteria'])
         return bound
-    jobs=[db.mutate('jobs',job['id'],bind) for job in (create_job(JobInput(**payload)) for payload in payloads)]
+    jobs=[_create_job(JobInput(**payload),enrich=bind,expected_snapshot=profile['snapshot_id'],catalogue_binding=binding,cancel=cancel) for payload in payloads]
     stale=_invalidate_catalogue_jobs(id,found['entry_id'],{job.get('evidence_fingerprint') for job in jobs},
-                                     f'Catalogue entry changed to revision {found["entry_revision"]}; retry against the current revision.')
+                                     f'Catalogue entry changed to revision {found["entry_revision"]}; retry against the current revision.',
+                                     expected_snapshot=profile['snapshot_id'],cancel=cancel,revision=found['entry_revision'],entry_hash=found['entry_hash'])
     return {'match':found,'jobs':jobs,'invalidated':stale}
+
+
+@app.post('/api/repositories/{id}/knowledge-map')
+def repository_knowledge_map(id:str,body:dict):
+    """Join existing graphs through cited dependency matches; no cloud write or job creation."""
+    if body.get('engine','auto') not in ('auto','builtin','graphify'):
+        raise HTTPException(422,'engine must be auto, builtin or graphify')
+    assessment=_catalogue_assessment(id,body,include_graphs=True)
+    graph=repository_graph(id,body.get('engine','auto'))
+    if graph['snapshot_id']!=assessment['profile']['snapshot_id']:
+        raise HTTPException(409,'Repository changed while assembling knowledge; retry')
+    public=assessment.pop('graphs')
+    files={node['path']:node['id'] for node in graph['nodes'] if node['id'].startswith('file:')}
+    entries={node['entry']['canonical_id']:node['id'] for group in public for node in group['nodes'] if node['type']=='entry'}
+    links=[{'source':files[citation['path']],'target':entries[found['entry_id']],
+            'relation':'affected_dependency','status':found['status'],'entry_status':found['entry_status'],
+            'evidence':citation,'exploitability':'unknown'}
+           for found in assessment['matches'] if found['status']=='matched' and found['entry_id'] in entries
+           for citation in found['citations'] if citation['path'] in files]
+    return {'repo_id':id,'snapshot_id':graph['snapshot_id'],'repository':graph,'public':public,
+            'links':links,'applicability':assessment,'coverage':'unknown'}
 
 
 DIST=Path(__file__).resolve().parents[1]/'frontend'/'dist'

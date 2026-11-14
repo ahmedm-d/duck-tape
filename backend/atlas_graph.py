@@ -78,7 +78,7 @@ def _documents(repo_id: str, snapshot_id: str, graph: dict, index: dict) -> tupl
             excluded += 1
             continue
         nodes[node['id']] = node
-    edges, seen = [], set()
+    edges = []
     for edge in graph['edges'][:graphify_graph.MAX_EDGES]:
         evidence = edge.get('evidence') or {}
         if edge['source'] not in nodes or edge['target'] not in nodes or evidence.get('path') not in contents:
@@ -152,9 +152,9 @@ def mirror(repo_id: str, snapshot_id: str) -> dict:
                        for key, name in COLLECTIONS.items()}
         for key, group in groups.items():
             _write(collections[key], group, ReplaceOne)
-        # Only after every current-snapshot write succeeded: keep exactly one snapshot per repository.
-        for collection in collections.values():
-            result = collection.delete_many({'repo_id': repo_id, 'snapshot_id': {'$ne': snapshot_id}})
+        # Reconcile only after every write succeeds, including policies revoked on the same snapshot.
+        for key, collection in collections.items():
+            result = collection.delete_many({'repo_id': repo_id, '_id': {'$nin': list(groups[key])}})
             removed += int(getattr(result, 'deleted_count', 0) or 0)
     return {'database': config['database'], 'collections': dict(COLLECTIONS), 'repo_id': repo_id,
             'snapshot_id': snapshot_id, 'engine': graph['engine'], 'nodes': len(documents['nodes']),

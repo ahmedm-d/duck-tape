@@ -1,5 +1,7 @@
 # Duck Tape
 
+Backend integration: [completion plan](docs/BACKEND_COMPLETION.md) · [frontend API, demo and MongoDB/Databricks/model setup](docs/BACKEND_DEMO_HANDOFF.md). B/C knowledge graphs and catalogue-backed durable scans are connected; currently training Adaption artifacts still require serving and live qualification.
+
 Duck Tape is a local, AI-assisted code-maintenance workspace. It understands a repository, turns maintenance signals into persistent jobs, prepares isolated Git patches, and gives developers a diff with evidence to review.
 
 The goal is to reduce the work between noticing a problem and having a checked patch ready for review. Tickets, explicit requests, dependency advisories, repository findings and research can all become maintenance proposals. Repository-wide context and approved team decisions should inform each change, rather than treating an individual file as the whole project.

@@ -54,7 +54,7 @@ def test_intake_dedupes_unchanged_rescans_and_refuses_withdrawn_or_unmatched(cli
     withdrawn = api.post('/api/repositories/repo/applicability/intake', json={'entry': entry(revision=3, content_hash='e' * 64, status='withdrawn')})
     assert withdrawn.status_code == 200 and withdrawn.json()['jobs'] == []
     assert withdrawn.json()['invalidated'] == [revised['jobs'][0]['id']] and 'withdrawn' in withdrawn.json()['detail']
-    unrelated = entry(affected=[{'ecosystem': 'npm', 'package': 'react', 'versions': ['18.0.0']}])
+    unrelated = entry(id='unrelated-advisory',affected=[{'ecosystem': 'npm', 'package': 'react', 'versions': ['18.0.0']}])
     assert api.post('/api/repositories/repo/applicability/intake', json={'entry': unrelated}).json()['jobs'] == []
     assert api.post('/api/repositories/repo/applicability/intake', json={'entry': entry(revision=0)}).status_code == 422
 

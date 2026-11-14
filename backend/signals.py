@@ -151,7 +151,7 @@ def _lookup(package):
         return {'package':package,'error':type(exc).__name__,'retrieved_at':db.now(),'fixture':False}
 
 
-def scan(repo, snapshot_id=None, cursor=None, cancel=None):
+def scan(repo, snapshot_id=None, cursor=None, cancel=None, *, include_security=True):
     if isinstance(repo,str):
         repo=db.get('repositories',repo)
         if not repo or snapshot_id not in (None,repo['snapshot'],repo.get('source_snapshot_id')):
@@ -159,7 +159,7 @@ def scan(repo, snapshot_id=None, cursor=None, cancel=None):
     packages,gaps=dependencies(repo['index'])
     signals=[]; records=[]
     public=[]
-    for package in packages:
+    for package in packages if include_security else []:
         if package['name']=='fixture-parser':
             if repo.get('is_sample') and package['version']=='1.0.0':
                 signals.append({'title':'Fixture advisory: update fixture-parser','description':'Bundled fixture STEWARD-DEMO-001 matches requirements.lock fixture-parser 1.0.0; fixed 1.0.1. This is illustrative fixture data, not a live OSV advisory or evidence of exploitability.','source':'security','type':'security','priority':'high','scenario':'security','source_url':'fixture:STEWARD-DEMO-001','source_key':'STEWARD-DEMO-001:fixture-parser:1.0.0'})

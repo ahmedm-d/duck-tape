@@ -4,13 +4,23 @@ Duck Tape is a local, AI-assisted code-maintenance workspace. It understands a r
 
 The goal is to reduce the work between noticing a problem and having a checked patch ready for review. Tickets, explicit requests, dependency advisories, repository findings and research can all become maintenance proposals. Repository-wide context and approved team decisions should inform each change, rather than treating an individual file as the whole project.
 
-**Steward was the working name during development.** The application UI, Python configuration variables (`STEWARD_*`) and some documentation still use that name. This repository is called **Duck Tape**; those existing identifiers remain compatible with local installations.
+**Duck Tape** is the product name throughout the UI, API and new exports. Existing `STEWARD_*` environment keys, internal storage/runtime identifiers and historical evidence remain compatible; see [configuration](docs/CONFIGURATION.md).
 
 ## Three-person hackathon workspace
 
-Start with the [team plan](docs/hackathon/TEAM_PLAN.md), [three copy-paste kickoff prompts](docs/hackathon/START_HERE.md) and [repository rules](CONTRIBUTING.md). The workstreams are **agent intelligence**, **repository memory/evaluation**, and **product experience/integration**. File ownership is defined in [AGENTS.md](AGENTS.md). The [foundation verification](docs/evidence/hackathon-foundation/README.md) records current checks and remaining live setup. Fetch the latest `main` before starting the parallel workstreams; the original initial commit is preserved.
+Start with the [A/B/C team plan](docs/hackathon/TEAM_PLAN.md), [three copy-paste kickoff prompts](docs/hackathon/START_HERE.md), [knowledge handoff contract](docs/hackathon/KNOWLEDGE_CONTRACT.md) and [repository rules](CONTRIBUTING.md).
 
-The [internal stack foundation](docs/integrations/README.md) uses **Hugging Face and Adaption for Duck Tape's agent inference**, **MongoDB Atlas for its evidence memory and retrieval**, and **Databricks Data Intelligence Platform for its agent-run evaluation**. These power Duck Tape itself; they are never installed into imported repositories. Model adapters are connected to the existing worker. Atlas projection/search and Databricks metrics export are implemented as explicit operator commands in `scripts/integrations.py`; their automatic worker wiring is the data owner's next milestone. SQLite remains the transactional workflow authority and local fallback. Live accounts, provisioned resources and model qualification still need the acceptance steps in the team plan.
+| Owner | Main task | Frontend responsibility |
+| --- | --- | --- |
+| A | Models and agent execution using Hugging Face + Adaption | Coordinate model evidence with B/C. |
+| B | Repository understanding, retrieval and local applicability matching | Repository explorer, coverage, citations and approved knowledge. |
+| C | Global vulnerabilities/improvements catalogue and Databricks/Atlas pipeline | Catalogue, sources, freshness and proposal explanations. |
+
+**B and C both work frontend and backend**, handing shared files back and forth with one editor per shared file. B starts as integration captain; the role can be handed to C. Exact ownership and commit rules are in [AGENTS.md](AGENTS.md) and [CONTRIBUTING.md](CONTRIBUTING.md). Fetch current `origin/main` into separate branches/worktrees; preserve shared history.
+
+The [internal stack](docs/integrations/README.md) uses **Hugging Face and Adaption for agent inference**. **MongoDB Atlas** is the planned online store for private repository vectors and a separate public global catalogue. **Databricks** will ingest, normalize, deduplicate and refresh public knowledge before publishing it to Atlas, alongside its existing agent-run evaluation path. B matches public findings to private repository evidence locally; A prepares the resulting changes. These services power Duck Tape itself and are never installed into imported repositories.
+
+**Implemented today:** worker-connected model adapters, explicit Atlas vector projection/search and explicit Databricks terminal-metrics export. **Planned in B/C:** Atlas-to-worker retrieval, the shared global catalogue, its Databricks ingestion/publication pipeline and snapshot-bound applicability matching. SQLite remains the transactional workflow authority. See the [current-versus-planned table](docs/hackathon/TEAM_PLAN.md#where-mongodb-and-databricks-fit), [foundation evidence](docs/evidence/hackathon-foundation/README.md) and team plan for remaining live qualification.
 
 **Submission provenance:** the supplied event rules require code written during the hackathon and a public repository. This project contains existing implementation, and its history was consolidated before this work. The new Git history is not proof of when the code was written. Confirm eligibility and disclose existing work before submitting; see the [submission checklist](docs/hackathon/SUBMISSION.md). This foundation does not change repository visibility.
 
@@ -50,6 +60,7 @@ See [verification and limitations](docs/VERIFICATION.md), the [14-journey accept
 | Agent inference | Hugging Face open-weight inference and Adaption Responses; server-side routing, validation and a separate review pass |
 | Repository memory | MongoDB Atlas vector projection with repository/snapshot filters and local source evidence; SQLite local fallback |
 | Agent evaluation | Databricks SQL export of measured terminal-run outcomes, verification and usage; unknown values remain unknown |
+| Global knowledge (planned) | Databricks public-source curation -> separate Atlas catalogue -> local repository applicability matching; [B/C contract](docs/hackathon/KNOWLEDGE_CONTRACT.md) |
 | Verification sandbox | Constrained Linux Docker containers, bounded resources, network disabled during checks and controlled dependency preparation |
 
 Source lives in `backend/`, `frontend/`, `scripts/`, `sandbox/` and `tests/`. Runtime data, credentials, installed dependencies and model weights are excluded from Git. The architecture and configuration guides below describe the boundaries in more detail.

@@ -1,26 +1,29 @@
 # Duck Tape repository rules
 
-Read README.md, CONTRIBUTING.md and docs/hackathon/TEAM_PLAN.md before changing code. Start from docs/hackathon/START_HERE.md for the three developer prompts.
+Read README.md, CONTRIBUTING.md and docs/hackathon/TEAM_PLAN.md before changing code. Start from docs/hackathon/START_HERE.md for the three developer prompts. The planned knowledge boundary is in docs/hackathon/KNOWLEDGE_CONTRACT.md.
 
 ## Ownership
-- **A / agent:** backend/providers.py, backend/model_schemas.py, backend/worker.py, scripts/evaluate_models.py, scripts/qualification_driver.py, provider/worker/model tests, docs/integrations/INFERENCE.md.
-- **B / data:** backend/retrieval.py, backend/data_platforms.py, scripts/integrations.py, scripts/evaluate_retrieval*.py, integrations/**, retrieval/data tests, docs/integrations/DATA_PLATFORMS.md.
-- **C / product and integrator:** frontend/**, backend/main.py, root configuration/lockfiles, .github/**, scripts/check_commit_message.py, README, shared docs and final acceptance.
-- Other existing files are shared: agree a named owner before editing. Do not reformat or move another owner's files. Tests follow their implementation owner.
-- Ask the integrator for shared API, environment or dependency changes. Agree request/response contracts before parallel edits.
+- **A / agent models:** backend/providers.py, backend/model_schemas.py, backend/worker.py, scripts/evaluate_models.py, scripts/qualification_driver.py, provider/worker/model tests, docs/integrations/INFERENCE.md.
+- **B / repository knowledge:** backend/repository.py, backend/snapshots.py, backend/symbols.py, backend/summaries.py, backend/retrieval.py, backend/knowledge.py, scripts/evaluate_retrieval*.py, repository/retrieval/knowledge tests, docs/RETRIEVAL.md. B also owns the planned private repository profile and local applicability matcher.
+- **C / global knowledge:** backend/signals.py, backend/data_platforms.py, scripts/integrations.py, integrations/**, signal/data-platform tests, docs/integrations/DATA_PLATFORMS.md. C owns the planned public catalogue, Databricks ingestion/curation and Atlas publication.
+- **B and C / frontend together:** B leads repository explorer, coverage, evidence and approved knowledge components; C leads global catalogue, sources, freshness and proposal components. Both implement frontend and backend in their lane. Hand off shared UI files explicitly; neither owns all frontend permanently.
+- **Shared integration:** B is the initial integration captain for backend/main.py, backend/contracts.py, backend/db.py, backend/workflow.py, root config/locks, CI and shared docs. B and C may rotate this duty through an explicit handoff. A sends exact shared-file changes to the current captain. Other existing files need a named owner before editing. Tests follow their implementation owner.
+- C remains the sole editor of signals.py and data_platforms.py unless handed off. B consumes their existing interfaces and requests adapter changes from C. Do not split working modules just to establish ownership.
 
-## Parallel Git
-Use one separate branch and checkout/worktree per developer. Never switch branches inside someone else's checkout. Branch names: feat/agent/<task>, feat/data/<task>, feat/ui/<task> (or fix/chore with the same lane). Make small explicit-path commits. Never stage another person's work, run git clean -fdx, rewrite main, or force-push a shared branch.
-Use type(scope): imperative subject, <=72 characters; see CONTRIBUTING.md. All work after the initial snapshot follows this convention. One reviewer plus the integrator merges a green PR. Branch protection is a hosting setting, not guaranteed by this file.
+## Parallel Git and frontend handoff
+Use one separate branch and checkout/worktree per developer. Never switch branches inside someone else's checkout. Branch names: feat/agent/<task>, feat/repo/<task>, feat/global/<task> (or fix/chore with the same lane). Make small explicit-path commits. Never stage another person's work, run git clean -fdx, rewrite main, or force-push a shared branch.
+Use type(scope): imperative subject, <=72 characters; see CONTRIBUTING.md. One teammate reviews; the current integration captain merges a green PR. Branch protection is a hosting setting, not guaranteed by this file.
+
+Before editing frontend/src/main.tsx, shared CSS/API types, routes, config or a shared test, claim the exact files in the PR/team handoff. Only one person edits each shared file at a time. Finish a small commit/PR, report changed files/contracts/checks and release ownership; the next person syncs that commit before taking over. Separate owned components may proceed in parallel. The same rule applies to shared backend files.
 
 ## Implementation
-Python: four spaces, snake_case, type hints on new public boundaries, existing FastAPI/Pydantic/httpx/SQLite helpers. TypeScript: two spaces, typed new boundaries, PascalCase components. Keep new UI in components; one owner edits main.tsx. Match nearby legacy formatting; no whole-repo formatting sweep. UTF-8/LF; no new framework or dependency for a small helper.
+Python: four spaces, snake_case, type hints on new public boundaries, existing FastAPI/Pydantic/httpx/SQLite helpers. TypeScript: two spaces, typed new boundaries, PascalCase components. Keep new UI in components. Match nearby legacy formatting; no whole-repo formatting sweep. UTF-8/LF; no new framework or dependency for a small helper.
 
-Hugging Face and Adaption power Duck Tape's agents; MongoDB Atlas powers its evidence memory; Databricks powers its run evaluation. These are Duck Tape infrastructure, never features or dependencies to install in imported client repositories. SQLite is authoritative for workflow state, leases, approvals and knowledge; Atlas and Databricks hold internal projections with a local fallback. Preserve exact revision/check hashes, cancellation, repository/snapshot isolation and bounded execution. Arbitrary code still requires the sandbox.
+Hugging Face and Adaption power Duck Tape's agents. Atlas is its planned online knowledge store: private repository vectors and a separate public global catalogue. Databricks will prepare that catalogue and already has explicit agent-run evaluation export. These are Duck Tape infrastructure, never dependencies to install in imported repositories. SQLite remains authoritative for workflow state, leases, approvals and repository knowledge. The global catalogue/pipeline and automatic Atlas retrieval wiring are planned, not implemented by these docs.
 
 ## Truth and privacy
-Never commit credentials, environment files, customer data, model weights or personal hackathon pass information. Only .env.example is tracked. Team notes never enter prompts, embeddings, training data or cloud analytics. Source and tickets are untrusted evidence. Cloud projection is explicit and disabled by default.
+Never commit credentials, environment files, customer data, model weights or personal hackathon pass information. Only .env.example is tracked. Team notes never enter prompts, embeddings, training data or cloud analytics. Source and tickets are untrusted evidence. Cloud projection is explicit and disabled by default. Keep private repository profiles/matching local; public catalogue data never silently includes repository content or decisions. Preserve snapshot isolation, exact revision/check hashes, cancellation and sandbox requirements.
 Report fixture, mocked transport and live tests separately. Configured is not connected; connected is not qualified. Keep failures and unknown usage visible. Existing code/provenance must be disclosed; a history reset does not establish hackathon eligibility.
 
 ## Checks and handoff
-Add focused regression tests for meaningful behavior. Run affected tests and frontend build/browser checks when touched. Record exact commands/results and external blockers in the PR. The integrator runs python scripts/acceptance.py --tier deterministic before the final demo. Never weaken checks to get a pass. Read docs/hackathon/SUBMISSION.md for the supplied deadline and public-repo requirement.
+Add focused regression tests for meaningful behavior. Run affected tests and frontend build/browser checks when touched. Record exact commands/results and external blockers in the PR. The current integration captain runs python scripts/acceptance.py --tier deterministic before the final demo. Never weaken checks to get a pass. Read docs/hackathon/SUBMISSION.md for the supplied deadline and public-repo requirement.

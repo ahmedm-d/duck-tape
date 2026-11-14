@@ -16,14 +16,14 @@ The destination must be new and outside the workspace. The backup contains every
 
 ## Restore to the original location
 
-Steward stores absolute evidence paths. Restore therefore supports only the original absolute workspace location, and refuses an existing target. It never merges workspaces or rewrites references. Stop services, keep the backup, and manually rename an existing workspace aside before restoring. For example, after verifying that the old workspace is the intended directory and `workspace-kept` does not already exist:
+Duck Tape stores absolute evidence paths. Restore therefore supports only the original absolute workspace location, and refuses an existing target. It never merges workspaces or rewrites references. Stop services, keep the backup, and manually rename an existing workspace aside before restoring. For example, after verifying that the old workspace is the intended directory and `workspace-kept` does not already exist:
 
 ```powershell
 Move-Item -LiteralPath data/workspace -Destination data/workspace-kept
 .venv/Scripts/python.exe scripts/maintenance.py --data-dir data/workspace restore data/backups/before-upgrade
 ```
 
-Restore validates manifest paths, all hashes and the database before copying, then checks restored hashes. It does not overwrite the directory kept aside. A copy interrupted by disk failure may leave an incomplete target; retain the backup and move that target aside before retrying. Start Steward normally after successful restoration; pending work is recovered by its existing worker recovery process.
+Restore validates manifest paths, all hashes and the database before copying, then checks restored hashes. It does not overwrite the directory kept aside. A copy interrupted by disk failure may leave an incomplete target; retain the backup and move that target aside before retrying. Start Duck Tape normally after successful restoration; pending work is recovered by its existing worker recovery process.
 
 ## Conservative artifact cleanup
 

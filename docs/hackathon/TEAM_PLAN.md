@@ -1,101 +1,85 @@
 # Three-person hackathon plan
 
-Build one convincing live journey: **Duck Tape repairs a cross-module bug, proves the regression, and carries approved team decisions into the next change.** Show a deliberately unsafe proposal being rejected as the second proof. Target the Autonomous Agents track and the Adaption additional prize where the actual work qualifies; no plan guarantees a prize.
+**A builds the models. B understands each repository. C maintains what Duck Tape knows about the wider software ecosystem. B and C both build their frontend and backend, handing shared screens back and forth.**
 
-The supplied submission deadline is **Sunday 15 November 2026 at 12:00 Europe/London (12:00 UTC)**. Target submission by 11:00. Confirm current organizer announcements. The supplied rules require a public GitHub repository and a README listing the models/APIs used.
+The demo: a sourced vulnerability or improvement enters the global catalogue, matches evidence in a repository, becomes a maintenance proposal, and produces a checked patch for developer review. Target the Autonomous Agents track, with the Adaption additional prize only where actual usage qualifies.
 
-## Duck Tape's internal stack
+## Where MongoDB and Databricks fit
 
-Hugging Face, Adaption, MongoDB Atlas and Databricks power **Duck Tape itself**. Imported/client repositories supply evidence and receive reviewed maintenance patches. They do not receive these services, SDKs, credentials or setup flows.
+All four services power Duck Tape itself. Imported repositories provide evidence and receive reviewed patches; they do not receive sponsor SDKs, credentials or setup flows.
 
-| Internal service | Duck Tape responsibility | Foundation versus remaining work |
-| --- | --- | --- |
-| Hugging Face / Adaption | Run Duck Tape's reasoning, editing and review models; adapt its model behavior when justified by evaluation. | API adapters exist. Actual account/model configuration, live qualification and any adaptation experiment remain to be performed. |
-| MongoDB Atlas | Store and retrieve Duck Tape's internal repository-evidence memory. | Explicit vector projection/search exists. Connecting Atlas candidates to the generic worker is still B's task. |
-| Databricks | Evaluate Duck Tape's own agent runs and guide improvements to its retrieval, prompts or models. | Explicit terminal-metric export/query exists. No automatic export or proven improvement loop is implemented. |
+| Technology | Product responsibility | Owner | Current implementation / next work |
+| --- | --- | --- | --- |
+| Hugging Face + Adaption | Reason about evidence, plan, edit and review; evaluate model behavior and any adaptation. | A | Provider adapters are wired into the worker. Live qualification and adaptation experiments still need actual evidence. |
+| MongoDB Atlas: private repository memory | Serve snapshot-scoped semantic candidates, resolved back to local source evidence. | B consumes it; C owns the shared adapter. | Explicit vector sync/search exists. B must connect candidates to retrieval with validation and visible fallback. |
+| MongoDB Atlas: public global knowledge | Serve curated vulnerabilities, improvements, framework and research updates for runtime lookup/search. | C | Planned separate catalogue collections/indexes and access policy; not implemented yet. |
+| Databricks Data Intelligence Platform | Ingest public sources, normalize, deduplicate, track freshness and publish curated catalogue revisions to Atlas. Also evaluate agent-run outcomes. | C | Terminal-run metrics export/query exists. The global ingestion/curation/publication pipeline is planned. |
+| SQLite | Keep local workflow transactions, leases, approvals, repository knowledge and source evidence authoritative. | Current integration captain | Already implemented. No database rewrite is needed for this split. |
 
-Infrastructure credentials and provisioning belong to Duck Tape's operator/server environment. Keep maintenance evidence visible in the product; infrastructure setup is not a feature installed in the imported repository.
+**Databricks prepares knowledge; Atlas serves it; B establishes whether it applies here; A acts on the evidence.** An unavailable cloud account must remain an explicit blocker, with labelled local fixtures for development. A local fixture is not evidence that Atlas or Databricks ran.
 
-## Start from the actual baseline
+The proposed global pipeline is: public OSV/curated source records -> Databricks ingestion and normalization -> versioned curated catalogue -> Atlas online lookup -> B's local repository matcher -> existing signal/job intake -> A's worker -> checked diff and developer review. Public catalogue processing never needs private source code. Agent evaluation is a separate Databricks dataset of allowlisted terminal metrics.
 
-Read [the repository review](REPO_REVIEW.md), [README](../../README.md), [verification status](../VERIFICATION.md), [AGENTS.md](../../AGENTS.md) and [CONTRIBUTING.md](../../CONTRIBUTING.md) first. Initial commit 1d094be already contains substantial working code. Its consolidated history does not establish when that code was written or establish eligibility.
+## A: models and agent execution
 
-Disclose the existing baseline and resolve any conflict with the supplied all-code-during-the-event rule with organizers. Permission to use pretrained models, APIs and open-source dependencies does not automatically exempt the team's own existing application. Do not make an unsupported authorship attestation.
+Own the Hugging Face/Adaption provider behavior, routing, schema validation, bounded investigation/planning/edit/review loop and model evaluation. Consume B's bounded repository evidence and C's public source records through B's applicability match. Keep approved repository decisions in scope and team notes out of prompts.
 
-The foundation supplies internal provider adapters, opt-in Atlas projection/search, explicit Databricks terminal-metric commands and server-side diagnostics. These are starting points: actual credentials, provisioning, model quality and live acceptance still need evidence. **Atlas is not yet connected to the generic worker's retrieval path, and Databricks does not receive metrics automatically.**
+**Deliver first:** one generic cross-module repair using actual inference and sandbox execution, with failing-before/passing-after regression evidence, a separate review and exact-revision approval. Record actual model identity, latency, known usage and failed cases. Attempt an Adaption adaptation comparison only after this works, with held-out tasks and no promised improvement.
 
-**Team handoff:** use the reviewed foundation on `main` as the common starting point. Fetch the latest `origin/main` before creating each developer's branch/worktree; keep local environment files and runtime databases separate.
+Owned files: `backend/providers.py`, `backend/model_schemas.py`, `backend/worker.py`, model/provider/worker tests, `scripts/evaluate_models.py`, `scripts/qualification_driver.py`, and [inference guide](../integrations/INFERENCE.md).
 
-## Ownership
+## B: repository knowledge and applicability
 
-Assign actual names to A/B/C before editing. Start from the same reviewed foundation commit. One person owns each file; arrange a handoff before crossing a boundary.
+Own imports/snapshots, inventory, symbols/import graph, architecture summaries, approved team constraints, source citations and hybrid retrieval. Build the private snapshot-bound repository profile, including exact lockfile versions and explicit gaps. Match public catalogue records to that profile locally; distinguish an affected-version match from proven exploitability and an improvement hypothesis from a measured improvement.
 
-| Owner | Exclusive files and area | Done when |
-| --- | --- | --- |
-| A: live agent and models | backend/providers.py, backend/model_schemas.py, backend/worker.py; provider/worker/model tests; scripts/evaluate_models.py and scripts/qualification_driver.py; docs/integrations/INFERENCE.md | Duck Tape's own agent performs a generic imported-repository repair with real inference, failing-before/passing-after checks and review. A seeded unsafe proposal is tested. Exact model, checks and failures are recorded. |
-| B: retrieval and data platforms | backend/retrieval.py, backend/data_platforms.py, scripts/integrations.py, integrations/**; data-platform/retrieval tests and retrieval-evaluation scripts; docs/integrations/DATA_PLATFORMS.md | Duck Tape's worker uses its internal Atlas evidence memory with repository/snapshot/model isolation and local source validation. Terminal metrics, including failures, reach Databricks through explicit commands and an actual comparison is recorded. |
-| C: frontend, integration and submission | frontend/**, backend/main.py, root configuration/dependency files and locks, README, CI, AGENTS.md, CONTRIBUTING.md and other docs/** | Evidence is clear in the demo, changes integrate, current checks and a recording exist, and public submission facts and limitations are accurate. |
+**Deliver first:** trace an endpoint through its helper/config/tests; match one C-supplied advisory to an exact dependency with citations; feed the bounded evidence and approved decisions to A. Refresh modifications/deletions without retaining stale evidence. Add opt-in Atlas candidates through the existing retrieval boundary and compare relevant-file recall with the local fallback.
 
-A and B send C exact dependency, environment-variable, route and shared-contract changes; they do not edit C's files. Coordinate A/B contracts before changing them. A owns the inference guide, B owns the data-platform guide, and C owns shared/hackathon documentation. Only C edits frontend/src/main.tsx. Match style in touched code; avoid a formatter migration or broad refactor.
+Owned files: `backend/repository.py`, `backend/snapshots.py`, `backend/symbols.py`, `backend/summaries.py`, `backend/retrieval.py`, `backend/knowledge.py`, related tests, `scripts/evaluate_retrieval*.py`, [retrieval guide](../RETRIEVAL.md). The repository profile/matcher are new work owned by B; use small modules only where needed. Reuse `signals.dependencies()` and request changes to that module or Atlas adapters from C.
 
-Use one separate branch/worktree or clone per person: feat/agent/live-repair, feat/data/atlas-retrieval and feat/ui/demo-evidence. Fixes use fix/<lane>/<task>. Commit subjects use Conventional Commits: type(scope): lowercase imperative, at most 72 characters, for example:
+Frontend: repository explorer, coverage, graph/impact, citations and repository knowledge editing. B is the initial integration captain, not a fourth full-time workstream.
 
-- feat(agent): add measured Adaption review
-- feat(data): rank snapshot evidence from Atlas
-- feat(ui): show exact regression evidence
+## C: global knowledge and data pipeline
 
-One coherent change per commit. Every handoff states changed behavior, checks actually run and remaining limits. C integrates small reviewed commits/PRs. Do not force-push the shared branch, reset another person's work or edit a shared file concurrently.
+Own public vulnerabilities, improvements and framework/research updates, original attribution, aliases, affected versions, deduplication, revision history, freshness and failed ingestion visibility. Build the Databricks public-source pipeline and publish validated catalogue records to separate Atlas collections for runtime queries. Preserve the existing explicit agent metrics export as the evaluation path.
 
-## First hour
+**Deliver first:** one real public OSV source plus one curated sourced improvement, normalized into the agreed record shape. Repeated ingestion must not duplicate unchanged findings. B must be able to query a specific ecosystem/package/version and receive evidence or an explicit unknown. Support a labelled local fixture until credentials/resources are usable; record live Databricks processing and Atlas publication before claiming them.
 
-| Time from kickoff | Work | Concrete output |
-| --- | --- | --- |
-| 0-15 minutes | Read rules/current files; agree owners, common foundation commit and existing dirty changes. | Names, branches, demo scenario and provenance questions recorded. |
-| 15-35 minutes | A checks model credentials/API capabilities. B checks Atlas/Databricks access and explicit CLI. C starts the app and inspects evidence screens. | Each owner reports actual availability, the next step and any blocker. |
-| 35-60 minutes | Agree existing provider, retrieval and terminal-metric contracts. Run focused baseline checks in isolated test data. | One bounded live model request, a bounded Atlas capability check and a runnable local UI, or explicit blockers. |
+Owned files: `backend/signals.py`, `backend/data_platforms.py`, `scripts/integrations.py`, `integrations/**`, related tests, [data-platform guide](../integrations/DATA_PLATFORMS.md), and the planned global catalogue/ingestion modules. C owns the existing shared cloud adapter for both knowledge stores; B supplies its repository retrieval requirements. No prerequisite refactor of `signals.py` is required.
 
-Keep secrets out of Git, prompts and logs. A failed capability check is a reason to fix the endpoint or narrow an integration early; it is not permission to label fixture output as live.
+Frontend: global catalogue browsing/search, source attribution, freshness, applicability explanations and proposal intake. Keep source curation separate from project policy approval.
 
-## Through the deadline
+## B/C frontend and integration handoff
 
-All times are London time, Saturday 14 November and Sunday 15 November 2026. If a target has passed, take the remaining gates in order without dropping validation.
+Both B and C work across frontend and backend. Independent components can be developed concurrently. Shared navigation, Jobs/Settings, `frontend/src/main.tsx`, shared styles/API types and browser fixtures have **one named editor at a time**, with no permanent all-frontend owner.
 
-| Target | Gate |
-| --- | --- |
-| Saturday 16:00 | One real generic Python patch has executed tests; Atlas has an index and scoped query; the UI shows relevant check evidence. |
-| Saturday 18:00 | First integrated live journey. Demonstrate an approved constraint on a subsequent request and exercise unsafe-review handling. |
-| Saturday 20:00 | Compare fixed held-out tasks with identical inputs; explicitly export terminal outcomes and retain Databricks query results. Attempt adaptation only after the live base-model journey works. |
-| Saturday 22:00 | Feature freeze. Resolve integration defects, record the demo and run current deterministic acceptance. |
-| Sunday 09:00 | Rehearse from a fresh isolated demo workspace on the submission build. Retain a labelled recording in case services fail. |
-| Sunday 10:00 | Finish public README, model/API list, provenance disclosure, limitations and submission facts. Confirm public access and requirements. |
-| Sunday 11:00 | Freeze artifacts, check links/recording, submit early and retain confirmation. |
-| Sunday 12:00 | Supplied submission deadline. |
+1. Claim exact shared files in the PR/team handoff before editing. State the route/response/component contract and who is waiting.
+2. Finish a small reviewable commit/PR; report changed behavior, exact files, tests and remaining limits.
+3. Release the files explicitly. The next editor syncs the integrated commit before continuing.
+4. B starts as integration captain for `backend/main.py`, `backend/contracts.py`, `backend/db.py`, `backend/workflow.py`, shared config/locks, CI and docs. B/C can hand off this duty using the same process; A sends exact changes to the current captain.
 
-## Internal implementation choices
+Example: B builds the repository evidence component while C builds a catalogue component. B wires the repository route in `main.tsx`, hands it off, then C wires catalogue navigation and returns it. Do not both edit `main.tsx` while assuming Git will resolve it.
 
-- **Internal inference/adaptation:** use the implemented Adaption/Hugging Face adapters in Duck Tape's typed pipeline. Check actual API/model/schema support. Adaption prompt JSON is locally validated; Hugging Face structured-output support depends on the selected model/provider. Health and valid JSON do not prove coding quality. Keep adaptation secondary; separate training examples from held-out evaluation and report no gain if no gain is measured.
-- **Internal evidence memory:** use Atlas semantic retrieval for Duck Tape with repository/snapshot/model scope. The foundation projects hashed namespaces, chunk IDs and vectors; Atlas receives no source text. A configured remote embedding provider still receives the text it embeds; disclose that separately. Resolve returned IDs against local source/hash evidence and obey context budgets. Keep a visible local fallback; never represent fallback as Atlas success.
-- **Internal run evaluation/improvement:** explicitly export Duck Tape's bounded terminal metrics to Databricks. Compare success, independent check results, unsafe approvals, latency and known token usage; include failures and unknown usage. A completed stage is not independent correctness evidence. The foundation omits model names and retrieval labels; B must define explicit nonsecret run-to-variant mappings/cohorts before claiming across-version comparisons. Use measured results to guide changes to Duck Tape's own agent; do not imply an automatic improvement loop already exists.
-- **Workflow:** preserve SQLite transactions, job leases, exact-revision approval and sandbox checks. Team notes remain outside prompts. Cloud uploads stay opt-in with accurate disclosure.
+Use `feat/agent/<task>`, `feat/repo/<task>` and `feat/global/<task>` in separate clones/worktrees. A frontend change keeps its owner's lane. Conventional Commit examples: `feat(agent): validate review evidence`, `feat(repo): match advisory versions to snapshots`, `feat(global): publish curated advisory revisions`. One teammate reviews; the current captain integrates and runs the complete gate. Never rewrite shared history or force-push main.
 
-See [inference setup](../integrations/INFERENCE.md) and [data-platform setup](../integrations/DATA_PLATFORMS.md). Inspect the current CLI before running it:
+## Shared contract and staged delivery
 
-~~~text
-python scripts/integrations.py --help
-python scripts/integrations.py status
-python scripts/integrations.py atlas-index
-python scripts/integrations.py atlas-sync --repo ID --snapshot ID
-python scripts/integrations.py atlas-search --repo ID --snapshot ID --query TEXT --limit 12
-python scripts/integrations.py databricks-sync --run ID
-python scripts/integrations.py databricks-summary
-~~~
+Read [KNOWLEDGE_CONTRACT.md](KNOWLEDGE_CONTRACT.md) before implementing new payloads. It defines private repository profiles, public catalogue entries and local matches, including intake mapping and invalidation. Existing `knowledge.py` scope `global` means the whole current repository; it is not the proposed cross-repository catalogue.
 
-Run these commands in Duck Tape's own checkout/server environment, never the imported/client repository. Replace ID/TEXT with the intended demo data. Upload/query commands require explicitly enabled services, actual credentials and provisioned resources; status is not live acceptance.
+| Gate | A | B | C |
+| --- | --- | --- | --- |
+| First hour | Probe actual model access; run focused provider tests. | Inspect profile/retrieval boundaries; run fixed cross-module retrieval cases. | Check operator cloud access and existing CLI; agree public record fixtures with B. |
+| First integration | Accept B's evidence with schemas; produce a real checked patch. | Produce a snapshot-bound match and wire repository evidence UI. | Return a deduplicated sourced entry; wire catalogue/source UI after handoff. |
+| Complete journey | Exercise revision, decision and unsafe-review behavior. | Recheck snapshots and changed/deleted evidence; connect opt-in Atlas retrieval. | Run public ingestion/curation/publication and verify duplicate/stale handling. |
+| Demo freeze | Record model/check outcomes, including failures. | Run integrated acceptance as captain or hand it to C explicitly. | Record actual cloud processing and metrics query results; fill source/API attribution. |
 
-## Demo and evidence
+The supplied submission deadline is **Sunday 15 November 2026 at 12:00 Europe/London**; target submission by 11:00. The venue closes Saturday at 21:00; plan a saved handoff before leaving. Keep broad autonomous research, model adaptation and extra sources behind the first working journey.
 
-In roughly three minutes: show the request and snapshot, relevant source/approved decision, failing regression on unchanged code, patch and passing checks, then exact-revision approval. Show the seeded unsafe-review result and the small measured comparison. Label previous recordings with their time/model; fixture scenarios stay labelled.
+## Verification and demo
 
-Retain commit, provider/model/version, scenario IDs, elapsed time, known usage, checks, retrieval mode and blockers. Keep failures in evaluation denominators. Owners run focused tests first; C runs the current integrated release gates. Use [START_HERE.md](START_HERE.md) for kickoff prompts and [SUBMISSION.md](SUBMISSION.md) for the final handoff.
+Start from current `origin/main`, read [AGENTS.md](../../AGENTS.md), [CONTRIBUTING.md](../../CONTRIBUTING.md), [repository review](REPO_REVIEW.md) and [verification status](../VERIFICATION.md), and keep separate environment/data directories. Reuse current provider/retrieval/intake APIs rather than adding a second workflow engine. The [kickoff prompts](START_HERE.md) are ready to copy for each person.
 
-Skip public multi-user hosting, a database migration, a new agent framework, a broad UI redesign and training before a working base patch. Remaining risks are service access, model quality, deadline pressure and unresolved eligibility of the existing baseline.
+Each owner tests their boundary: A actual provider inputs/outputs and checks; B citation/snapshot isolation, exact applicability and refresh; C source normalization, duplicates, stale/withdrawn records, failures and cloud publication. B/C run build/browser checks for touched UI. The current captain runs `python scripts/acceptance.py --tier deterministic` and the actual integrated demo. Keep mocked, fixture and live evidence separate.
+
+In three minutes: open a sourced global finding, show why the exact repository snapshot matches, inspect retrieved helper/config/tests and an approved constraint, show failing-before/passing-after checks, then review/approve the exact patch. Show an unchanged rescan creates no duplicate. Claim cloud processing or model adaptation only with recorded results from that build.
+
+Existing implementation and historical evidence must be disclosed; a history reset does not establish hackathon eligibility. See [SUBMISSION.md](SUBMISSION.md) for provenance, the public-repository requirement and the evidence register. Remaining external risks are account access, model quality and qualification of the existing baseline.

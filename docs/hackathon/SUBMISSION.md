@@ -8,6 +8,8 @@ Working project: **Duck Tape**. Proposed track: **Autonomous Agents**. Additiona
 
 Hugging Face and Adaption provide **Duck Tape's own model inference/adaptation**; MongoDB Atlas provides its **internal evidence memory/retrieval**; Databricks provides its **internal agent-run evaluation and improvement measurements**. Imported/client repositories supply evidence and receive reviewed maintenance patches. Duck Tape does not install sponsor services, SDKs, credentials or setup flows into those repositories.
 
+The [revised team plan](TEAM_PLAN.md) also proposes a public global catalogue served by Atlas, with Databricks ingestion/normalization/deduplication/freshness and publication. B matches those public findings to private repository evidence locally. These are planned additions, not existing foundation capabilities; describe them only if the submitted build supplies evidence.
+
 State actual implementation maturity: the foundation has adapters and explicit operator commands, not a configured/live-qualified stack or an automatic improvement loop. Atlas worker wiring, any automatic internal processing, actual cloud acceptance and any model adaptation must be described according to evidence from the submitted build.
 
 ## Facts to complete
@@ -30,6 +32,7 @@ Replace each TBD with a checked fact or explicitly mark it unavailable. These ar
 | Embedding provider/model and vector dimensions | TBD |
 | Internal Atlas evidence-memory index, namespace filters and worker retrieval evidence | TBD; omit credentials/connection secrets |
 | Internal Databricks agent-evaluation table/query and exported comparisons | TBD; redact secrets/private account details |
+| Global catalogue sources, Databricks processing/publication and Atlas queries | Planned; replace with actual run/revision evidence if implemented |
 | Other models, APIs, datasets and open-source dependencies | TBD; include licenses/attribution where required |
 | Evaluation tasks, holdout separation and actual results | TBD |
 | Known failures, unmeasured claims and unavailable integrations | TBD |
@@ -88,6 +91,7 @@ Use relative paths for repository artifacts and public URLs only where needed. I
 | Approved knowledge affects a later request | Scenario and approved version: TBD | TBD | TBD |
 | Duck Tape uses its internal Atlas memory | Explicit projection/query plus worker run: TBD | TBD | TBD |
 | Databricks evaluates Duck Tape agent runs | Explicit export plus query: TBD | TBD | TBD |
+| Global source becomes a repository-specific proposal | Public source -> catalogue revision -> local snapshot match: TBD | Planned | Not implemented by the planning docs |
 | Internal agent base/adapted comparison, if performed | Held-out manifest and settings: TBD | TBD | TBD |
 | UI/build and demo | npm run build; exact browser/demo checks: TBD | TBD | TBD |
 

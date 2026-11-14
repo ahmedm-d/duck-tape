@@ -24,4 +24,10 @@ python scripts/integrations.py databricks-summary
 
 Status reads local configuration. Atlas-index prints a definition without provisioning. Sync/search/summary can contact remote services only after explicitly enabling their integration. The CLI is a manual operator path; cloud sync is not a worker queue yet.
 
+## Planned global knowledge layer
+
+The [A/B/C plan](../hackathon/TEAM_PLAN.md) assigns A to models, B to repository knowledge/local matching, and C to global knowledge. B/C both build frontend and backend with explicit shared-file handoffs. C owns `data_platforms.py` and the integration CLI; B consumes the repository-vector adapter.
+
+C will use Databricks to ingest public advisories and curated improvements, normalize version rules, deduplicate sources and track freshness, then publish validated revisions into a separate Atlas global catalogue for runtime lookup. B matches these records against private snapshot-bound repository profiles locally. This catalogue/pipeline is **not implemented yet**; the commands above still cover private vectors and terminal metrics only. Keep public catalogue records separate from private vectors and approved team knowledge. SQLite retains workflow transactions and approvals. See the [planned knowledge contract](../hackathon/KNOWLEDGE_CONTRACT.md).
+
 The [three developer prompts](../hackathon/START_HERE.md) assign the next milestones. Retain actual request/run IDs, snapshots and measured outcomes before claiming live stack use or measured agent improvement.

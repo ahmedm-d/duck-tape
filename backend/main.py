@@ -669,7 +669,15 @@ def applicability_intake(id:str,body:dict):
     except ValueError as exc:
         stale=_invalidate_catalogue_jobs(id,found['entry_id'],set(),f'Catalogue entry is no longer a current match ({exc}); re-assess applicability.')
         return {'match':found,'jobs':[],'invalidated':stale,'detail':str(exc)}
-    jobs=[create_job(JobInput(**payload)) for payload in payloads]
+    binding={'entry_id':found['entry_id'],'entry_revision':found['entry_revision'],'entry_hash':found['entry_hash'],'entry_kind':found['entry_kind'],
+             'match_key':found['match_key'],'profile_hash':found['profile_hash'],'snapshot_id':found['snapshot_id']}
+    evidence={key:found[key] for key in ('status','evidence','citations','rationale','acceptance_criteria','limitations')}
+    def bind(job):
+        if job.get('status') in TERMINAL|{'Failed'} or job.get('catalogue')==binding: return job
+        bound={**job,'catalogue':binding,'applicability':evidence}
+        if not job.get('plan_hash'): bound.update(rationale=found['rationale'],acceptance_criteria=found['acceptance_criteria'])
+        return bound
+    jobs=[db.mutate('jobs',job['id'],bind) for job in (create_job(JobInput(**payload)) for payload in payloads)]
     stale=_invalidate_catalogue_jobs(id,found['entry_id'],{job.get('evidence_fingerprint') for job in jobs},
                                      f'Catalogue entry changed to revision {found["entry_revision"]}; retry against the current revision.')
     return {'match':found,'jobs':jobs,'invalidated':stale}

@@ -48,3 +48,36 @@ def test_sample_match_becomes_one_approval_gated_security_job(parcel):
     assert {item['id'] for item in db.list_records('jobs')} - before == {job['id']}
     sample_security = next(item for item in db.list_records('jobs') if item.get('scenario') == 'security')
     assert sample_security['status'] == 'Awaiting approval'
+    stored = db.get('jobs', job['id'])
+    assert stored['catalogue']['entry_id'] == 'DUCKTAPE-FIXTURE-CAT-001' and stored['catalogue']['entry_revision'] == 1
+    assert stored['catalogue']['snapshot_id'] == repo['source_snapshot_id']
+    assert stored['applicability']['citations'][0]['path'] == 'requirements.lock'
+    assert stored['acceptance_criteria'] == stored['applicability']['acceptance_criteria']
+
+
+def test_lockfile_change_invalidates_job_and_old_citation(parcel):
+    api, repo = parcel
+    entry = CATALOGUE['entries'][0]
+    job = api.post(f'/api/repositories/{repo["id"]}/applicability/intake', json={'entry': entry}).json()['jobs'][0]
+    lock = Path(repo['root']) / 'requirements.lock'
+    lock.write_text(lock.read_text(encoding='utf-8').replace('fixture-parser==1.0.0', 'fixture-parser==1.0.1'), encoding='utf-8', newline='')
+    main.refresh_repo(repo['id'])
+    current = db.get('repositories', repo['id'])
+    assert current['source_snapshot_id'] != repo['source_snapshot_id']
+    stale = db.get('jobs', job['id'])
+    assert stale['status'] == 'Failed' and stale['stale'] and stale['approval'] is None
+    old = api.post(f'/api/repositories/{repo["id"]}/applicability', json={'entries': [entry], 'snapshot_id': repo['source_snapshot_id']})
+    assert old.status_code == 409
+    now = api.post(f'/api/repositories/{repo["id"]}/applicability', json={'entries': [entry]}).json()['matches'][0]
+    assert now['status'] == 'not_matched' and now['snapshot_id'] == current['source_snapshot_id'] and not now['citations']
+    assert api.post(f'/api/repositories/{repo["id"]}/applicability/intake', json={'entry': entry}).json()['jobs'] == []
+
+
+def test_deleted_lockfile_leaves_no_current_dependency_evidence(parcel):
+    api, repo = parcel
+    (Path(repo['root']) / 'requirements.lock').unlink()
+    main.refresh_repo(repo['id'])
+    profile = api.get(f'/api/repositories/{repo["id"]}/profile').json()
+    assert all(item['path'] != 'requirements.lock' for item in profile['packages'])
+    now = api.post(f'/api/repositories/{repo["id"]}/applicability', json={'entries': [CATALOGUE['entries'][0]]}).json()['matches'][0]
+    assert now['status'] in {'not_matched', 'unknown'} and not now['citations']

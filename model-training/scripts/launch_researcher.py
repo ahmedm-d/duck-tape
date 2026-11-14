@@ -24,6 +24,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Mapping
 
+try:  # Use the OS trust store when available (keeps TLS verification on; needed where antivirus re-signs HTTPS).
+    import truststore
+
+    truststore.inject_into_ssl()
+except ImportError:
+    pass
+
 SCRIPT_DIR = Path(__file__).resolve().parent
 MODEL_TRAINING_ROOT = SCRIPT_DIR.parent
 REPO_ROOT = MODEL_TRAINING_ROOT.parent

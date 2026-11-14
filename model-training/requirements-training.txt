@@ -7,3 +7,4 @@ python-dotenv>=1.0.1
 tiktoken>=0.7.0
 adaption
 databricks-sdk>=0.28.0
+truststore>=0.9

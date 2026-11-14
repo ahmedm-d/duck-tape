@@ -1,8 +1,8 @@
 # Duck Tape (formerly Steward) Model Training Pipeline — State & Handover
 
-- **Current Phase:** Part 3.5 of 5 — Fast In-Place Handoff Migration & CI/Security Demo Alignment (**Completed**)
+- **Current Phase:** Part 4 of 5 — Multi-Account Adaption AutoScientist Orchestration (**In Progress**)
 - **Branch:** `feat/agent/model-training`
-- **Model Training Started:** `false` (data prep, Handoff v1 migration & pre-flight quality audit only in Parts 1–3.5)
+- **Model Training Started:** `true` (multi-account Adaption AutoScientist orchestration active in Part 4)
 
 ## Shared Infrastructure (`model-training/`)
 - `model-training/.gitignore` — ignores `.env.training`, `.venv/`, `__pycache__/`, `data/raw/`, `data/processed/*.jsonl`, `data/eval/*.jsonl`, `models/checkpoints/`, `*.tgz`, `*.safetensors`, `*.bin`, while keeping `data/inspection_report.md`, `data/dataset_licenses.json`, and `data/adaption_runs_manifest.json` tracked.
@@ -39,5 +39,31 @@
 - **Strict `backend/model_schemas.py` Compliance**: Migrated `275` train + `9` eval `ticket_parser` decision-card rows to the `DECISION` alternative schema (`validate_ticket_parser_output` + `backend.model_schemas.check(..., DECISION)`), removed `needs_decision_card`, and stripped `new_global_vuln_candidate`.
 - **Pre-Flight Quality & Handoff Gate (`model-training/scripts/inspect_datasets.py`)**: All 12 datasets + eval aliases passed Schema/JSONL validity, row count checks, strict JSON / zero-fence checks, `100.00%` prompt uniqueness, `<45,000` max tokens (`max 43,999` on `implementer`), `0` train/eval overlap, `0` secret hits, and `0` forbidden-term hits (`<steward_graph_context>`, `is_god_node`, `AMBIGUOUS`, `tenant_id`, `needs_decision_card`, `new_global_vuln_candidate`, `non-exploitable`). Full audit written to `model-training/data/inspection_report.md`.
 
-## Next Step (Part 4 of 5)
-- Review `model-training/data/inspection_report.md` and `model-training/patches/worker_handoff_patch.md`, then proceed to Part 4 (Adaption AutoScientist fine-tuning & evaluation orchestration).
+<!-- ADAPTION_RUNS_START -->
+## Multi-Account Adaption AutoScientist Runs (Part 4 of 5)
+
+- **Last Polled (UTC):** `2026-11-14T19:58:02+00:00`
+- **Run Summary:** `11` total | `11` active | `0` succeeded | `0` failed/cancelled
+- **Orchestrator Scripts:** `model-training/scripts/launch_adaption_parallel.py`, `model-training/scripts/poll_adaption_runs.py`
+- **Run Manifest:** `model-training/data/adaption_runs_manifest.json`
+
+| Account | Agent | Model | Method | Eff. Rows | Run ID | Status | Iteration | Best Win Rate |
+| --- | --- | --- | --- | ---: | --- | --- | --- | --- |
+| Acct 1 | `router` | `google/gemma-4-31B-it` | `instruction` | 10,000 | `a7c2975d-0eeb-4ad0-ae89-c7c634e540e7` | `running` | `0/3` | `-` |
+| Acct 1 | `ticket_parser` | `google/gemma-4-31B-it` | `instruction` | 10,000 | `aa06d9dd-7c82-4919-b46d-3c279a46c212` | `running` | `0/3` | `-` |
+| Acct 2 | `implementer` | `Qwen/Qwen3.6-35B-A3B` | `instruction` | 10,000 | `91d8228e-7244-400e-911f-deb4aa5e89a1` | `running` | `0/3` | `-` |
+| Acct 2 | `test_writer` | `Qwen/Qwen3.6-35B-A3B` | `instruction` | 10,000 | `eca61d3c-52df-4d6a-8565-e3aa0672c4a1` | `running` | `0/3` | `-` |
+| Acct 3 | `reviewer_dpo` | `Qwen/Qwen3.6-35B-A3B` | `alignment` | 12,000 | `f0619f20-3fdb-4c14-a895-ff0fb5045e5e` | `running` | `0/2` | `-` |
+| Acct 3 | `security_reviewer_dpo` | `Qwen/Qwen3.6-35B-A3B` | `alignment` | 12,000 | `35cf6a08-2405-4d0a-8fa1-5261e71d1cfe` | `running` | `0/2` | `-` |
+| Acct 4 | `commit_pr_writer` | `google/gemma-4-31B-it` | `instruction` | 10,000 | `50961b49-fd45-49f8-964a-06ea37361e2f` | `running` | `0/3` | `-` |
+| Acct 4 | `db_migration` | `Qwen/Qwen3.6-35B-A3B` | `instruction` | 10,000 | `2cb1904b-5e23-4c56-87e0-7aafeedfac07` | `running` | `0/3` | `-` |
+| Acct 4 | `frontend_ui` | `google/gemma-4-31B-it-VLM` | `instruction` | 2,500 | `2f6c1852-ce21-49c9-abb2-43a1e44e3854` | `running` | `0/3` | `-` |
+| Acct 4 | `iac` | `Qwen/Qwen3.6-35B-A3B` | `instruction` | 10,000 | `8d833e2a-45b8-4807-821c-a45d2142df6d` | `running` | `0/3` | `-` |
+| Acct 4 | `log_classifier` | `google/gemma-4-31B-it` | `instruction` | 10,000 | `74d2812d-b1ee-465d-b628-aca9d3a09093` | `running` | `0/3` | `-` |
+- **Account 1 Web UI Router Discovery:** `Multi-Agent_Job_Router` (`612ad034-bdb6-43ff-92a7-e5b3994b1e32`, status=`running`)
+- **Trajectory Extension (`implementer`):** status=`running`, run_id=`dataset-173bcadd-b10d-4385-a246-dfd6e2ae6ba5-1794686167184`, dataset_id=`173bcadd-b10d-4385-a246-dfd6e2ae6ba5`
+- **Custom Eval (`security_reviewer_dpo`):** status=`running`, custom_eval_id=`0f51efe2-6512-4d3b-81b1-a834fd39daee`
+
+## Next Step (Part 5 of 5)
+- Poll `python model-training/scripts/poll_adaption_runs.py` until runs reach terminal states (`succeeded`/`completed`), then download best checkpoints (`client.autoscientist.download()`), benchmark base vs. adapted held-out eval sets, and wire the Databricks/vLLM endpoints + `backend/worker.py` patch.
+<!-- ADAPTION_RUNS_END -->

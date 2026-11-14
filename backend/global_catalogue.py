@@ -5,6 +5,7 @@ from contextlib import contextmanager
 import hashlib
 import ipaddress
 import json
+import os
 from pathlib import Path
 import re
 import sqlite3
@@ -47,6 +48,11 @@ def package_identity(ecosystem: str, package: str) -> tuple[str, str]:
     if ecosystem == 'PyPI':
         package = re.sub(r'[-_.]+', '-', package).lower()
     return ecosystem, package
+
+
+def default_path() -> Path:
+    configured = os.getenv('STEWARD_GLOBAL_CATALOGUE_PATH')
+    return Path(configured).expanduser().resolve() if configured else Path(__file__).resolve().parents[1] / 'data' / 'global' / 'catalogue.sqlite3'
 
 
 class VersionEvent(PublicRecord):
@@ -289,6 +295,53 @@ class Catalogue:
                     if latest and latest[0] == 'failed':
                         entry.update(freshness='unknown', source_status='failed')
         return result
+
+    def graph(self, ecosystem: str, package: str, limit: int = 20) -> dict:
+        return graph_result(self.query(ecosystem, package, limit))
+
+
+def graph_result(result: dict) -> dict:
+    """Project a bounded catalogue query into public relationships, never local matches."""
+    validate_query(result['ecosystem'], result['package'], 100)
+    if not isinstance(result['entries'], list) or len(result['entries']) > 100:
+        raise ValueError('Public graphs contain at most 100 entries')
+    ecosystem, package = package_identity(result['ecosystem'], result['package'])
+    package_id = 'package:' + content_hash([ecosystem, package])
+    nodes = {package_id: {'id': package_id, 'type': 'package', 'label': f'{ecosystem} / {package}',
+                          'ecosystem': ecosystem, 'package': package}}
+    edges = []
+    for record in result['entries']:
+        entry = GlobalEntry.model_validate({key: value for key, value in record.items()
+                                            if key not in {'freshness', 'version_status', 'source_status'}})
+        if not any((item.ecosystem, item.package) == (ecosystem, package) for item in entry.affected):
+            raise ValueError('Graph entry does not concern the exact queried package')
+        if (record['freshness'] not in {'fresh', 'stale', 'unknown'}
+                or record['version_status'] not in {'unsupported', 'exact_versions', 'unknown'}
+                or record.get('source_status') not in {None, 'failed'}):
+            raise ValueError('Graph entry has invalid uncertainty status')
+        entry_id = 'entry:' + content_hash(entry.canonical_id)
+        if entry_id in nodes:
+            raise ValueError('Graph contains duplicate public entry identities')
+        source_id = 'source:' + content_hash(entry.source_url)
+        evidence = {**entry.model_dump(mode='json'), 'freshness': record['freshness'],
+                    'version_status': record['version_status']}
+        if record.get('source_status'):
+            evidence['source_status'] = record['source_status']
+        nodes[entry_id] = {'id': entry_id, 'type': 'entry', 'label': entry.title, 'entry': evidence}
+        nodes[source_id] = {'id': source_id, 'type': 'source', 'label': urlsplit(entry.source_url).hostname,
+                            'source_url': entry.source_url}
+        for relationship, target in [('affects' if entry.kind == 'vulnerability' else 'applies_to', package_id),
+                                     ('supported_by', source_id)]:
+            edges.append({'id': 'edge:' + content_hash([entry_id, relationship, target]),
+                          'source': entry_id, 'target': target, 'type': relationship,
+                          'canonical_id': entry.canonical_id, 'material_revision': entry.material_revision,
+                          'source_content_hash': entry.source_content_hash, 'source_url': entry.source_url,
+                          'applicability': 'unknown'})
+    return {'ecosystem': ecosystem, 'package': package, 'coverage': 'unknown',
+            'truncated': result['truncated'], 'source_status': result.get('source_status', []),
+            'limitations': [*result['limitations'],
+                           'Graph edges describe public source claims for the queried package, not confirmed repository or version applicability.'],
+            'nodes': list(nodes.values()), 'edges': edges}
 
 
 def validate_query(ecosystem: str, package: str, limit: int) -> None:

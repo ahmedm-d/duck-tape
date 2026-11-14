@@ -1,7 +1,7 @@
 """Labelled synthetic public catalogue fixtures; no live service evidence."""
 import pytest
 
-from backend.global_catalogue import Catalogue, GlobalEntry, normalize_osv, normalize_improvement
+from backend.global_catalogue import Catalogue, GlobalEntry, default_path, graph_result, normalize_osv, normalize_improvement
 
 
 def advisory(**changes):
@@ -136,3 +136,87 @@ def test_future_source_timestamps_cannot_poison_current_catalogue(tmp_path):
     assert catalogue.entries()[0] == first
     refreshed = catalogue.ingest(first.model_copy(update={'retrieved_at':'2026-11-11T00:00:00Z'}))
     assert refreshed.material_revision == 1
+
+
+def test_public_graph_has_stable_attributed_relationships_and_revisions(tmp_path):
+    catalogue = Catalogue(tmp_path / 'graph.sqlite3')
+    entry = catalogue.ingest(normalize_osv(advisory(), retrieved_at='2026-11-10T00:00:00Z'))
+    before = catalogue.graph('pypi', 'Example.Package')
+    assert before['coverage'] == 'unknown'
+    assert {node['type'] for node in before['nodes']} == {'entry', 'package', 'source'}
+    assert {edge['type'] for edge in before['edges']} == {'affects', 'supported_by'}
+    ids = {node['id'] for node in before['nodes']}
+    for edge in before['edges']:
+        assert edge['source'] in ids and edge['target'] in ids
+        assert edge['canonical_id'] == entry.canonical_id
+        assert edge['source_url'] == entry.source_url
+        assert edge['material_revision'] == 1
+        assert edge['source_content_hash'] == entry.source_content_hash
+        assert edge['applicability'] == 'unknown'
+    updated = catalogue.ingest(entry.model_copy(update={'summary':'Changed public facts',
+        'retrieved_at':'2026-11-11T00:00:00Z', 'withdrawn_at':'2026-11-11T00:00:00Z'}))
+    after = catalogue.graph('PyPI', 'example-package')
+    assert {node['id'] for node in after['nodes']} == ids
+    assert {edge['id'] for edge in after['edges']} == {edge['id'] for edge in before['edges']}
+    assert all(edge['material_revision'] == updated.material_revision == 2 for edge in after['edges'])
+    evidence = next(node['entry'] for node in after['nodes'] if node['type'] == 'entry')
+    assert evidence['withdrawn_at'] and evidence['version_status'] == 'unsupported'
+    assert evidence['summary'] == 'Changed public facts'
+
+
+def test_public_graph_bounds_deduplication_and_unknown_results(tmp_path):
+    catalogue = Catalogue(tmp_path / 'graph.sqlite3')
+    for number in range(3):
+        catalogue.ingest(normalize_improvement({
+            'canonical_id':f'improvement:graph-{number}', 'title':'Public improvement',
+            'summary':'Public source interpretation', 'source_url':'https://docs.python.org/3/whatsnew/3.13.html',
+            'published_at':'2024-10-07T00:00:00Z', 'evidence':['Public release documentation'],
+            'affected':[{'ecosystem':'PyPI','package':'example'}, {'ecosystem':'npm','package':'unrelated'}],
+        }, retrieved_at='2026-01-01T00:00:00Z'))
+    result = catalogue.graph('PyPI', 'example', limit=2)
+    assert result['truncated']
+    assert len(result['nodes']) == 4  # Two entries share one queried package and primary source.
+    assert len(result['edges']) == 4
+    assert len([node for node in result['nodes'] if node['type'] == 'package']) == 1
+    assert all(node['entry']['freshness'] == 'stale' for node in result['nodes'] if node['type'] == 'entry')
+    assert {edge['type'] for edge in result['edges']} == {'applies_to', 'supported_by'}
+    empty = catalogue.graph('npm', 'missing')
+    assert empty['coverage'] == 'unknown' and not empty['edges']
+    assert len(empty['nodes']) == 1 and empty['nodes'][0]['type'] == 'package'
+    for limit in (0, 101, True):
+        with pytest.raises(ValueError): catalogue.graph('PyPI', 'example', limit=limit)
+
+
+def test_public_graph_preserves_failed_refresh_and_rejects_private_payload(tmp_path):
+    import json
+    catalogue = Catalogue(tmp_path / 'graph.sqlite3')
+    entry = catalogue.ingest(normalize_osv(advisory(), retrieved_at='2026-11-10T00:00:00Z'))
+    catalogue.record_operation('ingest', entry.source_url, 'failed', 'Public fetch failed.')
+    result = catalogue.graph('PyPI', 'example-package')
+    node = next(node for node in result['nodes'] if node['type'] == 'entry')
+    assert node['entry']['freshness'] == 'unknown'
+    assert result['source_status'][0]['state'] == 'failed'
+    with catalogue._connect() as connection:
+        connection.execute('UPDATE global_entries SET payload=? WHERE id=?',
+                           (json.dumps({**entry.model_dump(), 'repo_id':'private-repository'}), entry.canonical_id))
+    with pytest.raises(ValueError): catalogue.graph('PyPI', 'example-package')
+
+
+def test_graph_projection_rejects_unbounded_mismatched_and_private_entries(tmp_path):
+    catalogue = Catalogue(tmp_path / 'graph.sqlite3')
+    catalogue.ingest(normalize_osv(advisory(), retrieved_at='2026-11-10T00:00:00Z'))
+    result = catalogue.query('PyPI', 'example-package')
+    with pytest.raises(ValueError): graph_result({**result, 'entries':result['entries'] * 101})
+    with pytest.raises(ValueError): graph_result({**result, 'package':'unrelated'})
+    with pytest.raises(ValueError):
+        graph_result({**result, 'entries':[{**result['entries'][0], 'team_notes':'private'}]})
+
+
+def test_default_catalogue_path_is_server_configurable_without_opening_data(tmp_path, monkeypatch):
+    from pathlib import Path
+    monkeypatch.delenv('STEWARD_GLOBAL_CATALOGUE_PATH', raising=False)
+    assert default_path() == Path(__file__).resolve().parents[1] / 'data/global/catalogue.sqlite3'
+    configured = tmp_path / 'isolated' / 'public.sqlite3'
+    monkeypatch.setenv('STEWARD_GLOBAL_CATALOGUE_PATH', str(configured))
+    assert default_path() == configured
+    assert not configured.parent.exists()

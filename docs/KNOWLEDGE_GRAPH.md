@@ -166,6 +166,7 @@ The block is bounded in UTF-8 bytes like retrieval. Edges, then focal symbols, t
 | Team notes | Never enter retrieval, embeddings, prompts, training or cloud analytics. A note becomes knowledge only by explicit promotion plus approval. |
 | Repository profile, matches, decisions | Computed and stored locally; never pushed to the public catalogue. |
 | Atlas `evidence_vectors` | Only SHA-256 repository/snapshot/embedding-space identifiers, deterministic chunk IDs and vectors. No source text, paths or symbol names; secret-bearing files are excluded whole. Queries are embedded first and refused if they look like credentials. |
+| Atlas graph mirror (`repo_nodes`, `repo_edges`, `approved_knowledge`) | Explicit opt-in, separate from vector retrieval: needs `STEWARD_ATLAS_GRAPH_MIRROR=1` plus the Atlas settings, private database only (never `*_public`). Sends node labels, paths, line numbers, declaration lines, edge relations and team-approved, non-stale, non-conflicting knowledge text. Never sends team notes, drafts, jobs, profiles, file bodies or evidence text; secret-bearing files are excluded whole, as for vectors. |
 | Graphify | Code-only and offline on a scratch copy; no LLM backend, model keys or query log. |
 | Databricks metrics | Hashed run/repository IDs and allowlisted counts, timings and statuses only. |
 
@@ -180,6 +181,7 @@ Embeddings are still source-derived data, and a configured remote embedding prov
 | Approved scoped knowledge with versioning and invalidation | Implemented | `backend/knowledge.py` |
 | RepositoryProfile, ApplicabilityMatch, intake mapping and routes (`/profile`, `/applicability`, `/applicability/intake`) | Implemented, tested against a labelled local fixture | `backend/applicability.py`, `backend/main.py` |
 | Opt-in Atlas vector candidates | Implemented, off by default; live-measured 14 Nov 2026 with lower recall on 3 of 6 fixed tasks | `backend/retrieval.py`, `backend/data_platforms.py` |
+| Opt-in Atlas graph and approved-knowledge mirror (`POST /api/repositories/{id}/atlas-graph-mirror`): idempotent upsert, one snapshot per repository | Implemented, off by default; mocked-collection tests only, not yet live-checked | `backend/atlas_graph.py`, `tests/test_atlas_graph.py` |
 | Graphify engine: normalized graph, SQLite cache, `GET /api/repositories/{id}/graph`, opt-in retrieval edges | Implemented: fixture, mocked-subprocess and real installed-CLI tests; retrieval default stays `builtin` (no measured gain) | `backend/graphify_graph.py`, `tests/test_graphify_graph.py` |
 | Databricks public-source ingestion/curation and Atlas catalogue publication | Planned (C) | [KNOWLEDGE_CONTRACT.md](hackathon/KNOWLEDGE_CONTRACT.md) |
 | Runtime Atlas catalogue lookup feeding the matcher | Planned (C supplies, B consumes) | |

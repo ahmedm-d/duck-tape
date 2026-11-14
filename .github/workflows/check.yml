@@ -3,6 +3,9 @@ on: [push, pull_request]
 jobs:
   contracts:
     runs-on: ubuntu-latest
+    env:
+      # Escape hatch: deterministic checks never contact a real Atlas cluster.
+      STEWARD_ATLAS_REQUIRED: '0'
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7

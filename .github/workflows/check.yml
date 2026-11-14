@@ -4,11 +4,11 @@ jobs:
   contracts:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.13'
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: npm
@@ -19,7 +19,10 @@ jobs:
       - run: npx playwright install --with-deps chromium
         working-directory: frontend
       - run: python scripts/acceptance.py --tier deterministic --output data/acceptance/ci
-      - uses: actions/upload-artifact@v4
+      - name: Annotate failed gates and tests
+        if: failure()
+        run: python scripts/ci_annotations.py data/acceptance/ci
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: deterministic-acceptance

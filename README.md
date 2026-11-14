@@ -8,6 +8,8 @@ The goal is to reduce the work between noticing a problem and having a checked p
 
 The [app workspace guide](docs/APP_WORKSPACE.md) covers the landing page, cross-repository dashboard, stable repository/job URLs, screen gallery and local launch for the navigation redesign.
 
+For parallel frontend work, use the [Workspace/Dashboard and Landing sections](docs/FRONTEND_PARALLEL.md), with separate branches, owned files, preview ports and kickoff prompts.
+
 ## Three-person hackathon workspace
 
 Start with the [A/B/C team plan](docs/hackathon/TEAM_PLAN.md), [three copy-paste kickoff prompts](docs/hackathon/START_HERE.md), [knowledge handoff contract](docs/hackathon/KNOWLEDGE_CONTRACT.md) and [repository rules](CONTRIBUTING.md).

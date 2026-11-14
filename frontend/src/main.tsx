@@ -5,7 +5,8 @@ import './style.css';
 import {api,operationResult} from './api';
 import DiffViewer from './components/DiffViewer';
 import CandidatePreview from './components/CandidatePreview';
-import {Landing,Screens} from './components/WorkspacePages';
+import {Screens} from './components/WorkspacePages';
+import {Landing} from './landing/Landing';
 type Row = Record<string, any>;
 
 const sources=['ticket','request','security','analysis','research'];

@@ -1,5 +1,6 @@
 import {useId, useState, type FormEvent} from 'react';
 import './GlobalCatalogue.css';
+import GlobalRelationships, {type CatalogueGraph} from './GlobalRelationships';
 
 export type GlobalEntry = {
   canonical_id: string;
@@ -30,7 +31,7 @@ export type GlobalEntry = {
   limitations: string[];
 };
 
-export type CatalogueQuery = {ecosystem: string; package: string; limit: number};
+export type CatalogueQuery = {ecosystem: string; package: string; limit: number; provider: 'local' | 'atlas'};
 export type CatalogueResult = {
   ecosystem: string;
   package: string;
@@ -47,13 +48,15 @@ export type CatalogueResult = {
   }[];
 };
 
-export default function GlobalCatalogue({query}: {query: (params: CatalogueQuery) => Promise<CatalogueResult>}) {
+export default function GlobalCatalogue({query, graphQuery}: {query: (params: CatalogueQuery) => Promise<CatalogueResult>; graphQuery?: (params: CatalogueQuery) => Promise<CatalogueGraph>}) {
   const id = useId();
   const [ecosystem, setEcosystem] = useState('');
   const [packageName, setPackageName] = useState('');
+  const [provider, setProvider] = useState<'local' | 'atlas'>('local');
   const [result, setResult] = useState<CatalogueResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [lastQuery, setLastQuery] = useState<CatalogueQuery | null>(null);
 
   async function search(event: FormEvent) {
     event.preventDefault();
@@ -61,7 +64,9 @@ export default function GlobalCatalogue({query}: {query: (params: CatalogueQuery
     setError('');
     setResult(null);
     try {
-      setResult(await query({ecosystem: ecosystem.trim(), package: packageName.trim(), limit: 25}));
+      const params = {ecosystem: ecosystem.trim(), package: packageName.trim(), limit: 25, provider};
+      setResult(await query(params));
+      setLastQuery(params);
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : 'Catalogue unavailable');
     } finally {
@@ -76,6 +81,12 @@ export default function GlobalCatalogue({query}: {query: (params: CatalogueQuery
       <p>Inspect public vulnerabilities, improvements and updates by exact ecosystem and package. Repository applicability is assessed separately using local evidence.</p>
     </header>
     <form className="panel global-catalogue-search" onSubmit={search}>
+      <label htmlFor={`${id}-provider`}>Catalogue store
+        <select id={`${id}-provider`} value={provider} disabled={loading} onChange={event => setProvider(event.target.value as 'local' | 'atlas')}>
+          <option value="local">Local catalogue</option>
+          <option value="atlas">Atlas public catalogue</option>
+        </select>
+      </label>
       <label htmlFor={`${id}-ecosystem`}>Ecosystem
         <input id={`${id}-ecosystem`} placeholder="e.g. PyPI or npm" value={ecosystem} maxLength={64} required disabled={loading} onChange={event => setEcosystem(event.target.value)}/>
       </label>
@@ -84,6 +95,7 @@ export default function GlobalCatalogue({query}: {query: (params: CatalogueQuery
       </label>
       <button className="primary" disabled={loading || !ecosystem.trim() || !packageName.trim()}>{loading ? 'Searching…' : 'Search catalogue'}</button>
     </form>
+    {provider === 'atlas' && <p>Search explicitly queries the configured public Atlas catalogue. Changing the selection does not connect.</p>}
     <p role="status" aria-live="polite">{loading ? 'Searching public catalogue…' : result ? `${result.entries.length} entries for ${result.ecosystem} / ${result.package}.` : 'Searches return at most 25 entries.'}</p>
     {error && <p role="alert" className="alert error">{error}</p>}
     {result && <>
@@ -93,6 +105,7 @@ export default function GlobalCatalogue({query}: {query: (params: CatalogueQuery
         {result.limitations.map((item, index) => <p key={index}>{item}</p>)}
         {result.truncated && <p>Results truncated at 25 entries. This is not the complete set of matching records.</p>}
       </aside>
+      {graphQuery && lastQuery && <GlobalRelationships key={JSON.stringify(lastQuery)} query={() => graphQuery(lastQuery)}/>}
       <section className="panel" aria-label="Source and publication status">
         <h2>Source and publication status</h2>
         <p>Latest catalogue operations. Failed refreshes can leave previous records available; record freshness alone does not confirm a successful refresh.</p>

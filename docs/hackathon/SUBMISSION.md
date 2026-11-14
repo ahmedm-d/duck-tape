@@ -84,7 +84,7 @@ Use relative paths for repository artifacts and public URLs only where needed. I
 
 | Claim | Command / scenario | Current artifact | Outcome and limit |
 | --- | --- | --- | --- |
-| Deterministic application checks | python scripts/acceptance.py --tier deterministic, in the installed environment | TBD | TBD |
+| Deterministic application checks | 2026-11-14, dev machine, branch `feat/repo/applicability`: `python scripts/acceptance.py --tier deterministic` | Local run directory `data/acceptance/20261114T181109Z-8afe1f6e/` (not tracked) | Passed: backend 578/578, restart passed, frontend build passed, browser fixtures 16/16 (mocked `/api`, nothing live). Browser fixtures need the 2-worker Playwright default on this machine: host antivirus network hooks stalled loopback socket close for 10–40 s under 6 concurrent Chromium loads. Rerun on the submission commit |
 | Generic live repair | Exact provider/model and request: TBD | TBD | TBD |
 | Regression fails before / passes after | Exact check commands: TBD | TBD | TBD |
 | Unsafe proposal handling | Seeded case: TBD | TBD | TBD |

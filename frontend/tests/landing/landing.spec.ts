@@ -34,6 +34,7 @@ test('plays the supplied video and supports pausing and resuming', async ({page}
   const video = page.locator('.landing-video video');
   await expect(video).toHaveAttribute('src', '/landing/hero.mp4');
   await expect.poll(() => video.evaluate((node: HTMLVideoElement) => node.readyState)).toBeGreaterThanOrEqual(2);
+  expect(await video.evaluate((node: HTMLVideoElement) => node.videoWidth / node.videoHeight)).toBeCloseTo(1918 / 1080, 2);
   await expect.poll(() => video.evaluate((node: HTMLVideoElement) => node.paused)).toBe(false);
   await page.getByRole('button', {name: 'Pause video'}).click();
   await expect.poll(() => video.evaluate((node: HTMLVideoElement) => node.paused)).toBe(true);
@@ -81,6 +82,9 @@ for (const {width, height} of [{width: 390, height: 900}, {width: 1440, height: 
     await page.setViewportSize({width, height});
     await page.addInitScript(() => localStorage.setItem('steward-theme', 'light'));
     await page.goto('/');
+    const logo = await page.locator('.landing-logo').boundingBox();
+    const navigation = await page.locator('.landing-nav').boundingBox();
+    expect(logo!.x + logo!.width).toBeLessThan(navigation!.x);
     const hero = await page.locator('.landing-opening').boundingBox();
     const video = await page.locator('.landing-video').boundingBox();
     expect(hero!.height).toBe(height);

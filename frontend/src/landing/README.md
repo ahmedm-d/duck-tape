@@ -3,15 +3,18 @@
 ## Current direction
 
 The supplied references drive this revision: white headline in a clean system
-font, the supplied duck-D logo at the top right, frosted Log in / Start creating
-buttons, the duck video in its original colours with the lower half fading out,
+font, the supplied duck-D logo at the top left, frosted Log in / Start creating
+buttons, the supplied silver tape animation with its lower edge fading out,
 and a blue/orange glow behind the dark workspace window.
 
 Below the preview, Tickets / Security / Research feed glass Understand / Prepare /
 Check / Review pills with coloured ribbons. The three example metric cards use
 soft grey glass and lavender details, followed by a minimal footer.
 
-The original video, logo and gradient are kept as supplied. CSS handles the crop,
+The supplied 20-second, 1918x1080 tape video replaces the duck. Its original
+29.2 MB file is retained without recompression; slow-network performance has not
+been measured. The poster is extracted from the new clip. The logo and gradient
+are kept as supplied. CSS handles the wide crop,
 fade, and white display of the black transparent logo. Numbers remain explicitly
 illustrative. Both hero buttons open the existing local `/dashboard`; this change
 does not introduce authentication.
@@ -46,8 +49,11 @@ From `frontend/`, use `STEWARD_TEST_URL=http://127.0.0.1:4178` and
 - `npm run test:browser -- tests/landing/landing.spec.ts --reporter=line --workers=3`:
   9 passed.
 - Real local API preview: no page errors; iframe receives its presentation class.
-- Independent review: no actionable findings; preview styling remains isolated.
-- Visual checks: 1440x1000, 390x844, 320x568, and 844x390. Regression coverage includes
+- Previous glass-layout review: no actionable findings; preview styling remains isolated.
+- Tape revision: build and all 9 landing checks pass; browser loop restart verified.
+  Tests also check the wide source ratio and left-side logo at each viewport.
+  Independent review found no actionable issues.
+- Visual checks: 1440x900, 390x844, 320x568, and 844x390. Regression coverage includes
   320x568, reduced motion, failed media, denied autoplay, keyboard access, section
   navigation, no overflow, and preservation of workspace theme preferences.
 

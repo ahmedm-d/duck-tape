@@ -36,7 +36,7 @@ function HeroVideo() {
   }
 
   return <div className="landing-video">
-    <div className="landing-duck-window">
+    <div className="landing-media-window">
     <video
       ref={video}
       src="/landing/hero.mp4"
@@ -133,12 +133,12 @@ export function Landing() {
     <a className="landing-skip" href="#workspace">Skip to content</a>
     <div className="landing-opening">
       <header className="landing-header">
+        <a className="landing-logo" href="/" aria-label="Duck Tape home"><img src="/landing/logo.png" alt="Duck Tape" width="44" height="44"/></a>
         <nav className="landing-nav" aria-label="Main navigation">
           <a href="#workspace">Workspace</a>
           <a href="#workflow">Workflow</a>
           <a href="#benchmarks">Benchmarks</a>
         </nav>
-        <a className="landing-logo" href="/" aria-label="Duck Tape home"><img src="/landing/logo.png" alt="Duck Tape" width="44" height="44"/></a>
       </header>
       <section className="landing-hero" aria-labelledby="landing-headline">
         <h1 id="landing-headline">Duck Tape is on Duck Tape</h1>

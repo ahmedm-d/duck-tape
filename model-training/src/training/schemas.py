@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 import tiktoken
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class InstructionRow(BaseModel):
@@ -160,8 +160,45 @@ class RouterCompletion(BaseModel):
     token_budget: int = Field(ge=256, le=65536)
 
 
+class DecisionOption(BaseModel):
+    """Strict option shape matching backend/model_schemas.py OPTION."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: str = Field(min_length=1, max_length=4000)
+    label: str = Field(min_length=1, max_length=4000)
+    tradeoff: str = Field(min_length=1, max_length=4000)
+
+
+class DecisionBody(BaseModel):
+    """Strict decision body matching backend/model_schemas.py DECISION['properties']['decision']."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    title: str = Field(min_length=1, max_length=1000)
+    options: list[DecisionOption] = Field(min_length=2, max_length=5)
+    recommendation: str = Field(min_length=1, max_length=1000)
+
+    @model_validator(mode="after")
+    def validate_recommendation_and_ids(self) -> DecisionBody:
+        ids = [opt.id for opt in self.options]
+        if len(ids) != len(set(ids)):
+            raise ValueError("Decision option IDs must be unique")
+        if self.recommendation not in ids:
+            raise ValueError("Decision recommendation must match one of the option IDs")
+        return self
+
+
+class DecisionCompletion(BaseModel):
+    """Strict DECISION alternative completion matching backend/model_schemas.py DECISION."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    decision: DecisionBody
+
+
 class TicketParserCompletion(BaseModel):
-    """Strict JSON completion schema for Agent 2 (ticket_parser)."""
+    """Strict JSON completion schema for Agent 2 (ticket_parser) — no forbidden decision keys."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -170,8 +207,13 @@ class TicketParserCompletion(BaseModel):
     change_type: Literal["feature", "fix", "refactor", "security", "performance"]
     priority: Literal["P0", "P1", "P2", "P3"]
     candidate_files_or_symbols: list[str]
-    needs_decision_card: bool
-    decision_options: list[str]
+
+
+def validate_ticket_parser_output(payload: dict[str, Any]) -> TicketParserCompletion | DecisionCompletion:
+    """Validate either a TicketParserCompletion or the backend DECISION alternative schema."""
+    if isinstance(payload, dict) and "decision" in payload:
+        return DecisionCompletion.model_validate(payload)
+    return TicketParserCompletion.model_validate(payload)
 
 
 class LogClassifierCompletion(BaseModel):

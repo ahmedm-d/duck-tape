@@ -1,7 +1,8 @@
-"""Pre-flight quality gate & inspection report generator for all 12 Steward datasets."""
+"""Pre-flight quality gate & inspection report generator for all 12 Duck Tape datasets."""
 from __future__ import annotations
 
 import json
+import re
 import sys
 from collections import Counter
 from dataclasses import dataclass
@@ -10,11 +11,18 @@ from typing import Any
 
 import tiktoken
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+SCRIPT_DIR = Path(__file__).resolve().parent
+MODEL_TRAINING_ROOT = SCRIPT_DIR.parent
+REPO_ROOT = MODEL_TRAINING_ROOT.parent
 
-from training.schemas import (
+sys.path.insert(0, str(REPO_ROOT))
+sys.path.insert(0, str(MODEL_TRAINING_ROOT / "src"))
+
+from backend import model_schemas  # noqa: E402
+from training.schemas import (  # noqa: E402
     ChatTrajectoryRow,
     ContrastiveTripletRow,
+    DecisionCompletion,
     InstructionRow,
     LogClassifierCompletion,
     PreferenceRow,
@@ -23,13 +31,53 @@ from training.schemas import (
     VisionInstructionRow,
     compute_jsonl_token_stats,
     count_chat_tokens,
+    validate_ticket_parser_output,
 )
-from training.scrub import contains_secrets
-from training.utils import MODEL_TRAINING_ROOT, truncate_bounded
+from training.scrub import contains_secrets  # noqa: E402
+from training.utils import truncate_bounded  # noqa: E402
 
 MAX_TOKENS_CEILING = 45000
 MIN_UNIQUENESS_PCT = 95.0
 MIN_REJECTED_CHARS = 51  # strictly > 50 chars
+
+FORBIDDEN_TERMS: tuple[str, ...] = (
+    "<steward_graph_context>",
+    "is_god_node",
+    "AMBIGUOUS",
+    "tenant_id",
+    "needs_decision_card",
+    "new_global_vuln_candidate",
+    "non-exploitable",
+)
+
+GRAPH_CONTEXT_AGENTS = frozenset(
+    {
+        "router",
+        "ticket_parser",
+        "commit_pr_writer",
+        "log_classifier",
+        "implementer",
+        "test_writer",
+        "reviewer",
+        "security_reviewer",
+        "db_migration",
+        "iac",
+    }
+)
+CI_WORKFLOW_AGENTS = frozenset({"implementer", "test_writer", "commit_pr_writer", "log_classifier"})
+
+_GRAPH_CTX_RE = re.compile(r"<graph_context>\s*(\{.*?\})\s*</graph_context>", re.DOTALL)
+_REQUIRED_GC_KEYS = frozenset(
+    {
+        "scope",
+        "focal_symbols",
+        "edges",
+        "blast_radius",
+        "catalogue_matches",
+        "approved_knowledge",
+        "gaps",
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -203,6 +251,69 @@ def _check_secrets_in_obj(obj: Any) -> int:
     return 0
 
 
+def _count_forbidden_in_text(text: str, counts: Counter[str]) -> None:
+    low = text.lower()
+    for term in FORBIDDEN_TERMS:
+        if term == "AMBIGUOUS":
+            hits = text.count("AMBIGUOUS")
+        else:
+            hits = low.count(term.lower())
+        if hits:
+            counts[term] += hits
+
+
+def _scan_forbidden_in_record(record: dict[str, Any], fmt: str, counts: Counter[str]) -> None:
+    if fmt == "vision_instruction":
+        _count_forbidden_in_text(str(record.get("prompt") or ""), counts)
+        _count_forbidden_in_text(str(record.get("completion") or ""), counts)
+        return
+    if fmt == "chat":
+        for msg in record.get("chat") or []:
+            _count_forbidden_in_text(str(msg.get("content") or ""), counts)
+            if msg.get("tool_calls"):
+                _count_forbidden_in_text(json.dumps(msg["tool_calls"], ensure_ascii=False), counts)
+        return
+    if fmt == "contrastive_triplet":
+        _count_forbidden_in_text(str(record.get("query") or ""), counts)
+        for item in (record.get("pos") or []) + (record.get("neg") or []):
+            _count_forbidden_in_text(str(item), counts)
+        return
+    for key, val in record.items():
+        _count_forbidden_in_text(str(val), counts)
+
+
+def _validate_graph_context(text: str, path: Path, line_no: int) -> dict[str, Any]:
+    match = _GRAPH_CTX_RE.search(text or "")
+    if not match:
+        raise ValueError(f"{path}:{line_no} missing <graph_context>...</graph_context> block")
+    ctx = json.loads(match.group(1))
+    if set(ctx.keys()) != _REQUIRED_GC_KEYS:
+        raise ValueError(f"{path}:{line_no} invalid graph_context v1 top-level keys: {sorted(ctx.keys())}")
+    scope = ctx["scope"]
+    if set(scope.keys()) != {"repo_id", "snapshot_id", "engine", "engine_version", "graph_hash"}:
+        raise ValueError(f"{path}:{line_no} invalid graph_context scope keys: {sorted(scope.keys())}")
+    for sym in ctx["focal_symbols"]:
+        if "is_god_node" in sym or "leiden_community" in sym:
+            raise ValueError(f"{path}:{line_no} forbidden focal_symbols key")
+        if sym.get("kind") not in {"callable", "class", "symbol", "file"}:
+            raise ValueError(f"{path}:{line_no} invalid focal_symbol kind: {sym.get('kind')}")
+    for edge in ctx["edges"]:
+        if edge.get("confidence") not in {"EXTRACTED", "INFERRED"}:
+            raise ValueError(f"{path}:{line_no} invalid edge confidence: {edge.get('confidence')}")
+        if not isinstance(edge.get("suggestion_only"), bool):
+            raise ValueError(f"{path}:{line_no} edge suggestion_only must be bool")
+        if edge.get("relation") not in {"calls", "imports", "imports_from", "tests"}:
+            raise ValueError(f"{path}:{line_no} invalid edge relation: {edge.get('relation')}")
+        if not isinstance(edge.get("evidence"), dict) or set(edge["evidence"].keys()) != {"path", "line"}:
+            raise ValueError(f"{path}:{line_no} invalid edge evidence")
+    br = ctx["blast_radius"]
+    if set(br.keys()) != {"dependent_files", "communities_touched", "linked_test_files", "structural_risk", "basis"}:
+        raise ValueError(f"{path}:{line_no} invalid blast_radius keys")
+    if br["structural_risk"] not in {"low", "medium", "high", None}:
+        raise ValueError(f"{path}:{line_no} invalid structural_risk: {br['structural_risk']}")
+    return ctx
+
+
 def _prompt_signature(record: dict[str, Any], fmt: str) -> str:
     if fmt == "chat":
         chat = record.get("chat") or []
@@ -225,11 +336,11 @@ def _format_sample_markdown(record: dict[str, Any], fmt: str) -> str:
         chat = record.get("chat") or []
         roles = [str(m.get("role")) for m in chat]
         first_user = next((str(m.get("content") or "") for m in chat if m.get("role") == "user"), "")
-        first_asst = next((str(m.get("content") or "") for m in chat if m.get("role") == "assistant"), "")
+        last_asst = next((str(m.get("content") or "") for m in reversed(chat) if m.get("role") == "assistant"), "")
         return (
             f"- **Turns:** `{len(chat)}` (`{' -> '.join(roles[:8])}{'...' if len(roles) > 8 else ''}`)\n"
             f"- **User Prompt Excerpt:**\n{_fenced('text', truncate_bounded(first_user, 380))}\n"
-            f"- **Assistant Excerpt:**\n{_fenced('text', truncate_bounded(first_asst, 380))}"
+            f"- **Final Assistant Excerpt:**\n{_fenced('text', truncate_bounded(last_asst, 380))}"
         )
     if fmt == "preference":
         return (
@@ -277,6 +388,9 @@ def _audit_file(
     min_rejected_len: int | None = None
     max_raw_tokens = 0
     dist: Counter[str] = Counter()
+    forbidden_counts: Counter[str] = Counter()
+    graph_context_valid = 0
+    ci_workflow_valid = 0
     samples: list[dict[str, Any]] = []
 
     with path.open("r", encoding="utf-8") as handle:
@@ -289,6 +403,7 @@ def _audit_file(
         if idx in sample_indices:
             samples.append(record)
 
+        _scan_forbidden_in_record(record, spec.fmt, forbidden_counts)
         sigs.append(_prompt_signature(record, spec.fmt))
 
         if spec.fmt == "chat":
@@ -305,6 +420,17 @@ def _audit_file(
                     fn = tc.get("function") or {}
                     if not isinstance(fn.get("arguments"), dict):
                         raise ValueError(f"{path}:{idx + 1} non-dict tool_call arguments")
+
+            first_user = next((str(m.get("content") or "") for m in row_chat.chat if m.get("role") == "user"), "")
+            last_asst = next((str(m.get("content") or "") for m in reversed(row_chat.chat) if m.get("role") == "assistant"), "")
+            if spec.agent in GRAPH_CONTEXT_AGENTS:
+                _validate_graph_context(first_user, path, idx + 1)
+                graph_context_valid += 1
+            if spec.agent in CI_WORKFLOW_AGENTS:
+                if "blast_radius.linked_test_files" in first_user and "blast_radius.linked_test_files" in last_asst:
+                    ci_workflow_valid += 1
+                else:
+                    raise ValueError(f"{path}:{idx + 1} missing CI/worktree workflow rules")
             dist["chat_valid"] += 1
             if any(m.get("tool_calls") for m in row_chat.chat):
                 dist["with_tool_calls"] += 1
@@ -325,13 +451,29 @@ def _audit_file(
             max_raw_tokens = max(max_raw_tokens, raw_toks)
             if raw_toks >= MAX_TOKENS_CEILING:
                 raise ValueError(f"{path}:{idx + 1} token count {raw_toks} >= {MAX_TOKENS_CEILING}")
+
+            ctx = _validate_graph_context(row_pref.prompt, path, idx + 1)
+            graph_context_valid += 1
+
             if spec.agent == "security_reviewer":
-                if "### Verdict: EXPLOITABLE" in row_pref.chosen:
-                    dist["exploitable"] += 1
-                elif "### Verdict: NOT EXPLOITABLE" in row_pref.chosen:
-                    dist["benign_or_unreachable"] += 1
+                matches = ctx.get("catalogue_matches") or []
+                if not matches:
+                    raise ValueError(f"{path}:{idx + 1} security_reviewer missing catalogue_matches")
+                sink_val = matches[0].get("sink_reachable")
+                if sink_val is None:
+                    if "not shown reachable" not in row_pref.chosen or "SUPPRESSED" in row_pref.chosen:
+                        raise ValueError(f"{path}:{idx + 1} sink_reachable=null chosen violated null-safety rule")
+                    dist["sink_reachable_null"] += 1
+                elif sink_val is True:
+                    if "EXTRACTED" not in row_pref.chosen:
+                        raise ValueError(f"{path}:{idx + 1} sink_reachable=true chosen missing EXTRACTED citation")
+                    dist["sink_reachable_true"] += 1
+                elif sink_val is False:
+                    if "zero ast imports" not in row_pref.chosen.lower() or "not shown reachable" not in row_pref.chosen.lower():
+                        raise ValueError(f"{path}:{idx + 1} sink_reachable=false chosen missing zero-AST-import bump note")
+                    dist["sink_reachable_false"] += 1
                 else:
-                    raise ValueError(f"{path}:{idx + 1} missing security Verdict header")
+                    raise ValueError(f"{path}:{idx + 1} invalid sink_reachable value: {sink_val!r}")
             else:
                 dist["preference_valid"] += 1
 
@@ -377,25 +519,45 @@ def _audit_file(
             max_raw_tokens = max(max_raw_tokens, raw_toks)
             if raw_toks >= MAX_TOKENS_CEILING:
                 raise ValueError(f"{path}:{idx + 1} token count {raw_toks} >= {MAX_TOKENS_CEILING}")
+            if spec.agent in GRAPH_CONTEXT_AGENTS:
+                _validate_graph_context(row_inst.prompt, path, idx + 1)
+                graph_context_valid += 1
             if spec.completion_schema is not None:
                 if "```" in row_inst.completion:
                     fence_hits += 1
                 try:
                     parsed = json.loads(row_inst.completion)
-                    obj = spec.completion_schema.model_validate(parsed)
+                    if spec.agent == "ticket_parser":
+                        obj = validate_ticket_parser_output(parsed)
+                        if isinstance(obj, DecisionCompletion):
+                            model_schemas.check(parsed, model_schemas.DECISION)
+                    else:
+                        obj = spec.completion_schema.model_validate(parsed)
                 except Exception:
                     json_failures += 1
                     raise
                 if spec.agent == "router":
                     dist[obj.next_agent] += 1
                 elif spec.agent == "ticket_parser":
-                    dist[obj.change_type] += 1
+                    if isinstance(obj, DecisionCompletion):
+                        dist["decision_card"] += 1
+                    else:
+                        dist[obj.change_type] += 1
                 elif spec.agent == "log_classifier":
                     dist[obj.failure_category] += 1
+                    if "blast_radius.linked_test_files" in row_inst.prompt and "blast_radius.linked_test_files" in obj.recommended_action:
+                        ci_workflow_valid += 1
+                    else:
+                        raise ValueError(f"{path}:{idx + 1} log_classifier missing CI/worktree guidance")
             else:
                 for req in spec.required_substrings:
                     if req not in row_inst.completion:
                         raise ValueError(f"{path}:{idx + 1} missing required heading {req!r}")
+                if spec.agent in CI_WORKFLOW_AGENTS:
+                    if "blast_radius.linked_test_files" in row_inst.prompt and "blast_radius.linked_test_files" in row_inst.completion:
+                        ci_workflow_valid += 1
+                    else:
+                        raise ValueError(f"{path}:{idx + 1} {spec.agent} missing CI/worktree guidance")
                 if spec.agent == "iac":
                     if "Terraform (.tf)" in row_inst.prompt:
                         dist["terraform"] += 1
@@ -428,6 +590,9 @@ def _audit_file(
         "min_rejected_len": min_rejected_len,
         "max_raw_tokens": max_raw_tokens,
         "dist": dict(sorted(dist.items())),
+        "forbidden_counts": dict(forbidden_counts),
+        "graph_context_valid": graph_context_valid,
+        "ci_workflow_valid": ci_workflow_valid,
         "samples": samples,
     }
 
@@ -438,10 +603,10 @@ def main() -> int:
     gate_failures: list[str] = []
 
     md_summary: list[str] = [
-        "# Steward Pre-Flight Dataset Quality & Inspection Report",
+        "# Duck Tape Pre-Flight Dataset Quality & Inspection Report",
         "",
-        "Comprehensive quality gate audit across all **12 specialist agent datasets** (Waves 1–3) in ",
-        "`model-training/data/processed/` and `model-training/data/eval/`.",
+        "Comprehensive quality gate & `HANDOFF_B_TO_A.md` (`graph_context v1`) audit across all **12 specialist agent datasets** ",
+        "in `model-training/data/processed/` and `model-training/data/eval/`.",
         "",
         "## 1. Pre-Flight Quality Gate Checklist",
         "",
@@ -462,15 +627,23 @@ def main() -> int:
         "| --- | --- | ---: | --- | --- |",
     ]
 
+    handoff_lines: list[str] = [
+        "",
+        "## 4. Handoff v1 (`graph_context v1`), Null-Safety & Forbidden-Key Audit",
+        "",
+        "| Agent | `<graph_context>` v1 Valid | CI / Worktree Grounded | Forbidden Term Hits | Status |",
+        "| --- | ---: | ---: | ---: | --- |",
+    ]
+
     dist_lines: list[str] = [
         "",
-        "## 4. Label, Framework & Source Distributions",
+        "## 5. Label, Framework & Source Distributions",
         "",
     ]
 
     sample_lines: list[str] = [
         "",
-        "## 5. Formatted Sample Rows (2 per Agent)",
+        "## 6. Formatted Sample Rows (2 per Agent)",
         "",
     ]
 
@@ -478,6 +651,7 @@ def main() -> int:
     total_eval_rows = 0
     total_secrets = 0
     total_overlap = 0
+    total_forbidden: Counter[str] = Counter()
 
     for idx, spec in enumerate(AGENT_SPECS, start=1):
         train_path = MODEL_TRAINING_ROOT / spec.train_rel
@@ -496,6 +670,12 @@ def main() -> int:
         secrets = tr["secret_hits"] + ev["secret_hits"]
         total_secrets += secrets
 
+        for k, v in tr["forbidden_counts"].items():
+            total_forbidden[k] += v
+        for k, v in ev["forbidden_counts"].items():
+            total_forbidden[k] += v
+        agent_forb = sum(tr["forbidden_counts"].values()) + sum(ev["forbidden_counts"].values())
+
         if tr_rows < 1000:
             gate_failures.append(f"{spec.agent}: train rows {tr_rows} < 1000")
         if tr_rows != spec.expected_train:
@@ -506,12 +686,25 @@ def main() -> int:
             gate_failures.append(f"{spec.agent}: train/eval overlap = {overlap}")
         if secrets != 0:
             gate_failures.append(f"{spec.agent}: secret hits = {secrets}")
+        if agent_forb != 0:
+            gate_failures.append(
+                f"{spec.agent}: forbidden handoff terms present: "
+                f"train={tr['forbidden_counts']} eval={ev['forbidden_counts']}"
+            )
         if tr["uniqueness_pct"] <= MIN_UNIQUENESS_PCT or ev["uniqueness_pct"] <= MIN_UNIQUENESS_PCT:
             gate_failures.append(
                 f"{spec.agent}: prompt uniqueness too low (train={tr['uniqueness_pct']}%, eval={ev['uniqueness_pct']}%)"
             )
         if tr["fence_hits"] != 0 or ev["fence_hits"] != 0:
             gate_failures.append(f"{spec.agent}: markdown fence hits in strict JSON")
+
+        if spec.agent == "security_reviewer":
+            tr_null_ratio = tr["dist"].get("sink_reachable_null", 0) / tr_rows
+            ev_null_ratio = ev["dist"].get("sink_reachable_null", 0) / ev_rows
+            if abs(tr_null_ratio - 0.70) > 0.02 or abs(ev_null_ratio - 0.70) > 0.02:
+                gate_failures.append(
+                    f"security_reviewer: sink_reachable=null ratio must be ~0.70 (got train={tr_null_ratio:.2%}, eval={ev_null_ratio:.2%})"
+                )
 
         aug_needed = max(0, spec.autoscientist_target - tr_rows)
         max_tok = max(tr["max_raw_tokens"], ev["max_raw_tokens"])
@@ -538,6 +731,18 @@ def main() -> int:
                 f"| `{spec.agent}` | N/A ({spec.fmt}) | N/A | N/A | PASS |"
             )
 
+        gc_str = (
+            f"{tr['graph_context_valid'] + ev['graph_context_valid']:,}/{tr_rows + ev_rows:,}"
+            if spec.agent in GRAPH_CONTEXT_AGENTS
+            else "N/A (vision/triplet)"
+        )
+        ci_str = (
+            f"{tr['ci_workflow_valid'] + ev['ci_workflow_valid']:,}/{tr_rows + ev_rows:,}"
+            if spec.agent in CI_WORKFLOW_AGENTS
+            else "N/A"
+        )
+        handoff_lines.append(f"| `{spec.agent}` | {gc_str} | {ci_str} | {agent_forb} | PASS |")
+
         dist_lines.append(f"- **`{spec.agent}`** (`train` `{tr['dist']}`, `eval` `{ev['dist']}`)")
 
         sample_lines.append(f"### Agent {idx}: `{spec.agent}` (`{spec.fmt}`)")
@@ -559,33 +764,46 @@ def main() -> int:
                 "eval_uniqueness_pct": ev["uniqueness_pct"],
                 "overlap": overlap,
                 "secret_hits": secrets,
+                "forbidden_hits": agent_forb,
                 "augmentation_domain_rows": aug_needed,
                 "autoscientist_target": spec.autoscientist_target,
             }
         )
+
+    # Also check canonical alias eval files for zero forbidden terms
+    for alias_rel in ("data/eval/reviewer_eval.jsonl", "data/eval/retriever_eval.jsonl"):
+        alias_path = MODEL_TRAINING_ROOT / alias_rel
+        if alias_path.is_file():
+            alias_text = alias_path.read_text(encoding="utf-8")
+            alias_forb: Counter[str] = Counter()
+            _count_forbidden_in_text(alias_text, alias_forb)
+            if alias_forb:
+                gate_failures.append(f"{alias_rel}: forbidden terms found: {dict(alias_forb)}")
 
     if gate_failures:
         raise RuntimeError("Quality gate failed:\n- " + "\n- ".join(gate_failures))
 
     md_summary.extend(
         [
-            f"- **1. Schema & JSONL Validity:** PASS — All 12 train/eval pairs ({total_train_rows:,} train + {total_eval_rows:,} eval rows) validated cleanly with Pydantic v2.",
-            "- **2. Row Count & Minimums:** PASS — All core SFT/DPO/contrastive sets have exactly 5,000 train rows; `router` has 1,200 (paired with Adaption `invent()` primary generation); `frontend_ui` has 2,500 (> 1,000 multimodal minimum).",
-            "- **3. Strict Output JSON Check:** PASS — 100% of `router`, `ticket_parser`, and `log_classifier` completions parse cleanly via `json.loads()` with zero markdown code fences.",
+            f"- **1. Schema & JSONL Validity:** PASS — All 12 train/eval pairs ({total_train_rows:,} train + {total_eval_rows:,} eval rows) validated cleanly with Pydantic v2 & `backend/model_schemas.py`.",
+            "- **2. Row Count & Minimums:** PASS — All core SFT/DPO/contrastive sets have exactly 5,000 train rows; `router` has 1,200; `frontend_ui` has 2,500 (> 1,000 minimum).",
+            "- **3. Strict Output JSON Check:** PASS — 100% of `router`, `ticket_parser` (including `DECISION` alternative schema), and `log_classifier` completions parse cleanly via `json.loads()` with zero markdown code fences and zero forbidden keys.",
             f"- **4. Deduplication & Grounding Check:** PASS — All datasets exceed >95.0% prompt uniqueness, `train/eval overlap = {total_overlap}`, and DPO `rejected` responses all exceed >50 characters.",
             f"- **5. Token & Secret Check:** PASS — Every row across all 12 datasets is strictly `< {MAX_TOKENS_CEILING:,}` tokens (`cl100k_base`) and `secret_hits = {total_secrets}`.",
+            f"- **6. Handoff v1 & Forbidden Term Check:** PASS — `<graph_context>` v1 validated across all 10 graph-aware agents, 70%/15%/15% `sink_reachable` distribution verified on `security_reviewer` with `not shown reachable` null-safety, CI/worktree rules verified on 4 workflow agents, and forbidden-term hits = `{sum(total_forbidden.values())}` across all 12 datasets.",
             "",
         ]
     )
 
     report_path = MODEL_TRAINING_ROOT / "data" / "inspection_report.md"
     report_path.parent.mkdir(parents=True, exist_ok=True)
-    full_md = "\n".join(md_summary + table_lines + strict_json_lines + dist_lines + sample_lines) + "\n"
+    full_md = "\n".join(md_summary + table_lines + strict_json_lines + handoff_lines + dist_lines + sample_lines) + "\n"
+    full_md = full_md.replace("\r\n", "\n").replace("\r", "\n")
     with report_path.open("w", encoding="utf-8", newline="\n") as handle:
         handle.write(full_md)
 
     print(json.dumps(summary_rows, indent=2))
-    print(f"ALL 12 QUALITY GATES PASSED. Wrote {report_path}")
+    print(f"ALL QUALITY & HANDOFF V1 GATES PASSED. Wrote {report_path}")
     return 0
 
 

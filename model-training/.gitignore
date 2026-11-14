@@ -11,3 +11,4 @@ models/checkpoints/
 *.bin
 !data/inspection_report.md
 !data/adaption_runs_manifest.json
+!data/dataset_licenses.json

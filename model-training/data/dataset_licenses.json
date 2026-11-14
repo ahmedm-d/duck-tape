@@ -1,0 +1,316 @@
+{
+  "schema_version": "duck-tape-licenses-1",
+  "handoff_contract": "HANDOFF_B_TO_A.md (graph_context v1)",
+  "model_schema_version": "steward-schema-3",
+  "privacy_and_provenance": {
+    "synthetic_or_public_only": true,
+    "team_notes_included": false,
+    "imported_client_repo_code_included": false,
+    "weights_committed": false
+  },
+  "datasets": [
+    {
+      "agent": "router",
+      "train_file": "model-training/data/processed/router.jsonl",
+      "eval_file": "model-training/data/eval/router_eval.jsonl",
+      "train_rows": 1200,
+      "eval_rows": 200,
+      "sources": [
+        {
+          "id": "SWE-bench/SWE-smith",
+          "url": "https://huggingface.co/datasets/SWE-bench/SWE-smith",
+          "license": "MIT"
+        },
+        {
+          "id": "SWE-Gym/SWE-Gym",
+          "url": "https://huggingface.co/datasets/SWE-Gym/SWE-Gym",
+          "license": "MIT"
+        }
+      ]
+    },
+    {
+      "agent": "ticket_parser",
+      "train_file": "model-training/data/processed/ticket_parser.jsonl",
+      "eval_file": "model-training/data/eval/ticket_parser_eval.jsonl",
+      "train_rows": 5000,
+      "eval_rows": 200,
+      "sources": [
+        {
+          "id": "princeton-nlp/SWE-bench_Verified",
+          "url": "https://huggingface.co/datasets/princeton-nlp/SWE-bench_Verified",
+          "license": "MIT"
+        },
+        {
+          "id": "SWE-Gym/SWE-Gym",
+          "url": "https://huggingface.co/datasets/SWE-Gym/SWE-Gym",
+          "license": "MIT"
+        },
+        {
+          "id": "cjsanjay/jira_train_17012024",
+          "url": "https://huggingface.co/datasets/cjsanjay/jira_train_17012024",
+          "license": "Apache-2.0 (public Jira issue mirror)"
+        },
+        {
+          "id": "kristmh/clean_Jira_balanced",
+          "url": "https://huggingface.co/datasets/kristmh/clean_Jira_balanced",
+          "license": "Apache-2.0 / public Jira issue corpus"
+        }
+      ]
+    },
+    {
+      "agent": "commit_pr_writer",
+      "train_file": "model-training/data/processed/commit_pr_writer.jsonl",
+      "eval_file": "model-training/data/eval/commit_pr_writer_eval.jsonl",
+      "train_rows": 5000,
+      "eval_rows": 200,
+      "sources": [
+        {
+          "id": "bigcode/commitpackft",
+          "url": "https://huggingface.co/datasets/bigcode/commitpackft",
+          "license": "Permissive OSS commit subset (MIT / Apache-2.0 / BSD)"
+        },
+        {
+          "id": "Maxscha/commitbench",
+          "url": "https://huggingface.co/datasets/Maxscha/commitbench",
+          "license": "Apache-2.0"
+        }
+      ]
+    },
+    {
+      "agent": "log_classifier",
+      "train_file": "model-training/data/processed/log_classifier.jsonl",
+      "eval_file": "model-training/data/eval/log_classifier_eval.jsonl",
+      "train_rows": 5000,
+      "eval_rows": 200,
+      "sources": [
+        {
+          "id": "logpai/loghub",
+          "url": "https://github.com/logpai/loghub",
+          "license": "MIT"
+        },
+        {
+          "id": "TestingResearchIllinois/idoft",
+          "url": "https://github.com/TestingResearchIllinois/idoft",
+          "license": "MIT / NCSA"
+        },
+        {
+          "id": "SWE-Gym/SWE-Gym",
+          "url": "https://huggingface.co/datasets/SWE-Gym/SWE-Gym",
+          "license": "MIT"
+        },
+        {
+          "id": "SWE-bench/SWE-smith",
+          "url": "https://huggingface.co/datasets/SWE-bench/SWE-smith",
+          "license": "MIT"
+        }
+      ]
+    },
+    {
+      "agent": "implementer",
+      "train_file": "model-training/data/processed/implementer.jsonl",
+      "eval_file": "model-training/data/eval/implementer_eval.jsonl",
+      "train_rows": 5000,
+      "eval_rows": 200,
+      "sources": [
+        {
+          "id": "nebius/SWE-rebench-openhands-trajectories",
+          "url": "https://huggingface.co/datasets/nebius/SWE-rebench-openhands-trajectories",
+          "license": "CC-BY-4.0 / Apache-2.0"
+        },
+        {
+          "id": "SWE-bench/SWE-smith-trajectories",
+          "url": "https://huggingface.co/datasets/SWE-bench/SWE-smith-trajectories",
+          "license": "MIT"
+        },
+        {
+          "id": "R2E-Gym/R2EGym-SFT-Trajectories",
+          "url": "https://huggingface.co/datasets/R2E-Gym/R2EGym-SFT-Trajectories",
+          "license": "MIT"
+        }
+      ]
+    },
+    {
+      "agent": "test_writer",
+      "train_file": "model-training/data/processed/test_writer.jsonl",
+      "eval_file": "model-training/data/eval/test_writer_eval.jsonl",
+      "train_rows": 5000,
+      "eval_rows": 200,
+      "sources": [
+        {
+          "id": "nebius/SWE-rebench-openhands-trajectories",
+          "url": "https://huggingface.co/datasets/nebius/SWE-rebench-openhands-trajectories",
+          "license": "CC-BY-4.0 / Apache-2.0"
+        },
+        {
+          "id": "kjain14/testgeneval",
+          "url": "https://huggingface.co/datasets/kjain14/testgeneval",
+          "license": "MIT"
+        },
+        {
+          "id": "SWE-Gym/SWE-Gym",
+          "url": "https://huggingface.co/datasets/SWE-Gym/SWE-Gym",
+          "license": "MIT"
+        },
+        {
+          "id": "SWE-bench/SWE-smith",
+          "url": "https://huggingface.co/datasets/SWE-bench/SWE-smith",
+          "license": "MIT"
+        }
+      ]
+    },
+    {
+      "agent": "reviewer",
+      "train_file": "model-training/data/processed/reviewer_dpo.jsonl",
+      "eval_file": "model-training/data/eval/reviewer_dpo_eval.jsonl",
+      "train_rows": 5000,
+      "eval_rows": 200,
+      "sources": [
+        {
+          "id": "fasterinnerlooper/codereviewer",
+          "url": "https://huggingface.co/datasets/fasterinnerlooper/codereviewer",
+          "license": "MIT (Microsoft CodeReviewer)"
+        },
+        {
+          "id": "Dahoas/code-review-instruct-critique-revision-python",
+          "url": "https://huggingface.co/datasets/Dahoas/code-review-instruct-critique-revision-python",
+          "license": "MIT / Apache-2.0"
+        }
+      ]
+    },
+    {
+      "agent": "security_reviewer",
+      "train_file": "model-training/data/processed/security_reviewer_dpo.jsonl",
+      "eval_file": "model-training/data/eval/security_reviewer_eval.jsonl",
+      "train_rows": 5000,
+      "eval_rows": 200,
+      "sources": [
+        {
+          "id": "OSV.dev API",
+          "url": "https://osv.dev/",
+          "license": "CC-BY-4.0"
+        },
+        {
+          "id": "colin/PrimeVul",
+          "url": "https://huggingface.co/datasets/colin/PrimeVul",
+          "license": "MIT / Apache-2.0"
+        },
+        {
+          "id": "MickyMike/cvefixes_bigvul",
+          "url": "https://huggingface.co/datasets/MickyMike/cvefixes_bigvul",
+          "license": "CC-BY-4.0"
+        },
+        {
+          "id": "bstee615/diversevul",
+          "url": "https://huggingface.co/datasets/bstee615/diversevul",
+          "license": "Apache-2.0"
+        }
+      ]
+    },
+    {
+      "agent": "db_migration",
+      "train_file": "model-training/data/processed/db_migration.jsonl",
+      "eval_file": "model-training/data/eval/db_migration_eval.jsonl",
+      "train_rows": 5000,
+      "eval_rows": 200,
+      "sources": [
+        {
+          "id": "birdsql/bird_mini_dev",
+          "url": "https://huggingface.co/datasets/birdsql/bird_mini_dev",
+          "license": "CC-BY-SA-4.0"
+        },
+        {
+          "id": "bigcode/commitpackft",
+          "url": "https://huggingface.co/datasets/bigcode/commitpackft",
+          "license": "Permissive OSS commit subset (MIT / Apache-2.0 / BSD)"
+        },
+        {
+          "id": "xlangai/spider",
+          "url": "https://huggingface.co/datasets/xlangai/spider",
+          "license": "CC-BY-SA-4.0"
+        }
+      ]
+    },
+    {
+      "agent": "iac",
+      "train_file": "model-training/data/processed/iac.jsonl",
+      "eval_file": "model-training/data/eval/iac_eval.jsonl",
+      "train_rows": 5000,
+      "eval_rows": 200,
+      "sources": [
+        {
+          "id": "autoiac-project/iac-eval",
+          "url": "https://huggingface.co/datasets/autoiac-project/iac-eval",
+          "license": "MIT"
+        },
+        {
+          "id": "bigcode/commitpackft",
+          "url": "https://huggingface.co/datasets/bigcode/commitpackft",
+          "license": "Permissive OSS commit subset (MIT / Apache-2.0 / BSD)"
+        },
+        {
+          "id": "HelloBoieeee/kubernetes_config",
+          "url": "https://huggingface.co/datasets/HelloBoieeee/kubernetes_config",
+          "license": "Apache-2.0"
+        },
+        {
+          "id": "LeeSek/dockerfiles-linted",
+          "url": "https://huggingface.co/datasets/LeeSek/dockerfiles-linted",
+          "license": "MIT"
+        },
+        {
+          "id": "loubnabnl/dockerfile_checks",
+          "url": "https://huggingface.co/datasets/loubnabnl/dockerfile_checks",
+          "license": "Apache-2.0"
+        }
+      ]
+    },
+    {
+      "agent": "frontend_ui",
+      "train_file": "model-training/data/processed/frontend_ui.jsonl",
+      "eval_file": "model-training/data/eval/frontend_ui_eval.jsonl",
+      "train_rows": 2500,
+      "eval_rows": 100,
+      "sources": [
+        {
+          "id": "SALT-NLP/Design2Code",
+          "url": "https://huggingface.co/datasets/SALT-NLP/Design2Code",
+          "license": "MIT"
+        },
+        {
+          "id": "HuggingFaceM4/WebSight",
+          "url": "https://huggingface.co/datasets/HuggingFaceM4/WebSight",
+          "license": "Apache-2.0"
+        }
+      ]
+    },
+    {
+      "agent": "retriever",
+      "train_file": "model-training/data/processed/retriever_triplets.jsonl",
+      "eval_file": "model-training/data/eval/retriever_triplets_eval.jsonl",
+      "train_rows": 5000,
+      "eval_rows": 300,
+      "sources": [
+        {
+          "id": "princeton-nlp/SWE-bench_Verified",
+          "url": "https://huggingface.co/datasets/princeton-nlp/SWE-bench_Verified",
+          "license": "MIT"
+        },
+        {
+          "id": "SWE-Gym/SWE-Gym",
+          "url": "https://huggingface.co/datasets/SWE-Gym/SWE-Gym",
+          "license": "MIT"
+        },
+        {
+          "id": "code-search-net/code_search_net",
+          "url": "https://huggingface.co/datasets/code-search-net/code_search_net",
+          "license": "MIT"
+        },
+        {
+          "id": "gonglinyuan/CoSQA",
+          "url": "https://huggingface.co/datasets/gonglinyuan/CoSQA",
+          "license": "MIT"
+        }
+      ]
+    }
+  ]
+}

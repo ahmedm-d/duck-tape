@@ -108,3 +108,29 @@ def test_installed_graphify_builds_the_sample_map(parcel):
     graph = api.get(f'/api/repositories/{repo["id"]}/graph?engine=graphify').json()
     assert graph['engine'] == 'graphify' and graph['stats']['edges'] > 0
     assert any(edge['relation'] == 'calls' and edge['evidence']['path'] == 'app.py' for edge in graph['edges'])
+
+
+def test_retrieval_expands_only_extracted_cross_file_graphify_edges(parcel, monkeypatch):
+    from backend import retrieval
+    _, repo = parcel
+    raw = json.loads(json.dumps(RAW))
+    raw['links'].append({'source': 'app_quote', 'target': 'search_unique_labels', 'relation': 'uses', 'confidence': 'INFERRED',
+                         'source_file': 'app.py', 'source_location': 'L4'})
+    monkeypatch.setattr(graphify_graph, '_run_graphify', lambda snapshot_id, cancel=None: raw)
+    edges, note = retrieval._graphify_edges(repo['id'], repo['source_snapshot_id'], None)
+    assert ('app.py', 'pricing.py', 'graphify calls') in {(e['source'], e['target'], e['kind']) for e in edges}
+    assert all(e['source'] != e['target'] for e in edges) and not any('uses' in e['kind'] for e in edges)
+    result = retrieval.retrieve(repo['id'], repo['source_snapshot_id'], 'quote quantity', 6000, semantic=False, atlas=False, graph_engine='graphify')
+    assert 'graphify' in result['mode'] and any(item.startswith('Graphify 0.9.108') for item in result['missing'])
+    assert any('graph graphify calls' in item['reason'] for item in result['items'])
+
+
+def test_retrieval_graphify_failure_keeps_builtin_graph(parcel, monkeypatch):
+    from backend import retrieval
+    _, repo = parcel
+    monkeypatch.setattr(graphify_graph, 'executable', lambda: None)
+    result = retrieval.retrieve(repo['id'], repo['source_snapshot_id'], 'quote quantity', 6000, semantic=False, atlas=False, graph_engine='graphify')
+    assert 'graphify' not in result['mode'] and 'graph' in result['mode'] and result['items']
+    assert any('Graphify graph unavailable' in item and 'built-in import/call graph only' in item for item in result['missing'])
+    default = retrieval.retrieve(repo['id'], repo['source_snapshot_id'], 'quote quantity', 6000, semantic=False, atlas=False)
+    assert not any(item.startswith('Graphify') for item in default['missing'])

@@ -136,7 +136,34 @@ def _atlas_candidates(repo_id, snapshot_id, query, available, limit, cancel):
     return hits, f'Atlas candidates: {len(hits)} validated against local snapshot chunks; source text from local evidence'
 
 
-def retrieve(repo_id, snapshot_id, query=None, budget_tokens=7000, paths=None, *, knowledge=None, limit=12, graph=True, semantic=None, atlas=None, cancel=None):
+GRAPHIFY_RELATIONS = {'calls', 'imports', 'imports_from', 'inherits', 'mixes_in', 'uses', 'references'}
+
+
+def _graphify_edges(repo_id, snapshot_id, cancel):
+    """Cross-file EXTRACTED Graphify edges in the index edge shape; INFERRED suggestions are never expanded."""
+    from . import graphify_graph
+    try:
+        built = graphify_graph.graphify(repo_id, snapshot_id, cancel=cancel)
+    except graphify_graph.GraphifyUnavailable as exc:
+        return [], f'Graphify graph unavailable ({exc}); built-in import/call graph only'
+    nodes = {node['id']: node for node in built['nodes']}
+    edges, seen = [], set()
+    for edge in built['edges']:
+        source, target = nodes.get(edge['source']), nodes.get(edge['target'])
+        if (edge['relation'] not in GRAPHIFY_RELATIONS or edge['confidence'] != 'EXTRACTED' or not source or not target
+                or source['path'] == target['path']):
+            continue
+        key = (source['path'], target['path'], edge['relation'], edge['evidence']['line'], target['line'])
+        if key in seen:
+            continue
+        seen.add(key)
+        edges.append({'source': source['path'], 'target': target['path'], 'kind': 'graphify ' + edge['relation'],
+                      'confidence': 'graphify EXTRACTED', 'evidence': {'start_line': edge['evidence']['line']},
+                      'target_evidence': {'start_line': target['line']}})
+    return edges, f'Graphify {built.get("engine_version")}: {len(edges)} cross-file EXTRACTED edges added to graph expansion'
+
+
+def retrieve(repo_id, snapshot_id, query=None, budget_tokens=7000, paths=None, *, knowledge=None, limit=12, graph=True, semantic=None, atlas=None, graph_engine=None, cancel=None):
     started = time.perf_counter()
     legacy = isinstance(repo_id, dict)
     if legacy:
@@ -214,13 +241,18 @@ def retrieve(repo_id, snapshot_id, query=None, budget_tokens=7000, paths=None, *
     by_path = {}
     for key, chunk in available.items():
         by_path.setdefault(chunk['path'], []).append(key)
+    graph_edges, graphify_note, graphify_used = index.get('edges', []), None, False
+    engine = graph_engine or os.getenv('STEWARD_GRAPH_ENGINE', 'builtin')
+    if graph and not legacy and engine == 'graphify':
+        extra, graphify_note = _graphify_edges(repo_id, snapshot_id, cancel)
+        graph_edges, graphify_used = [*graph_edges, *extra], bool(extra)
     if graph:
         required_lines = {}
         frontier = {available[key]['path'] for key in sorted(scores, key=scores.get, reverse=True)[:4]}
         visited = set(frontier)
         for depth in range(3):
             following = set()
-            for edge in index.get('edges', []):
+            for edge in graph_edges:
                 for origin, related, ref in [(edge['source'], edge['target'], edge.get('target_evidence')), (edge['target'], edge['source'], edge.get('evidence'))]:
                     if origin not in frontier or related not in by_path:
                         continue
@@ -248,6 +280,8 @@ def retrieve(repo_id, snapshot_id, query=None, budget_tokens=7000, paths=None, *
         missing.append(semantic_note)
     if atlas_note:
         missing.append(atlas_note)
+    if graphify_note:
+        missing.append(graphify_note)
     if len(missing) > 32:
         missing = missing[:32] + [f'{len(missing) - 32} further inventory gaps available in the source index']
     overview = index.get('overview', '')[:1000]
@@ -261,7 +295,7 @@ def retrieve(repo_id, snapshot_id, query=None, budget_tokens=7000, paths=None, *
         scope = record.get('scope') or '*'
         if scope in {'*', 'repository', 'global'} or any(fnmatch.fnmatchcase(path, scope) or path.startswith(scope.rstrip('/') + '/') for path in selected_paths):
             policies.append({key: record[key] for key in ['id', 'title', 'content', 'scope', 'version', 'updated_at'] if key in record})
-    mode = 'keyword' + (' + semantic' if semantic_used else '') + (' + atlas' if atlas_used else '') + (' + graph' if graph else ' only' if not (semantic_used or atlas_used) else '')
+    mode = 'keyword' + (' + semantic' if semantic_used else '') + (' + atlas' if atlas_used else '') + (' + graphify' if graphify_used else '') + (' + graph' if graph else ' only' if not (semantic_used or atlas_used) else '')
     # shortcut: UTF-8 bytes bound tokens conservatively; use model tokenization when available.
     base_fields = {'missing': missing, 'overview': overview, 'repo_id': repo_id, 'snapshot': snapshot_id, 'snapshot_id': snapshot_id,
                    'mode': mode, 'context_hash': '0' * 64, 'token_estimate': budget_tokens, 'latency_ms': 99999999,

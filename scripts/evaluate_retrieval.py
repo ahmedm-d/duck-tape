@@ -87,6 +87,41 @@ def evaluate_atlas(output=None, limit=6, wait_seconds=90):
     return report
 
 
+def evaluate_graph_engines(output=None, limits=(4, 6, 12)):
+    """Local, offline: built-in import/call graph versus built-in + Graphify EXTRACTED edges on the fixed tasks."""
+    from backend import graphify_graph, snapshots
+    root = Path(__file__).resolve().parents[1]
+    fixture = root / 'data' / 'evaluation' / ('graphify-' + str(uuid.uuid4()))
+    source_dir = fixture / 'source'
+    for path, content in {**FILES, **SOURCE_EXTRA}.items():
+        destination = source_dir / path
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_text(content, encoding='utf-8')
+    db.DATA_DIR = fixture / 'store'
+    db.init()
+    repo_id = 'evaluation-graphify-' + fixture.name
+    snapshot = snapshots.capture(repo_id, source_dir, {})
+    index = index_repository(source_dir, repo_id=repo_id, source_snapshot_id=snapshot['id'])
+    db.put('repositories', {'id': repo_id, 'root': str(source_dir), 'source_snapshot_id': snapshot['id'], 'snapshot': index['snapshot'], 'index': index})
+    built = graphify_graph.graphify(repo_id, snapshot['id'])
+    rows = []
+    for limit in limits:
+        for query, relevant in TASKS:
+            for requested in ('builtin', 'graphify'):
+                result = retrieve(repo_id, snapshot['id'], query, budget_tokens=10000, limit=limit, semantic=False, atlas=False, graph_engine=requested)
+                rows.append({'query': query, 'limit': limit, 'requested_mode': requested, 'mode': result['mode'], 'status': 'measured',
+                             'expected_ranges': relevant, 'found_ranges': [(item['path'], item['start_line'], item['end_line']) for item in result['items']],
+                             **score_evidence(result['items'], relevant), 'latency_ms': result['latency_ms'],
+                             'graph_notes': [item for item in result['missing'] if item.startswith('Graphify')]})
+    report = {'fixture': 'reviewed Python Parcel sample plus fixed TS module chain; labels defined independently of retrieval',
+              'live': False, 'engine': 'graphify', 'engine_version': built['engine_version'], 'graph_stats': built['stats'], 'graph_gaps': built['gaps'],
+              'repo_id': repo_id, 'source_snapshot_id': snapshot['id'], 'results': rows,
+              'warning': 'Small fixed tasks on one fixture measure retrieval only; no quality or task-success improvement is claimed.'}
+    output = Path(output) if output else root / 'docs' / 'evidence' / 'retrieval-graphify.json'
+    output.write_text(json.dumps(report, indent=2), encoding='utf-8')
+    return report
+
+
 def evaluate(output=None):
     root = Path(__file__).resolve().parents[1]
     fixture = root / 'data' / 'evaluation' / str(uuid.uuid4())
@@ -135,7 +170,9 @@ def evaluate(output=None):
 
 
 if __name__ == '__main__':
-    if '--atlas' in sys.argv[1:]:
+    if '--graphify' in sys.argv[1:]:
+        evaluate_graph_engines()
+    elif '--atlas' in sys.argv[1:]:
         from run import load_environment
         load_environment()
         evaluate_atlas()

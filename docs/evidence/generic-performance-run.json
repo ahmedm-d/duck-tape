@@ -1,0 +1,316 @@
+{
+  "runtime": "actual pinned Docker Python runtime; no model calls",
+  "plan": {
+    "profile": "python-unittest",
+    "commands": [
+      {
+        "id": "tests",
+        "argv": [
+          "python",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "tests",
+          "-v"
+        ],
+        "purpose": "test",
+        "kind": "test",
+        "required": true,
+        "timeout_seconds": 300
+      },
+      {
+        "id": "benchmark",
+        "argv": [
+          "python",
+          "benchmark.py"
+        ],
+        "purpose": "benchmark",
+        "kind": "benchmark",
+        "required": true,
+        "timeout_seconds": 300,
+        "benchmark_harness": [
+          "benchmark.py"
+        ]
+      }
+    ],
+    "unfamiliar_commands": {},
+    "install_policy": "offline-ignore-scripts",
+    "fingerprint": "c551237f07548cadaf77cb5ae35f578bd12132162b00ec0bfb832f10aa3bd305"
+  },
+  "checks": [
+    {
+      "id": "aa20d6486e0e4eb6b8691f5490aa6c33",
+      "run_id": "generic-performance-real",
+      "phase": "benchmark_before",
+      "command": [
+        "python",
+        "benchmark.py"
+      ],
+      "check_id": "benchmark",
+      "kind": "benchmark",
+      "required": true,
+      "exit_code": 0,
+      "status": "passed",
+      "duration": 0.3690346000948921,
+      "stdout": "{\"workload\": {\"items\": 10000, \"repetitions\": 200, \"expected_total\": 49995000}, \"samples_seconds\": [0.030720183999960682, 0.028631653999980244, 0.028518350000013015, 0.04177940800002489, 0.029505572999994456]}\n",
+      "truncated": false,
+      "environment": {
+        "image": "sha256:66879db054c590771d6745bdb3e4653caa16b56164a769ddd15eb8c92984a200",
+        "dependencies": "4e3282be8f61d2aa1f14a26f74d5feff472edde1b87f68279f532e98e69f8892"
+      },
+      "base_snapshot": "generic-performance-baseline",
+      "patch_hash": "generic-performance-built-in-sum",
+      "benchmark": {
+        "workload": {
+          "items": 10000,
+          "repetitions": 200,
+          "expected_total": 49995000
+        },
+        "samples_seconds": [
+          0.030720183999960682,
+          0.028631653999980244,
+          0.028518350000013015,
+          0.04177940800002489,
+          0.029505572999994456
+        ]
+      },
+      "benchmark_harness": {
+        "benchmark.py": "1c96c20b581e60fc02660ee4f2a6ed33f5bd842361847d7aa4939a206e4a27ed"
+      }
+    },
+    {
+      "id": "39b082e6c9af41208439622d120ae129",
+      "run_id": "generic-performance-real",
+      "phase": "baseline",
+      "command": [
+        "python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-v"
+      ],
+      "check_id": "tests",
+      "kind": "test",
+      "required": true,
+      "exit_code": 0,
+      "status": "passed",
+      "duration": 0.40093140001408756,
+      "stdout": "test_total (test_service.Totals.test_total) ... ok\n\n----------------------------------------------------------------------\nRan 1 test in 0.000s\n\nOK\n",
+      "truncated": false,
+      "environment": {
+        "image": "sha256:66879db054c590771d6745bdb3e4653caa16b56164a769ddd15eb8c92984a200",
+        "dependencies": "4e3282be8f61d2aa1f14a26f74d5feff472edde1b87f68279f532e98e69f8892"
+      },
+      "base_snapshot": "generic-performance-baseline",
+      "patch_hash": "generic-performance-built-in-sum",
+      "test_count": 1,
+      "skipped_count": 0
+    },
+    {
+      "id": "735f3bd58e4c473b8f0494b8f397d24f",
+      "run_id": "generic-performance-real",
+      "phase": "benchmark_after",
+      "command": [
+        "python",
+        "benchmark.py"
+      ],
+      "check_id": "benchmark",
+      "kind": "benchmark",
+      "required": true,
+      "exit_code": 0,
+      "status": "passed",
+      "duration": 0.21583170001395047,
+      "stdout": "{\"workload\": {\"items\": 10000, \"repetitions\": 200, \"expected_total\": 49995000}, \"samples_seconds\": [0.007159979999983079, 0.007324271999948451, 0.006977953999978581, 0.008494963999964966, 0.006672768000044016]}\n",
+      "truncated": false,
+      "environment": {
+        "image": "sha256:66879db054c590771d6745bdb3e4653caa16b56164a769ddd15eb8c92984a200",
+        "dependencies": "4e3282be8f61d2aa1f14a26f74d5feff472edde1b87f68279f532e98e69f8892"
+      },
+      "base_snapshot": "generic-performance-baseline",
+      "patch_hash": "generic-performance-built-in-sum",
+      "benchmark": {
+        "workload": {
+          "items": 10000,
+          "repetitions": 200,
+          "expected_total": 49995000
+        },
+        "samples_seconds": [
+          0.007159979999983079,
+          0.007324271999948451,
+          0.006977953999978581,
+          0.008494963999964966,
+          0.006672768000044016
+        ]
+      },
+      "benchmark_harness": {
+        "benchmark.py": "1c96c20b581e60fc02660ee4f2a6ed33f5bd842361847d7aa4939a206e4a27ed"
+      }
+    },
+    {
+      "id": "5fa6b6af49a243a8aaa9eecc4cf7ebd5",
+      "run_id": "generic-performance-real",
+      "phase": "candidate",
+      "command": [
+        "python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-v"
+      ],
+      "check_id": "tests",
+      "kind": "test",
+      "required": true,
+      "exit_code": 0,
+      "status": "passed",
+      "duration": 0.3711105000693351,
+      "stdout": "test_total (test_service.Totals.test_total) ... ok\n\n----------------------------------------------------------------------\nRan 1 test in 0.000s\n\nOK\n",
+      "truncated": false,
+      "environment": {
+        "image": "sha256:66879db054c590771d6745bdb3e4653caa16b56164a769ddd15eb8c92984a200",
+        "dependencies": "4e3282be8f61d2aa1f14a26f74d5feff472edde1b87f68279f532e98e69f8892"
+      },
+      "base_snapshot": "generic-performance-baseline",
+      "patch_hash": "generic-performance-built-in-sum",
+      "test_count": 1,
+      "skipped_count": 0
+    }
+  ],
+  "assessment": {
+    "passed": true,
+    "baseline_passed": true,
+    "candidate_passed": true,
+    "regression_reproduced": null,
+    "advisories": [],
+    "benchmarks": [
+      {
+        "check_id": "benchmark",
+        "valid": true,
+        "before": {
+          "workload": {
+            "items": 10000,
+            "repetitions": 200,
+            "expected_total": 49995000
+          },
+          "samples_seconds": [
+            0.030720183999960682,
+            0.028631653999980244,
+            0.028518350000013015,
+            0.04177940800002489,
+            0.029505572999994456
+          ]
+        },
+        "after": {
+          "workload": {
+            "items": 10000,
+            "repetitions": 200,
+            "expected_total": 49995000
+          },
+          "samples_seconds": [
+            0.007159979999983079,
+            0.007324271999948451,
+            0.006977953999978581,
+            0.008494963999964966,
+            0.006672768000044016
+          ]
+        },
+        "improvement_percent": 75.73346567448657
+      }
+    ],
+    "limitations": [
+      "No new regression test was run against the unchanged implementation"
+    ]
+  },
+  "tampered_checks": [
+    {
+      "id": "32633040bcfa4fb49504a159eb58a449",
+      "phase": "benchmark_integrity",
+      "status": "failed",
+      "base_snapshot": "generic-performance-baseline",
+      "patch_hash": "generic-performance-harness-tampered",
+      "check_id": "benchmark",
+      "required": true,
+      "kind": "benchmark",
+      "stdout": "Benchmark harness must exist unchanged in baseline and candidate",
+      "benchmark_harness": {
+        "benchmark.py": "1c96c20b581e60fc02660ee4f2a6ed33f5bd842361847d7aa4939a206e4a27ed"
+      }
+    },
+    {
+      "id": "971bc16fb79048e0b0873346ff0b9a6e",
+      "run_id": "generic-performance-tampered",
+      "phase": "baseline",
+      "command": [
+        "python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-v"
+      ],
+      "check_id": "tests",
+      "kind": "test",
+      "required": true,
+      "exit_code": 0,
+      "status": "passed",
+      "duration": 0.32264270004816353,
+      "stdout": "test_total (test_service.Totals.test_total) ... ok\n\n----------------------------------------------------------------------\nRan 1 test in 0.001s\n\nOK\n",
+      "truncated": false,
+      "environment": {
+        "image": "sha256:66879db054c590771d6745bdb3e4653caa16b56164a769ddd15eb8c92984a200",
+        "dependencies": "4e3282be8f61d2aa1f14a26f74d5feff472edde1b87f68279f532e98e69f8892"
+      },
+      "base_snapshot": "generic-performance-baseline",
+      "patch_hash": "generic-performance-harness-tampered",
+      "test_count": 1,
+      "skipped_count": 0
+    },
+    {
+      "id": "95843f37e2114d3f9e5cd3355f059769",
+      "run_id": "generic-performance-tampered",
+      "phase": "candidate",
+      "command": [
+        "python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-v"
+      ],
+      "check_id": "tests",
+      "kind": "test",
+      "required": true,
+      "exit_code": 0,
+      "status": "passed",
+      "duration": 0.31439279997721314,
+      "stdout": "test_total (test_service.Totals.test_total) ... ok\n\n----------------------------------------------------------------------\nRan 1 test in 0.000s\n\nOK\n",
+      "truncated": false,
+      "environment": {
+        "image": "sha256:66879db054c590771d6745bdb3e4653caa16b56164a769ddd15eb8c92984a200",
+        "dependencies": "4e3282be8f61d2aa1f14a26f74d5feff472edde1b87f68279f532e98e69f8892"
+      },
+      "base_snapshot": "generic-performance-baseline",
+      "patch_hash": "generic-performance-harness-tampered",
+      "test_count": 1,
+      "skipped_count": 0
+    }
+  ],
+  "tampered_assessment": {
+    "passed": false,
+    "baseline_passed": true,
+    "candidate_passed": true,
+    "regression_reproduced": null,
+    "advisories": [],
+    "benchmarks": [],
+    "limitations": [
+      "No new regression test was run against the unchanged implementation",
+      "Required benchmark harness integrity failed"
+    ]
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "baseline_commit": "ad9a3d46f9f5a3cbfb8c75b0e3b7b9c62e83f67d",
+  "schema_version": "steward-schema-3",
+  "prompt_version": "steward-13",
+  "fixture": "tests/fixtures/calibration/acceptance-failures.json",
+  "fixture_sha256": "02fef1d6405118efbf78effb650e0e1c9062be6260b4a31fd83cd2dfae43177e",
+  "source_artifacts": [
+    {
+      "path": "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\data\\q3b-final\\python-decision-feature-0d417f806c234fd18804a1259dc209fc\\qualification-result.json",
+      "sha256": "e27b59644e6cff7ee15af468136a49a54bdd5fef7b629c21e1b03abf7af649df"
+    },
+    {
+      "path": "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\data\\q3b-final\\python-revision-507c823e74924323b9cb9b856e484dfa\\qualification-result.json",
+      "sha256": "4b7482681771e4548ceb41b6163b28b737a88fdf84a794e25295a385d6f889d5"
+    }
+  ],
+  "recorded_outputs": [
+    {
+      "case": "python-decision-feature",
+      "label": "acceptance",
+      "stage_id": "6cce0c2537dfabf1edc1121ffe902da4e526eddad678edd678dd5e0c7083d1d5",
+      "original_output_and_payload_subset_match": true,
+      "static_schema_accepted": true,
+      "request_bound_schema_accepted": false,
+      "rejection": "Invalid model schema alternative",
+      "original_edit_contract": "Return the complete cumulative patch against the supplied immutable source. Preserve prior changes unless explicitly requested to revert. Include a regression test for bugs, preserving all existing tests."
+    },
+    {
+      "case": "python-decision-feature",
+      "label": "acceptance-correction",
+      "stage_id": "d3f38c6b6ac12e5fd2d7d5ef4e21bc508fe00e62aa6295f09b2e8dc337bacc10",
+      "original_output_and_payload_subset_match": true,
+      "static_schema_accepted": true,
+      "request_bound_schema_accepted": false,
+      "rejection": "Invalid model schema alternative",
+      "original_edit_contract": "Return the complete cumulative patch against the supplied immutable source. Preserve prior changes unless explicitly requested to revert. Include a regression test for bugs, preserving all existing tests."
+    },
+    {
+      "case": "python-revision",
+      "label": "acceptance",
+      "stage_id": "6572d44aa312ba5fc604b187ecd0ef9546165846617d40dbc69b76c1151908b3",
+      "original_output_and_payload_subset_match": true,
+      "static_schema_accepted": true,
+      "request_bound_schema_accepted": false,
+      "rejection": "Invalid model schema alternative",
+      "original_edit_contract": "Return the complete cumulative patch against the supplied immutable source. Preserve prior changes unless explicitly requested to revert. Include a regression test for bugs, preserving all existing tests."
+    },
+    {
+      "case": "python-revision",
+      "label": "acceptance-correction",
+      "stage_id": "8825be7dfc601f027638e2e31f071d073970f45db134ba67c1c573fc4d4f3cac",
+      "original_output_and_payload_subset_match": true,
+      "static_schema_accepted": true,
+      "request_bound_schema_accepted": false,
+      "rejection": "Invalid model schema alternative",
+      "original_edit_contract": "Return the complete cumulative patch against the supplied immutable source. Preserve prior changes unless explicitly requested to revert. Include a regression test for bugs, preserving all existing tests."
+    }
+  ],
+  "live_inference_performed": false
+}

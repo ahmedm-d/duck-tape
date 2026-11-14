@@ -1,0 +1,33 @@
+{
+  "status": "passed",
+  "source": "https://github.com/octocat/Hello-World.git",
+  "commit": "7fd1a60b01f91b314f59955a4e4d4e80d8edf11d",
+  "branch": "master",
+  "history_entries": 3,
+  "files": 1,
+  "transport": {
+    "kind": "DNS-pinned public HTTPS CONNECT broker",
+    "bytes": 8521,
+    "destinations": [
+      {
+        "host": "github.com",
+        "validated_addresses": [
+          "4.159.197.192"
+        ],
+        "pinned_address": "4.159.197.192"
+      }
+    ],
+    "advertisement": {
+      "requests": [
+        {
+          "url": "https://github.com/octocat/Hello-World.git/info/refs?service=git-upload-pack",
+          "validated_addresses": [
+            "4.159.197.192"
+          ],
+          "pinned_address": "4.159.197.192"
+        }
+      ],
+      "final_url": "https://github.com/octocat/Hello-World.git/info/refs?service=git-upload-pack"
+    }
+  }
+}

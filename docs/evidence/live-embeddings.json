@@ -1,0 +1,32 @@
+{
+  "provider": "live local Nomic Embed v1.5 Q8_0, CPU",
+  "source": "https://huggingface.co/nomic-ai/nomic-embed-text-v1.5-GGUF",
+  "source_revision": "0188c9bf409793f810680a5a431e7b899c46104c",
+  "model_sha256": "3e24342164b3d94991ba9692fdc0dd08e3fd7362e0aacc396a9a5c54a544c3b7",
+  "dimensions": [
+    768,
+    768
+  ],
+  "calls": [
+    {
+      "repo_id": "live-embedding-with-usage",
+      "snapshot_id": "snapshot",
+      "model": "nomic-embed-text-v1.5",
+      "kind": "openai",
+      "latency_ms": 391.475,
+      "usage": {
+        "prompt_tokens": 41,
+        "total_tokens": 41
+      },
+      "inputs": 2,
+      "dimensions": 768,
+      "result": "succeeded",
+      "id": "e12367a9-6d6a-48b9-a85d-22daa42b3ef7",
+      "created_at": "2026-11-14T04:16:14.926216+00:00",
+      "updated_at": "2026-11-14T04:16:14.926225+00:00",
+      "record_version": 1
+    }
+  ],
+  "warm_cache_latency_ms": 10.955699952319264,
+  "passed": true
+}

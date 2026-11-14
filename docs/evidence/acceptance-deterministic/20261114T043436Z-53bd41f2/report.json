@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "tier": "deterministic",
+  "status": "passed",
+  "recorded_at": "2026-11-14T04:41:33.968595+00:00",
+  "results": [
+    {
+      "id": "backend",
+      "tier": "deterministic",
+      "argv": [
+        "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\full-product\\.venv\\Scripts\\python.exe",
+        "-m",
+        "pytest",
+        "tests",
+        "--ignore=tests/live",
+        "-m",
+        "not live",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\full-product\\docs\\evidence\\acceptance-deterministic\\20261114T043436Z-53bd41f2\\backend.xml"
+      ],
+      "cwd": "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\full-product",
+      "required": true,
+      "status": "passed",
+      "exit_code": 0,
+      "artifacts": [
+        "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\full-product\\docs\\evidence\\acceptance-deterministic\\20261114T043436Z-53bd41f2\\backend.log",
+        "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\full-product\\docs\\evidence\\acceptance-deterministic\\20261114T043436Z-53bd41f2\\backend.xml"
+      ],
+      "counts": {
+        "total": 376,
+        "skipped": 0,
+        "failed": 0,
+        "passed": 376
+      },
+      "duration_seconds": 352.96
+    },
+    {
+      "id": "restart",
+      "tier": "deterministic",
+      "argv": [
+        "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\full-product\\.venv\\Scripts\\python.exe",
+        "scripts/check_restart.py"
+      ],
+      "cwd": "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\full-product",
+      "required": true,
+      "status": "passed",
+      "exit_code": 0,
+      "artifacts": [
+        "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\full-product\\docs\\evidence\\acceptance-deterministic\\20261114T043436Z-53bd41f2\\restart.log"
+      ],
+      "duration_seconds": 17.328
+    },
+    {
+      "id": "frontend-build",
+      "tier": "deterministic",
+      "argv": [
+        "C:\\Program Files\\nodejs\\npm.cmd",
+        "run",
+        "build"
+      ],
+      "cwd": "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\full-product\\frontend",
+      "required": true,
+      "status": "passed",
+      "exit_code": 0,
+      "artifacts": [
+        "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\full-product\\docs\\evidence\\acceptance-deterministic\\20261114T043436Z-53bd41f2\\frontend-build.log"
+      ],
+      "duration_seconds": 12.829
+    },
+    {
+      "id": "browser-fixtures",
+      "tier": "deterministic",
+      "argv": [
+        "C:\\Program Files\\nodejs\\npm.cmd",
+        "run",
+        "test:browser",
+        "--",
+        "tests/navigation.spec.ts",
+        "tests/imported-workflows.spec.ts",
+        "tests/evidence.spec.ts",
+        "tests/summaries.spec.ts",
+        "tests/settings.spec.ts",
+        "--project=chromium",
+        "--reporter=json",
+        "--output=C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\full-product\\docs\\evidence\\acceptance-deterministic\\20261114T043436Z-53bd41f2\\browser-fixtures-artifacts"
+      ],
+      "cwd": "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\full-product\\frontend",
+      "required": true,
+      "status": "passed",
+      "exit_code": 0,
+      "artifacts": [
+        "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\full-product\\docs\\evidence\\acceptance-deterministic\\20261114T043436Z-53bd41f2\\browser-fixtures.log",
+        "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\full-product\\docs\\evidence\\acceptance-deterministic\\20261114T043436Z-53bd41f2\\browser-fixtures.json"
+      ],
+      "counts": {
+        "startTime": "2026-11-14T04:41:02.235Z",
+        "duration": 31637.251,
+        "expected": 13,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "duration_seconds": 33.843
+    }
+  ],
+  "scope": "A tier pass proves only that tier. Full live release additionally requires the documented acceptance matrix and independent reviews.",
+  "capabilities": {
+    "git": {
+      "available": true,
+      "reason": "Git executable is required"
+    },
+    "frontend": {
+      "available": true,
+      "reason": "Install Node, npm and frontend dependencies; install Playwright Chromium separately"
+    }
+  },
+  "artifact_directory": "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\full-product\\docs\\evidence\\acceptance-deterministic\\20261114T043436Z-53bd41f2",
+  "complete": true
+}

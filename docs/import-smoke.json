@@ -1,0 +1,18 @@
+{
+  "metadata": {
+    "source": "https://github.com/octocat/Hello-World",
+    "branch": "master",
+    "commit": "7fd1a60b01f91b314f59955a4e4d4e80d8edf11d",
+    "history": "GitHub snapshot; full Git history unavailable"
+  },
+  "snapshot": "911022a3226abeee16c8d2f8157efb9f668673f68124e1856eefa27990388b7f",
+  "coverage": {
+    "indexed": 1,
+    "excluded": 0,
+    "unsupported": 0,
+    "failed": 0
+  },
+  "files": [
+    "README"
+  ]
+}

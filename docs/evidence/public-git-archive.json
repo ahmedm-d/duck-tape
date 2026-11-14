@@ -1,0 +1,12 @@
+{
+  "status": "passed",
+  "source": "https://github.com/octocat/Hello-World",
+  "commit": "7fd1a60b01f91b314f59955a4e4d4e80d8edf11d",
+  "branch": "master",
+  "manifest_hash": "9b2b748fa6a151bfc04bad3f7ae47430c59319e14f203d18d14e82d1ff8f4371",
+  "files": 1,
+  "history_entries": 3,
+  "gaps": [
+    "Archive-only history: full Git object history and submodules unavailable; external systems not inspected"
+  ]
+}

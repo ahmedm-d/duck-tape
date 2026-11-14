@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="5" skipped="0" tests="5" time="1.112" timestamp="2026-11-14T06:05:01.528440+00:00" hostname="ahmed"><testcase classname="tests.test_runner_startup" name="test_legacy_runtime_uses_shared_startup_guard" time="0.005"><failure message="ValueError: '--parallel' is not in list">tmp_path = WindowsPath('C:/Users/ahmed/Projects/ducktape/steward/.worktrees/model-calibration/data/tests/5757ad4eb8064178ac63b830b82cd2c6')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000002C9E84CE190&gt;
+
+    def test_legacy_runtime_uses_shared_startup_guard(tmp_path,monkeypatch):
+        runtime=tmp_path/'data/model-runtime';(runtime/'runner').mkdir(parents=True)
+        (runtime/'runner/llama-server.exe').write_bytes(b'fixture')
+        monkeypatch.setattr(providers,'__file__',str(tmp_path/'backend/providers.py'))
+        monkeypatch.setattr(providers,'configuration',lambda:{'endpoint':'http://127.0.0.1:11435/v1','model':'legacy-fixture'})
+        monkeypatch.setattr(providers,'installed_runtime',lambda:None)
+        monkeypatch.setattr(providers,'health',lambda:{'available':False})
+        calls=[]
+        monkeypatch.setattr(providers,'_start_runner',lambda *args,**kwargs:(calls.append((args,kwargs)) or {'started':False,'error':'fixture startup blocked'}),raising=False)
+        monkeypatch.setattr(providers.subprocess,'Popen',lambda *args,**kwargs:pytest.fail('Legacy runner bypassed shared guard'))
+        result=providers.start_local_runner()
+        assert len(calls)==1 and result['error']=='fixture startup blocked'
+        assert providers._runner_error==result['error']
+        argv=calls[0][0][0]
+&gt;       assert argv[argv.index('--parallel')+1]=='1'
+                    ^^^^^^^^^^^^^^^^^^^^^^^^
+E       ValueError: '--parallel' is not in list
+
+tests\test_runner_startup.py:88: ValueError</failure></testcase><testcase classname="tests.test_runner_startup" name="test_manifest_reasoning_flag_reaches_coding_only[off]" time="0.040"><failure message="ValueError: '--parallel' is not in list">tmp_path = WindowsPath('C:/Users/ahmed/Projects/ducktape/steward/.worktrees/model-calibration/data/tests/d2779fc18cd24b7ab44334ae7400c05c')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000002C9E8107A80&gt;
+reasoning = 'off'
+
+    @pytest.mark.parametrize('reasoning',['off','on','auto',None])
+    def test_manifest_reasoning_flag_reaches_coding_only(tmp_path,monkeypatch,reasoning):
+        installed=manifest(tmp_path,available_port())
+        if reasoning is not None:installed['reasoning']=reasoning
+        runtime=tmp_path/'data/model-runtime';runtime.mkdir(parents=True)
+        (runtime/'installed.json').write_text(json.dumps(installed))
+        monkeypatch.setattr(providers,'__file__',str(tmp_path/'backend/providers.py'))
+        assert providers.installed_runtime()==installed
+        calls=[]
+        monkeypatch.setattr(providers,'_start_runner',lambda argv,*args:(calls.append(argv) or {'started':True}),raising=False)
+        monkeypatch.setattr(providers.subprocess,'Popen',lambda *args,**kwargs:pytest.fail('Launcher guard must own process creation'))
+        providers._launch_installed(installed)
+        providers._launch_installed(installed,embedding=True)
+        assert ('--reasoning' in calls[0]) == (reasoning is not None)
+        if reasoning is not None:assert calls[0][calls[0].index('--reasoning')+1]==reasoning
+        assert '--reasoning' not in calls[1]
+&gt;       assert calls[0][calls[0].index('--parallel')+1]=='1'
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       ValueError: '--parallel' is not in list
+
+tests\test_runner_startup.py:169: ValueError</failure></testcase><testcase classname="tests.test_runner_startup" name="test_manifest_reasoning_flag_reaches_coding_only[on]" time="0.034"><failure message="ValueError: '--parallel' is not in list">tmp_path = WindowsPath('C:/Users/ahmed/Projects/ducktape/steward/.worktrees/model-calibration/data/tests/c28cfd831f584d04b0b4f16535329ea1')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000002C9E85127B0&gt;
+reasoning = 'on'
+
+    @pytest.mark.parametrize('reasoning',['off','on','auto',None])
+    def test_manifest_reasoning_flag_reaches_coding_only(tmp_path,monkeypatch,reasoning):
+        installed=manifest(tmp_path,available_port())
+        if reasoning is not None:installed['reasoning']=reasoning
+        runtime=tmp_path/'data/model-runtime';runtime.mkdir(parents=True)
+        (runtime/'installed.json').write_text(json.dumps(installed))
+        monkeypatch.setattr(providers,'__file__',str(tmp_path/'backend/providers.py'))
+        assert providers.installed_runtime()==installed
+        calls=[]
+        monkeypatch.setattr(providers,'_start_runner',lambda argv,*args:(calls.append(argv) or {'started':True}),raising=False)
+        monkeypatch.setattr(providers.subprocess,'Popen',lambda *args,**kwargs:pytest.fail('Launcher guard must own process creation'))
+        providers._launch_installed(installed)
+        providers._launch_installed(installed,embedding=True)
+        assert ('--reasoning' in calls[0]) == (reasoning is not None)
+        if reasoning is not None:assert calls[0][calls[0].index('--reasoning')+1]==reasoning
+        assert '--reasoning' not in calls[1]
+&gt;       assert calls[0][calls[0].index('--parallel')+1]=='1'
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       ValueError: '--parallel' is not in list
+
+tests\test_runner_startup.py:169: ValueError</failure></testcase><testcase classname="tests.test_runner_startup" name="test_manifest_reasoning_flag_reaches_coding_only[auto]" time="0.033"><failure message="ValueError: '--parallel' is not in list">tmp_path = WindowsPath('C:/Users/ahmed/Projects/ducktape/steward/.worktrees/model-calibration/data/tests/70c21b494e004bbe9c5f4811e8a06c70')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000002C9E74A48D0&gt;
+reasoning = 'auto'
+
+    @pytest.mark.parametrize('reasoning',['off','on','auto',None])
+    def test_manifest_reasoning_flag_reaches_coding_only(tmp_path,monkeypatch,reasoning):
+        installed=manifest(tmp_path,available_port())
+        if reasoning is not None:installed['reasoning']=reasoning
+        runtime=tmp_path/'data/model-runtime';runtime.mkdir(parents=True)
+        (runtime/'installed.json').write_text(json.dumps(installed))
+        monkeypatch.setattr(providers,'__file__',str(tmp_path/'backend/providers.py'))
+        assert providers.installed_runtime()==installed
+        calls=[]
+        monkeypatch.setattr(providers,'_start_runner',lambda argv,*args:(calls.append(argv) or {'started':True}),raising=False)
+        monkeypatch.setattr(providers.subprocess,'Popen',lambda *args,**kwargs:pytest.fail('Launcher guard must own process creation'))
+        providers._launch_installed(installed)
+        providers._launch_installed(installed,embedding=True)
+        assert ('--reasoning' in calls[0]) == (reasoning is not None)
+        if reasoning is not None:assert calls[0][calls[0].index('--reasoning')+1]==reasoning
+        assert '--reasoning' not in calls[1]
+&gt;       assert calls[0][calls[0].index('--parallel')+1]=='1'
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       ValueError: '--parallel' is not in list
+
+tests\test_runner_startup.py:169: ValueError</failure></testcase><testcase classname="tests.test_runner_startup" name="test_manifest_reasoning_flag_reaches_coding_only[None]" time="0.034"><failure message="ValueError: '--parallel' is not in list">tmp_path = WindowsPath('C:/Users/ahmed/Projects/ducktape/steward/.worktrees/model-calibration/data/tests/0f7311d2b4ea45b5813c4cd6e2c273c7')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000002C9E8588E20&gt;
+reasoning = None
+
+    @pytest.mark.parametrize('reasoning',['off','on','auto',None])
+    def test_manifest_reasoning_flag_reaches_coding_only(tmp_path,monkeypatch,reasoning):
+        installed=manifest(tmp_path,available_port())
+        if reasoning is not None:installed['reasoning']=reasoning
+        runtime=tmp_path/'data/model-runtime';runtime.mkdir(parents=True)
+        (runtime/'installed.json').write_text(json.dumps(installed))
+        monkeypatch.setattr(providers,'__file__',str(tmp_path/'backend/providers.py'))
+        assert providers.installed_runtime()==installed
+        calls=[]
+        monkeypatch.setattr(providers,'_start_runner',lambda argv,*args:(calls.append(argv) or {'started':True}),raising=False)
+        monkeypatch.setattr(providers.subprocess,'Popen',lambda *args,**kwargs:pytest.fail('Launcher guard must own process creation'))
+        providers._launch_installed(installed)
+        providers._launch_installed(installed,embedding=True)
+        assert ('--reasoning' in calls[0]) == (reasoning is not None)
+        if reasoning is not None:assert calls[0][calls[0].index('--reasoning')+1]==reasoning
+        assert '--reasoning' not in calls[1]
+&gt;       assert calls[0][calls[0].index('--parallel')+1]=='1'
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       ValueError: '--parallel' is not in list
+
+tests\test_runner_startup.py:169: ValueError</failure></testcase></testsuite></testsuites>

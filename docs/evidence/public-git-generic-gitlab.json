@@ -1,0 +1,36 @@
+{
+  "status": "passed",
+  "source": "https://gitlab.com/gitlab-examples/nodejs.git",
+  "commit": "892a1f16725e56cc3a2cb0d677be42935c8fc262",
+  "branch": "master",
+  "history_entries": 20,
+  "files": 17,
+  "gaps": [
+    "Git history limited to at most 20 commits on the fetched default branch; other branches and external systems unavailable"
+  ],
+  "transport": {
+    "kind": "DNS-pinned public HTTPS CONNECT broker",
+    "bytes": 27550,
+    "destinations": [
+      {
+        "host": "gitlab.com",
+        "validated_addresses": [
+          "172.65.251.78"
+        ],
+        "pinned_address": "172.65.251.78"
+      }
+    ],
+    "advertisement": {
+      "requests": [
+        {
+          "url": "https://gitlab.com/gitlab-examples/nodejs.git/info/refs?service=git-upload-pack",
+          "validated_addresses": [
+            "172.65.251.78"
+          ],
+          "pinned_address": "172.65.251.78"
+        }
+      ],
+      "final_url": "https://gitlab.com/gitlab-examples/nodejs.git/info/refs?service=git-upload-pack"
+    }
+  }
+}

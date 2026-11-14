@@ -1,0 +1,67 @@
+{
+  "recorded_at": "2026-11-14T04:32:48.060447+00:00",
+  "core_ready": true,
+  "python": "3.13.12",
+  "git": "git version 2.51.0.windows.2",
+  "frontend_built": true,
+  "database": {
+    "schema": 2,
+    "integrity": "ok"
+  },
+  "provider": {
+    "endpoint": "http://127.0.0.1:11436/v1",
+    "kind": "openai",
+    "small_model": "qwen-coder-3b",
+    "model": "qwen-coder-3b",
+    "context_limit": 16384,
+    "embedding_model": "nomic-embed-text-v1.5",
+    "embedding_endpoint": "http://127.0.0.1:11437/v1",
+    "available": true,
+    "mode": "live",
+    "qualification": "Not qualified for autonomous review; see recorded task/check evidence",
+    "runner_installed": true,
+    "usage": null,
+    "installed_models": [
+      "qwen-coder-3b"
+    ]
+  },
+  "sandbox": {
+    "available": true,
+    "runtime": "docker-linux",
+    "image": "sha256:66879db054c590771d6745bdb3e4653caa16b56164a769ddd15eb8c92984a200",
+    "images": {
+      "python": "sha256:66879db054c590771d6745bdb3e4653caa16b56164a769ddd15eb8c92984a200",
+      "node": "sha256:e199042f377f797ed92dad1d2121397bd45f105e460fd6c925e799144349958b"
+    },
+    "probes": {
+      "python_clean_environment": true,
+      "python_cpu_limit": true,
+      "python_memory_limit": true,
+      "python_no_capabilities": true,
+      "python_no_credentials": true,
+      "python_no_network": true,
+      "python_no_new_privileges": true,
+      "python_no_privilege_escalation": true,
+      "python_nonroot": true,
+      "python_process_limit": true,
+      "python_readonly_root": true,
+      "node_nonroot": true,
+      "node_no_credentials": true,
+      "node_clean_environment": true,
+      "node_memory_limit": true,
+      "node_process_limit": true,
+      "node_cpu_limit": true,
+      "node_no_new_privileges": true,
+      "node_no_capabilities": true,
+      "node_no_privilege_escalation": true,
+      "node_readonly_root": true,
+      "node_no_network": true
+    }
+  },
+  "mode": "live provider and sandbox available; model qualification is a separate acceptance gate",
+  "limits": [
+    "Local demo identity is not production authentication",
+    "Model availability does not establish coding quality",
+    "Unsupported package managers remain analysis/export only"
+  ]
+}

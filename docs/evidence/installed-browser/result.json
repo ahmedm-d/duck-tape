@@ -1,0 +1,39 @@
+{
+  "status": "passed",
+  "started": "2026-11-14T05:14:50.771Z",
+  "finished": "2026-11-14T05:15:19.180Z",
+  "repo": "c00c84ab-b3e1-4ed6-bf1a-18bb7c132218",
+  "bugJob": "4aa58004ed2955dcdae22307afce0d82beb868e5f3b6c25093fed1f523bd0c04",
+  "readyJob": "5a8cb4273b080c2f822483c29e7f624793c945ceba6564d0d11eb3e28d921f24",
+  "readyUrl": "http://127.0.0.1:8765/#/repositories/c00c84ab-b3e1-4ed6-bf1a-18bb7c132218/jobs/5a8cb4273b080c2f822483c29e7f624793c945ceba6564d0d11eb3e28d921f24",
+  "checks": [
+    "installed desktop overview",
+    "real fixture patch with failing-before/passing-after checks",
+    "browser patch download",
+    "immutable captured citations",
+    "team note persisted without revision",
+    "checked second revision and note isolation",
+    "exact revision approved and applied to managed branch",
+    "feature decision resumes checked preparation, left ready for review",
+    "720px responsive layout and dark theme",
+    "all preexisting repository/job/knowledge/note/revision IDs preserved",
+    "zero browser runtime or console errors"
+  ],
+  "errors": [],
+  "consoleErrors": [],
+  "failedRequests": [
+    {
+      "url": "http://127.0.0.1:8765/api/jobs/4aa58004ed2955dcdae22307afce0d82beb868e5f3b6c25093fed1f523bd0c04/patch?revision_id=5a65497a-d7fc-452a-98e4-a1c4da5612af",
+      "failure": {
+        "errorText": "net::ERR_ABORTED"
+      }
+    }
+  ],
+  "preservedCounts": {
+    "repos": 3,
+    "jobs": 13,
+    "knowledge": 4,
+    "notes": 4,
+    "revisions": 7
+  }
+}

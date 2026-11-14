@@ -1,0 +1,15 @@
+# Real model qualification driver
+
+Implemented `scripts/qualification_driver.py` with the callable `scripts.qualification_driver:driver` for the existing 12-task manifest. Run from the project root with the actual provider configuration and Docker available:
+
+```
+python scripts/evaluate_models.py --driver scripts.qualification_driver:driver --output data/model-evaluation.json
+```
+
+Each task creates a separate owned workspace and database, imports the fixed Python or TypeScript fixture through application APIs, and launches an actual worker subprocess. No fixture provider responses are supplied. Imported source is never executed on the host. Independent behavioral holdouts execute inside the verified disposable Docker runtime and return observed JSON values; the controller compares values and types with the manifest expectations rather than accepting a zero exit code alone.
+
+The driver checks reproduced bug regressions, persisted decision selection and attribution, preserved earlier revisions and rejected stale application, exact approved knowledge in model inputs with private notes excluded, knowledge edits invalidating approval, cancellation followed by a distinct restarted worker and one reviewable revision, and rejection of seeded unsafe edits with valid source references. It checks original source bytes and added paths, baseline/candidate evidence bindings, actual live provider attempts, aggregate call/token reservations, and repair/evidence limits. Unknown output token usage remains unknown. Unavailable real prerequisites return an explicit failed/blocked result with diagnostic evidence and no invented attempts. Every attempted task writes `qualification-result.json` containing results, jobs, runs, stages, checks, revisions, candidate attempts, decisions, and knowledge under its workspace.
+
+Validation: focused driver tests observed failing before implementation and now **9 passed in 0.59 seconds**. A combined run of the driver, dependency adapter, and managed integration regressions passed **20 tests in 12.15 seconds**. Separate actual Docker mechanism probes for both languages accepted correct observed behavior, rejected an incorrect expected mean, verified unchanged original source, and started/stopped/restarted actual workers with distinct PIDs. These probes made no model inference calls. The TypeScript fixture also ran its actual Node 22.16 checks successfully with the exact `--experimental-strip-types --test` argument sequence; the adapter accepts that specific flag sequence and no general command expansion.
+
+The full 12-task actual model gate has **not** run in this agent. Model calls are serialized with the model agent; root will launch the complete gate after its current Python/TypeScript runs and independent review. Unit tests, mechanism probes, passing application checks, and schema smoke do not establish model qualification. Final qualification remains the evaluator's mandatory-journey, unsafe-rejection, and minimum-completion gate.

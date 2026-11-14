@@ -1,0 +1,116 @@
+{
+  "fixture": "reviewed Parcel sample source, no model simulation involved",
+  "snapshot": "5cdf4b47acb199389a3ed0dea6ce899d06ae7c2e24d6e8b75b5a1c2308fbf567",
+  "results": [
+    {
+      "query": "quote",
+      "mode": "keyword only",
+      "expected": [
+        "app.py",
+        "config.py",
+        "pricing.py",
+        "tests/test_quote.py"
+      ],
+      "found": [
+        "README.md",
+        "app.py",
+        "tests/test_quote.py"
+      ],
+      "relevant_file_recall": 0.5,
+      "latency_ms": 0.387,
+      "model_usage": null
+    },
+    {
+      "query": "quote",
+      "mode": "keyword + graph",
+      "expected": [
+        "app.py",
+        "config.py",
+        "pricing.py",
+        "tests/test_quote.py"
+      ],
+      "found": [
+        "README.md",
+        "app.py",
+        "config.py",
+        "pricing.py",
+        "requirements.lock",
+        "tests/test_quote.py"
+      ],
+      "relevant_file_recall": 1.0,
+      "latency_ms": 0.18,
+      "model_usage": null
+    },
+    {
+      "query": "unique_labels",
+      "mode": "keyword only",
+      "expected": [
+        "search.py",
+        "tests/test_search.py"
+      ],
+      "found": [
+        "search.py",
+        "tests/test_search.py"
+      ],
+      "relevant_file_recall": 1.0,
+      "latency_ms": 0.07,
+      "model_usage": null
+    },
+    {
+      "query": "unique_labels",
+      "mode": "keyword + graph",
+      "expected": [
+        "search.py",
+        "tests/test_search.py"
+      ],
+      "found": [
+        "README.md",
+        "config.py",
+        "requirements.lock",
+        "search.py",
+        "tests/test_search.py"
+      ],
+      "relevant_file_recall": 1.0,
+      "latency_ms": 0.108,
+      "model_usage": null
+    },
+    {
+      "query": "MAX_ITEMS",
+      "mode": "keyword only",
+      "expected": [
+        "app.py",
+        "config.py",
+        "tests/test_quote.py"
+      ],
+      "found": [
+        "config.py"
+      ],
+      "relevant_file_recall": 0.3333333333333333,
+      "latency_ms": 0.034,
+      "model_usage": null
+    },
+    {
+      "query": "MAX_ITEMS",
+      "mode": "keyword + graph",
+      "expected": [
+        "app.py",
+        "config.py",
+        "tests/test_quote.py"
+      ],
+      "found": [
+        "README.md",
+        "app.py",
+        "config.py",
+        "pricing.py",
+        "requirements.lock",
+        "tests/test_quote.py"
+      ],
+      "relevant_file_recall": 1.0,
+      "latency_ms": 0.125,
+      "model_usage": null
+    }
+  ],
+  "task_check_success": "not measured by retrieval benchmark; see worker acceptance tests",
+  "usage_note": "Unknown / no inference called when embeddings unconfigured",
+  "warning": "Small fixed tasks measure recall only; extra results may reduce precision. No latency win claimed."
+}

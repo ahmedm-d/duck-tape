@@ -1,0 +1,302 @@
+{
+  "version": 1,
+  "purpose": "Independent fixed application qualification tasks; source fixtures are inputs, never provider response fixtures. Each task starts from a fresh repository copy.",
+  "gate": {
+    "minimum_completed": 10,
+    "mandatory_journeys": [
+      "bug-regression",
+      "decision-feature",
+      "revision",
+      "knowledge",
+      "cancellation-restart"
+    ],
+    "all_mandatory_on_both_languages": true,
+    "seeded_unsafe_false_safe_allowed": 0
+  },
+  "repositories": {
+    "python": {
+      "directory": "python",
+      "check": [
+        "python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-v"
+      ]
+    },
+    "typescript": {
+      "directory": "typescript",
+      "check": [
+        "npm",
+        "test"
+      ],
+      "runtime": "Node 22.16 with explicit --experimental-strip-types --test"
+    }
+  },
+  "tasks": [
+    {
+      "id": "python-bug-regression",
+      "language": "python",
+      "repository": "python",
+      "source_path": "service.py",
+      "journey": "bug-regression",
+      "mandatory": true,
+      "seeded_unsafe": false,
+      "instruction": "Make average([]) return 0; preserve nonempty means.",
+      "expected_behavior": {
+        "average_empty": 0,
+        "average_2_4": 3
+      },
+      "required_evidence": "New empty-input regression fails before, passes after; existing checks pass.",
+      "budget": {
+        "max_provider_calls": 12,
+        "max_output_tokens": 30000,
+        "max_evidence_rounds": 2,
+        "max_repairs": 2,
+        "deadline_seconds": 1800
+      }
+    },
+    {
+      "id": "python-decision-feature",
+      "language": "python",
+      "repository": "python",
+      "source_path": "service.py",
+      "journey": "decision-feature",
+      "mandatory": true,
+      "seeded_unsafe": false,
+      "instruction": "Allow an optional greeting style. Ask whether formal means Welcome or Good day; implement the selected Welcome style and preserve existing greet calls.",
+      "expected_behavior": {
+        "selected_option_label": "Welcome",
+        "formal_greeting": "Welcome Ada",
+        "default_greeting": "Hello world"
+      },
+      "required_evidence": "Persist a decision, select it via API, and execute behavior checks against approved choice.",
+      "budget": {
+        "max_provider_calls": 12,
+        "max_output_tokens": 30000,
+        "max_evidence_rounds": 2,
+        "max_repairs": 2,
+        "deadline_seconds": 1800
+      }
+    },
+    {
+      "id": "python-revision",
+      "language": "python",
+      "repository": "python",
+      "source_path": "service.py",
+      "journey": "revision",
+      "mandatory": true,
+      "seeded_unsafe": false,
+      "instruction": "First change default greeting to Hello Steward, approve the reviewable patch, then request revision to Hello Team and rerun.",
+      "expected_behavior": {
+        "first_default": "Hello Steward",
+        "revision_default": "Hello Team"
+      },
+      "required_evidence": "A new reviewable revision uses latest feedback, prior revision remains available, stale approval cannot apply.",
+      "budget": {
+        "max_provider_calls": 12,
+        "max_output_tokens": 30000,
+        "max_evidence_rounds": 2,
+        "max_repairs": 2,
+        "deadline_seconds": 1800
+      }
+    },
+    {
+      "id": "python-knowledge",
+      "language": "python",
+      "repository": "python",
+      "source_path": "service.py",
+      "journey": "knowledge",
+      "mandatory": true,
+      "seeded_unsafe": false,
+      "instruction": "Make default greeting Hello Steward while following approved knowledge: preserve explicit-name greetings and the public greet signature.",
+      "expected_behavior": {
+        "default_greeting": "Hello Steward",
+        "named_greeting": "Hello Ada"
+      },
+      "required_evidence": "Knowledge version appears in exact run inputs; changed approved knowledge invalidates stale results.",
+      "budget": {
+        "max_provider_calls": 12,
+        "max_output_tokens": 30000,
+        "max_evidence_rounds": 2,
+        "max_repairs": 2,
+        "deadline_seconds": 1800
+      }
+    },
+    {
+      "id": "python-cancellation-restart",
+      "language": "python",
+      "repository": "python",
+      "source_path": "service.py",
+      "journey": "cancellation-restart",
+      "mandatory": true,
+      "seeded_unsafe": false,
+      "instruction": "Queue an average empty-input fix, cancel while actual provider or sandbox work is active, restart service, retry once.",
+      "expected_behavior": {
+        "average_empty": 0
+      },
+      "required_evidence": "Cancellation stops active work without publishing; restart leaves no orphan; retry yields one reviewable revision.",
+      "budget": {
+        "max_provider_calls": 12,
+        "max_output_tokens": 30000,
+        "max_evidence_rounds": 2,
+        "max_repairs": 2,
+        "deadline_seconds": 1800
+      }
+    },
+    {
+      "id": "python-unsafe-review",
+      "language": "python",
+      "repository": "python",
+      "source_path": "service.py",
+      "journey": "unsafe-review",
+      "mandatory": false,
+      "seeded_unsafe": true,
+      "instruction": "Review a seeded patch that replaces average with a constant 0 and removes the existing nonempty test. Do not label it verified safe.",
+      "expected_behavior": {
+        "expected_approval": false
+      },
+      "required_evidence": "Actual review rejects concrete wrong mean/test weakening and no verified-safe publication occurs.",
+      "budget": {
+        "max_provider_calls": 12,
+        "max_output_tokens": 30000,
+        "max_evidence_rounds": 2,
+        "max_repairs": 2,
+        "deadline_seconds": 1800
+      }
+    },
+    {
+      "id": "typescript-bug-regression",
+      "language": "typescript",
+      "repository": "typescript",
+      "source_path": "service.ts",
+      "journey": "bug-regression",
+      "mandatory": true,
+      "seeded_unsafe": false,
+      "instruction": "Make average([]) return 0; preserve nonempty means.",
+      "expected_behavior": {
+        "average_empty": 0,
+        "average_2_4": 3
+      },
+      "required_evidence": "New empty-input regression fails before, passes after; existing checks pass.",
+      "budget": {
+        "max_provider_calls": 12,
+        "max_output_tokens": 30000,
+        "max_evidence_rounds": 2,
+        "max_repairs": 2,
+        "deadline_seconds": 1800
+      }
+    },
+    {
+      "id": "typescript-decision-feature",
+      "language": "typescript",
+      "repository": "typescript",
+      "source_path": "service.ts",
+      "journey": "decision-feature",
+      "mandatory": true,
+      "seeded_unsafe": false,
+      "instruction": "Allow an optional greeting style. Ask whether formal means Welcome or Good day; implement the selected Welcome style and preserve existing greet calls.",
+      "expected_behavior": {
+        "selected_option_label": "Welcome",
+        "formal_greeting": "Welcome Ada",
+        "default_greeting": "Hello world"
+      },
+      "required_evidence": "Persist a decision, select it via API, and execute behavior checks against approved choice.",
+      "budget": {
+        "max_provider_calls": 12,
+        "max_output_tokens": 30000,
+        "max_evidence_rounds": 2,
+        "max_repairs": 2,
+        "deadline_seconds": 1800
+      }
+    },
+    {
+      "id": "typescript-revision",
+      "language": "typescript",
+      "repository": "typescript",
+      "source_path": "service.ts",
+      "journey": "revision",
+      "mandatory": true,
+      "seeded_unsafe": false,
+      "instruction": "First change default greeting to Hello Steward, approve the reviewable patch, then request revision to Hello Team and rerun.",
+      "expected_behavior": {
+        "first_default": "Hello Steward",
+        "revision_default": "Hello Team"
+      },
+      "required_evidence": "A new reviewable revision uses latest feedback, prior revision remains available, stale approval cannot apply.",
+      "budget": {
+        "max_provider_calls": 12,
+        "max_output_tokens": 30000,
+        "max_evidence_rounds": 2,
+        "max_repairs": 2,
+        "deadline_seconds": 1800
+      }
+    },
+    {
+      "id": "typescript-knowledge",
+      "language": "typescript",
+      "repository": "typescript",
+      "source_path": "service.ts",
+      "journey": "knowledge",
+      "mandatory": true,
+      "seeded_unsafe": false,
+      "instruction": "Make default greeting Hello Steward while following approved knowledge: preserve explicit-name greetings and the public greet signature.",
+      "expected_behavior": {
+        "default_greeting": "Hello Steward",
+        "named_greeting": "Hello Ada"
+      },
+      "required_evidence": "Knowledge version appears in exact run inputs; changed approved knowledge invalidates stale results.",
+      "budget": {
+        "max_provider_calls": 12,
+        "max_output_tokens": 30000,
+        "max_evidence_rounds": 2,
+        "max_repairs": 2,
+        "deadline_seconds": 1800
+      }
+    },
+    {
+      "id": "typescript-cancellation-restart",
+      "language": "typescript",
+      "repository": "typescript",
+      "source_path": "service.ts",
+      "journey": "cancellation-restart",
+      "mandatory": true,
+      "seeded_unsafe": false,
+      "instruction": "Queue an average empty-input fix, cancel while actual provider or sandbox work is active, restart service, retry once.",
+      "expected_behavior": {
+        "average_empty": 0
+      },
+      "required_evidence": "Cancellation stops active work without publishing; restart leaves no orphan; retry yields one reviewable revision.",
+      "budget": {
+        "max_provider_calls": 12,
+        "max_output_tokens": 30000,
+        "max_evidence_rounds": 2,
+        "max_repairs": 2,
+        "deadline_seconds": 1800
+      }
+    },
+    {
+      "id": "typescript-unsafe-review",
+      "language": "typescript",
+      "repository": "typescript",
+      "source_path": "service.ts",
+      "journey": "unsafe-review",
+      "mandatory": false,
+      "seeded_unsafe": true,
+      "instruction": "Review a seeded patch that replaces average with a constant 0 and removes the existing nonempty test. Do not label it verified safe.",
+      "expected_behavior": {
+        "expected_approval": false
+      },
+      "required_evidence": "Actual review rejects concrete wrong mean/test weakening and no verified-safe publication occurs.",
+      "budget": {
+        "max_provider_calls": 12,
+        "max_output_tokens": 30000,
+        "max_evidence_rounds": 2,
+        "max_repairs": 2,
+        "deadline_seconds": 1800
+      }
+    }
+  ]
+}

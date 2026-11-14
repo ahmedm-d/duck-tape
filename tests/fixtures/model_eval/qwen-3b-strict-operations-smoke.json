@@ -1,0 +1,274 @@
+{
+  "kind": "provider_schema_smoke",
+  "qualified": false,
+  "note": "Schema/edit/review smoke is not the 12-task application qualification gate.",
+  "attempts": [
+    {
+      "task": "investigation",
+      "expected_approval": null,
+      "passed": true,
+      "output": {
+        "summary": "The function `greet` in `greeting.py` returns the string \"Hello world\".",
+        "evidence": [
+          {
+            "path": "greeting.py",
+            "start_line": 1,
+            "end_line": 2
+          }
+        ],
+        "missing": []
+      },
+      "telemetry": {
+        "model": "qwen-coder-3b",
+        "role": "investigation",
+        "routing_reason": "investigation; risk=low; context=132 bytes; scope=unspecified; previous_failures=0",
+        "latency": 6.2957222000695765,
+        "usage": {
+          "input_tokens": 266,
+          "output_tokens": 74
+        },
+        "attempts": 1,
+        "attempt_log": [
+          {
+            "attempt": 1,
+            "model": "qwen-coder-3b",
+            "usage": {
+              "input_tokens": 266,
+              "output_tokens": 74
+            },
+            "latency": 6.295592200011015,
+            "error": null
+          }
+        ],
+        "cached": false,
+        "mode": "live",
+        "input_token_upper_bound": 1066,
+        "output_reservation": 1024
+      }
+    },
+    {
+      "task": "planning",
+      "expected_approval": null,
+      "passed": true,
+      "output": {
+        "steps": [
+          {
+            "description": "Open the greeting.py file in a text editor.",
+            "paths": [
+              "greeting.py"
+            ]
+          },
+          {
+            "description": "Locate the greet() function.",
+            "paths": [
+              "greeting.py"
+            ]
+          },
+          {
+            "description": "Modify the return statement to return 'Hello Steward'.",
+            "paths": [
+              "greeting.py"
+            ]
+          }
+        ],
+        "acceptance": [
+          "Run the greet() function and verify that it returns 'Hello Steward'.",
+          "Test the function with different inputs to ensure it behaves as expected."
+        ]
+      },
+      "telemetry": {
+        "model": "qwen-coder-3b",
+        "role": "planning",
+        "routing_reason": "planning; risk=low; context=143 bytes; scope=unspecified; previous_failures=0",
+        "latency": 13.320863400003873,
+        "usage": {
+          "input_tokens": 474,
+          "output_tokens": 138
+        },
+        "attempts": 1,
+        "attempt_log": [
+          {
+            "attempt": 1,
+            "model": "qwen-coder-3b",
+            "usage": {
+              "input_tokens": 474,
+              "output_tokens": 138
+            },
+            "latency": 13.320632899994962,
+            "error": null
+          }
+        ],
+        "cached": false,
+        "mode": "live",
+        "input_token_upper_bound": 1907,
+        "output_reservation": 1024
+      }
+    },
+    {
+      "task": "implementation",
+      "expected_approval": null,
+      "passed": true,
+      "output": {
+        "edits": [
+          {
+            "op": "update",
+            "path": "greeting.py",
+            "expected_hash": "af035e85c51a2ed583e4e2c1e4e2bcedce14685f13212626e2aa2e7ef84de03e",
+            "destination": null,
+            "content": "def greet():\n    return \"Hello Steward\"\n",
+            "replacements": [],
+            "complete_file": true
+          }
+        ],
+        "explanation": "Changed the greeting message to 'Hello Steward' while preserving the function signature."
+      },
+      "telemetry": {
+        "model": "qwen-coder-3b",
+        "role": "implementation",
+        "routing_reason": "implementation; risk=low; context=261 bytes; scope=unspecified; previous_failures=0",
+        "latency": 59.92813439993188,
+        "usage": {
+          "input_tokens": 1387,
+          "output_tokens": 158
+        },
+        "attempts": 1,
+        "attempt_log": [
+          {
+            "attempt": 1,
+            "model": "qwen-coder-3b",
+            "usage": {
+              "input_tokens": 1387,
+              "output_tokens": 158
+            },
+            "latency": 59.92776819993742,
+            "error": null
+          }
+        ],
+        "cached": false,
+        "mode": "live",
+        "input_token_upper_bound": 5350,
+        "output_reservation": 1024
+      }
+    },
+    {
+      "task": "review",
+      "expected_approval": true,
+      "passed": true,
+      "output": {
+        "approved": true,
+        "findings": []
+      },
+      "telemetry": {
+        "model": "qwen-coder-3b",
+        "role": "review",
+        "routing_reason": "review; risk=low; context=226 bytes; scope=unspecified; previous_failures=0",
+        "latency": 6.354796199942939,
+        "usage": {
+          "input_tokens": 331,
+          "output_tokens": 19
+        },
+        "attempts": 1,
+        "attempt_log": [
+          {
+            "attempt": 1,
+            "model": "qwen-coder-3b",
+            "usage": {
+              "input_tokens": 331,
+              "output_tokens": 19
+            },
+            "latency": 6.354551599943079,
+            "error": null
+          }
+        ],
+        "cached": false,
+        "mode": "live",
+        "input_token_upper_bound": 1489,
+        "output_reservation": 1024
+      }
+    },
+    {
+      "task": "review",
+      "expected_approval": false,
+      "passed": true,
+      "output": {
+        "approved": false,
+        "findings": [
+          {
+            "message": "The function `greet` does not return the expected string 'Hello Steward'.",
+            "reference": {
+              "path": "greeting.py",
+              "start_line": 2,
+              "end_line": 2
+            }
+          }
+        ]
+      },
+      "telemetry": {
+        "model": "qwen-coder-3b",
+        "role": "review",
+        "routing_reason": "review; risk=low; context=186 bytes; scope=unspecified; previous_failures=0",
+        "latency": 9.432793099898845,
+        "usage": {
+          "input_tokens": 323,
+          "output_tokens": 80
+        },
+        "attempts": 1,
+        "attempt_log": [
+          {
+            "attempt": 1,
+            "model": "qwen-coder-3b",
+            "usage": {
+              "input_tokens": 323,
+              "output_tokens": 80
+            },
+            "latency": 9.43262620002497,
+            "error": null
+          }
+        ],
+        "cached": false,
+        "mode": "live",
+        "input_token_upper_bound": 1449,
+        "output_reservation": 1024
+      }
+    }
+  ],
+  "recorded_at": "2026-11-14T03:06:34.388190+00:00",
+  "configuration": {
+    "investigation": {
+      "role": "investigation",
+      "model": "qwen-coder-3b",
+      "context_limit": 8192,
+      "max_output_tokens": 4096,
+      "structured_output": true,
+      "schema_version": "steward-schema-1",
+      "qualification": "unqualified"
+    },
+    "planning": {
+      "role": "planning",
+      "model": "qwen-coder-3b",
+      "context_limit": 8192,
+      "max_output_tokens": 4096,
+      "structured_output": true,
+      "schema_version": "steward-schema-1",
+      "qualification": "unqualified"
+    },
+    "implementation": {
+      "role": "implementation",
+      "model": "qwen-coder-3b",
+      "context_limit": 8192,
+      "max_output_tokens": 4096,
+      "structured_output": true,
+      "schema_version": "steward-schema-1",
+      "qualification": "unqualified"
+    },
+    "review": {
+      "role": "review",
+      "model": "qwen-coder-3b",
+      "context_limit": 8192,
+      "max_output_tokens": 4096,
+      "structured_output": true,
+      "schema_version": "steward-schema-1",
+      "qualification": "unqualified"
+    }
+  }
+}

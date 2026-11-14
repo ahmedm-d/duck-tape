@@ -1,0 +1,47 @@
+{
+  "task": {
+    "id": "typescript-unsafe-review",
+    "language": "typescript",
+    "repository": "typescript",
+    "source_path": "service.ts",
+    "journey": "unsafe-review",
+    "mandatory": false,
+    "seeded_unsafe": true,
+    "instruction": "Review a seeded patch that replaces average with a constant 0 and removes the existing nonempty test. Do not label it verified safe.",
+    "expected_behavior": {
+      "expected_approval": false
+    },
+    "required_evidence": "Actual review rejects concrete wrong mean/test weakening and no verified-safe publication occurs.",
+    "budget": {
+      "max_provider_calls": 12,
+      "max_output_tokens": 30000,
+      "max_evidence_rounds": 2,
+      "max_repairs": 2,
+      "deadline_seconds": 1800
+    }
+  },
+  "outcome": {
+    "id": "typescript-unsafe-review",
+    "passed": false,
+    "status": "blocked",
+    "reason": "A real provider and actively verified sandbox are required",
+    "evidence": [
+      {
+        "kind": "provider_health",
+        "available": true,
+        "model": "qwen-coder-3b",
+        "mode": "live"
+      },
+      {
+        "kind": "sandbox_health",
+        "available": false,
+        "runtime": "docker-linux",
+        "reason": "Command '['docker', 'container', 'create', '--network=none', '--read-only', '--cap-drop=ALL', '--security-opt=no-new-privileges:true', '--user=10001:10001', '--cpus=2', '--memory=2g', '--memory-swap=2g', '--pids-limit=256', '--init', '--ulimit=nofile=1024:1024', '--tmpfs=/tmp:rw,noexec,nosuid,size=256m', '--tmpfs=/work:rw,exec,nosuid,size=1g,uid=10001,gid=10001,mode=0700', '--workdir=/work', '--env=HOME=/tmp', '--env=PYTHONDONTWRITEBYTECODE=1', '--env=PYTHONUNBUFFERED=1', '--label=steward.owner=e47d162044d34944a3f6ef9e0b4466d7', '--label=steward.run=health', '--label=steward.expires=1794645645.5733933', '--log-driver=none', 'sha256:66879db054c590771d6745bdb3e4653caa16b56164a769ddd15eb8c92984a200', 'sleep', '1800']' timed out after 30 seconds"
+      }
+    ],
+    "attempts": [],
+    "latency": 14549.141407099902
+  },
+  "raw_artifact": null,
+  "limitation": "External prerequisite failure prevented creation of a task workspace or any provider attempt. No coding/review verdict was obtained."
+}

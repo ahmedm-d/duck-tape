@@ -1,0 +1,161 @@
+{
+  "health": {
+    "endpoint": "http://127.0.0.1:11435/v1",
+    "kind": "openai",
+    "small_model": "qwen-coder-1.5b",
+    "model": "qwen-coder-1.5b",
+    "context_limit": 8192,
+    "embedding_model": "",
+    "available": true,
+    "mode": "live",
+    "runner_installed": true,
+    "usage": null,
+    "quality_warning": "Bundled small CPU model: structured edits verified, but live acceptance review has rejected valid patches with incorrect findings. Do not treat this model as reliable autonomous review. Execution of model code remains unavailable without a sandbox.",
+    "installed_models": [
+      "qwen-coder-1.5b"
+    ]
+  },
+  "job": {
+    "repo_id": "ed7fa0c4-b014-4c2e-8272-226788f77dff",
+    "title": "Change greeting",
+    "description": "In greeting.py replace Hello world with Hello Steward. Keep the function named greet.",
+    "risk": "low",
+    "status": "Failed",
+    "base_snapshot": "97baac06560cdd61b8edea53f52bc4b8ad9d8d83e3d3df0b6ad883ed5dfc75f6",
+    "source": "request",
+    "id": "a0e59095-0455-4c8e-a081-e1ec8afb37c8",
+    "created_at": "2026-11-14T01:56:56.509467+00:00",
+    "updated_at": "2026-11-14T01:57:20.558871+00:00",
+    "lease_token": "398f0517-40d6-425a-8e3b-e9af219a0ece",
+    "lease_until": 1794621620.5588596,
+    "error": "Independent model review requested changes: The proposed code does not match the requested behaviour. The function `greet` is expected to return a string, but the proposed code returns the string 'Hello Steward'."
+  },
+  "revisions": [],
+  "checks": [],
+  "runs": [
+    {
+      "job_id": "a0e59095-0455-4c8e-a081-e1ec8afb37c8",
+      "status": "failed",
+      "lease_token": "398f0517-40d6-425a-8e3b-e9af219a0ece",
+      "started_at": "2026-11-14T01:56:56.546594+00:00",
+      "base_snapshot": "97baac06560cdd61b8edea53f52bc4b8ad9d8d83e3d3df0b6ad883ed5dfc75f6",
+      "id": "7d2b7ab5-8735-40c4-931b-3267d52a88b4",
+      "created_at": "2026-11-14T01:56:56.546666+00:00",
+      "updated_at": "2026-11-14T01:57:20.560681+00:00",
+      "context": {
+        "items": [
+          {
+            "path": "greeting.py",
+            "start_line": 1,
+            "end_line": 2,
+            "content": "def greet():\n    return \"Hello world\"",
+            "reason": "exact symbol/path and full-text match",
+            "snapshot": "97baac06560cdd61b8edea53f52bc4b8ad9d8d83e3d3df0b6ad883ed5dfc75f6",
+            "hash": "af035e85c51a2ed583e4e2c1e4e2bcedce14685f13212626e2aa2e7ef84de03e",
+            "symbols": [
+              {
+                "name": "greet",
+                "kind": "FunctionDef",
+                "start_line": 1,
+                "end_line": 2,
+                "decorators": [],
+                "summary": "FunctionDef greet, lines 1-2; structural fact, semantic synthesis unavailable"
+              }
+            ]
+          },
+          {
+            "path": "README.md",
+            "start_line": 1,
+            "end_line": 1,
+            "content": "Greeting service. greet returns the user greeting.",
+            "reason": "full-text match",
+            "snapshot": "97baac06560cdd61b8edea53f52bc4b8ad9d8d83e3d3df0b6ad883ed5dfc75f6",
+            "hash": "7222fb9c6a7d6d892d6fb5f3c373cb5921a524cf97deee96be14215809dba575",
+            "symbols": []
+          }
+        ],
+        "missing": [
+          "Dynamic calls are incomplete; external systems are not inspected",
+          "Embeddings unavailable; deterministic keyword/graph fallback"
+        ],
+        "mode": "keyword + graph",
+        "snapshot": "97baac06560cdd61b8edea53f52bc4b8ad9d8d83e3d3df0b6ad883ed5dfc75f6",
+        "overview": "Repository snapshot 97baac06560c. 2 indexed files; 0 excluded entries; 0 unsupported; 0 failed. 0 source-linked relationships. Structural inventory only: model synthesis unavailable. Dynamic calls and external systems are not fully resolved.",
+        "knowledge": [
+          {
+            "id": "0aa07a33-337f-47f6-a006-dc4cc293547e",
+            "title": "Greeting contract",
+            "content": "greet must remain a no-argument function returning a string.",
+            "scope": "greeting.py",
+            "version": 1,
+            "updated_at": "2026-11-14T01:56:56.493489+00:00"
+          }
+        ],
+        "context_hash": "a525e9f9f192a602d223bcd9c6d13f8ffeb3be33256486b946c39949b817b9a4",
+        "latency_ms": 0.617,
+        "repo_id": "ed7fa0c4-b014-4c2e-8272-226788f77dff"
+      },
+      "provider": {
+        "model": "qwen-coder-1.5b",
+        "routing_reason": "implementation; risk=low; context=2422 characters; small model",
+        "latency": 14.813779200077988,
+        "usage": {
+          "completion_tokens": 81,
+          "prompt_tokens": 1215,
+          "total_tokens": 1296,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "attempts": 1,
+        "cached": false,
+        "mode": "live",
+        "context_requests": [],
+        "review": {
+          "model": "qwen-coder-1.5b",
+          "routing_reason": "review; risk=low; context=1107 characters; small model",
+          "latency": 8.140716699999757,
+          "usage": {
+            "completion_tokens": 59,
+            "prompt_tokens": 577,
+            "total_tokens": 636,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            }
+          },
+          "attempts": 1,
+          "cached": false,
+          "mode": "live"
+        }
+      },
+      "candidate_diff": "diff --git a/greeting.py b/greeting.py\nindex 2345ca0..17fef96 100644\n--- a/greeting.py\n+++ b/greeting.py\n@@ -1,2 +1,2 @@\n def greet():\n-    return \"Hello world\"\n+    return \"Hello Steward\"\n\\ No newline at end of file\n",
+      "candidate_files": [
+        {
+          "path": "greeting.py",
+          "before": "def greet():\n    return \"Hello world\"\n",
+          "after": "def greet():\n    return \"Hello Steward\""
+        }
+      ],
+      "review": {
+        "approved": false,
+        "findings": [
+          "The proposed code does not match the requested behaviour. The function `greet` is expected to return a string, but the proposed code returns the string 'Hello Steward'."
+        ]
+      },
+      "error": "Independent model review requested changes: The proposed code does not match the requested behaviour. The function `greet` is expected to return a string, but the proposed code returns the string 'Hello Steward'.",
+      "checks": [
+        {
+          "id": "fa4b1dab-c61a-4ac4-8191-d8651a7fe992",
+          "job_id": "a0e59095-0455-4c8e-a081-e1ec8afb37c8",
+          "phase": "after",
+          "command": "execution unavailable",
+          "exit_code": null,
+          "duration": 0,
+          "stdout": "No constrained sandbox available. Arbitrary repository/model code was not executed on the host.",
+          "status": "unavailable"
+        }
+      ],
+      "finished_at": "2026-11-14T01:57:20.560575+00:00"
+    }
+  ]
+}

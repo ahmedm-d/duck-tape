@@ -1,0 +1,33 @@
+{
+  "status": "passed",
+  "action": "downloaded_and_verified",
+  "completed_at": "2026-11-14T05:59:27.069453+00:00",
+  "repository": "Qwen/Qwen3-4B-GGUF",
+  "revision": "bc640142c66e1fdd12af0bd68f40445458f3869b",
+  "url": "https://huggingface.co/Qwen/Qwen3-4B-GGUF/resolve/bc640142c66e1fdd12af0bd68f40445458f3869b/Qwen3-4B-Q4_K_M.gguf",
+  "license": "Apache-2.0",
+  "license_url": "https://huggingface.co/Qwen/Qwen3-4B-GGUF/blob/bc640142c66e1fdd12af0bd68f40445458f3869b/LICENSE",
+  "target": "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\data\\model-runtime\\models\\Qwen3-4B-Q4_K_M.gguf",
+  "size_bytes": 2497280256,
+  "sha256": "7485fe6f11af29433bc51cab58009521f205840f5b4ae3a32fa7f92e8534fdf5",
+  "free_bytes_before": 125674110976,
+  "free_bytes_after": 123135438848,
+  "elapsed_seconds": 281.54,
+  "existing_weight_metadata_preserved": [
+    "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\data\\model-runtime\\nomic-embed-text-v1.5.Q8_0.gguf",
+    "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\data\\model-runtime\\qwen-coder-0.5b.gguf",
+    "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\data\\model-runtime\\qwen-coder-1.5b.gguf",
+    "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\data\\model-runtime\\qwen2.5-coder-3b-instruct-q4_k_m.gguf"
+  ],
+  "model_loaded": false,
+  "runner_configuration_changed": false,
+  "memory_estimate": {
+    "basis": "36 layers,8 KV heads,128 head dimension,FP16 K and V cache",
+    "weights_gib": 2.326,
+    "kv_cache_16384_tokens_gib": 2.25,
+    "weights_plus_kv_gib": 4.576,
+    "excludes": "compute buffers and all other processes",
+    "reported_current_free_ram_gib": 2.6,
+    "conclusion": "Do not load alongside current runners; replacement and fresh memory check required before any separately authorized test."
+  }
+}

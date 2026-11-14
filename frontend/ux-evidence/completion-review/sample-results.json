@@ -1,0 +1,52 @@
+{
+  "repo": "9f97a071-6b87-4dc7-bd2b-ebfa602f58d7",
+  "job": "8f703b388a2d2366d661922d912da015a31727b5ead8a6d1d8f9c1ce7b9da4f8",
+  "revision": "eedd0717-d396-4e00-8d8b-8d10a8af7017",
+  "approval": {
+    "revision_id": "eedd0717-d396-4e00-8d8b-8d10a8af7017",
+    "patch_hash": "42916e7c2948c68d6a51f1f9913d2786a6f34ab8ff12e3b7d483ac3272dfbda2",
+    "input_fingerprint": null,
+    "checks_hash": "afa0332bd64c3ab37957927f5f1ebf4af39fa9ebacabd807124dd47e496d9f45",
+    "author": "Alex · demo member",
+    "at": "2026-11-14T04:31:23.949832+00:00"
+  },
+  "provider": {
+    "model": "reviewed sample fixture",
+    "mode": "offline sample",
+    "usage": null,
+    "latency": 0,
+    "routing_reason": "Explicit bundled sample scenario only"
+  },
+  "checks": [
+    {
+      "phase": "baseline",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "phase": "regression-before",
+      "status": "failed",
+      "exit": 1
+    },
+    {
+      "phase": "after",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "phase": "baseline",
+      "status": "passed",
+      "exit": 0
+    },
+    {
+      "phase": "regression-before",
+      "status": "failed",
+      "exit": 1
+    },
+    {
+      "phase": "after",
+      "status": "passed",
+      "exit": 0
+    }
+  ]
+}

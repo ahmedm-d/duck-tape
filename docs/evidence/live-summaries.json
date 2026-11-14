@@ -1,0 +1,125 @@
+{
+  "provider": "actual local Qwen2.5-Coder3B Q4_K_M CPU",
+  "fixture": "reviewed one-module source; inference is live",
+  "records": [
+    {
+      "id": "ebedfeeec46f7ab983d68eff7975718ef497a7ef0e135654963f2355a1fbffa7",
+      "repo_id": "summary-acceptance",
+      "snapshot_id": "0cfe769b8f2699c02b5b6887bde91d86e709b4e09ce869a4b5113cc8a8073416",
+      "kind": "repository",
+      "scope": "*",
+      "dependency_hashes": [
+        [
+          "helper.py",
+          "3d74ea34da8fa1bea7d21b749cdf8c26c66cba565530c5bab6a5f279f40abd9b"
+        ]
+      ],
+      "model": "qwen-coder-3b",
+      "prompt_version": "evidence-summaries-1",
+      "summary": "The repository contains a single Python file, `helper.py`, which includes a function `total_cents` that computes the total cents for a given unit cents and quantity. The function is defined in line 1 and ends at line 3.",
+      "mode": "inferred synthesis",
+      "evidence": [
+        {
+          "path": "helper.py",
+          "start_line": 1,
+          "end_line": 3,
+          "repo_id": "summary-acceptance",
+          "snapshot_id": "0cfe769b8f2699c02b5b6887bde91d86e709b4e09ce869a4b5113cc8a8073416",
+          "blob_hash": "3d74ea34da8fa1bea7d21b749cdf8c26c66cba565530c5bab6a5f279f40abd9b",
+          "chunk_id": "a0e799f001b3171fd9451ded45e70d78f3fa6d09f626b52d595b0699ac264f2b"
+        }
+      ],
+      "missing": [],
+      "provider": {
+        "model": "qwen-coder-3b",
+        "role": "summary",
+        "routing_reason": "summary; risk=low; context=872 bytes; scope=unspecified; previous_failures=0",
+        "latency": 13.875688100000843,
+        "usage": {
+          "input_tokens": 590,
+          "output_tokens": 102
+        },
+        "attempts": 1,
+        "attempt_log": [
+          {
+            "attempt": 1,
+            "model": "qwen-coder-3b",
+            "usage": {
+              "input_tokens": 590,
+              "output_tokens": 102
+            },
+            "latency": 13.874796799966134,
+            "error": null
+          }
+        ],
+        "cached": false,
+        "mode": "live",
+        "input_token_upper_bound": 1806,
+        "output_reservation": 1024
+      },
+      "created_at": "2026-11-14T04:15:16.148718+00:00",
+      "updated_at": "2026-11-14T04:15:16.148728+00:00",
+      "record_version": 1
+    },
+    {
+      "id": "587c8638e068b70fd6fc203e195f168852f2159778f410386d362763a3183fbf",
+      "repo_id": "summary-acceptance",
+      "snapshot_id": "0cfe769b8f2699c02b5b6887bde91d86e709b4e09ce869a4b5113cc8a8073416",
+      "kind": "module",
+      "scope": "helper.py",
+      "dependency_hashes": [
+        [
+          "helper.py",
+          "3d74ea34da8fa1bea7d21b749cdf8c26c66cba565530c5bab6a5f279f40abd9b"
+        ]
+      ],
+      "model": "qwen-coder-3b",
+      "prompt_version": "evidence-summaries-1",
+      "summary": "The repository contains a single Python file, `helper.py`, which includes a function `total_cents` that computes the total cents for a given unit cents and quantity. The function is defined in line 1 and ends at line 3.",
+      "mode": "inferred synthesis",
+      "evidence": [
+        {
+          "path": "helper.py",
+          "start_line": 1,
+          "end_line": 3,
+          "repo_id": "summary-acceptance",
+          "snapshot_id": "0cfe769b8f2699c02b5b6887bde91d86e709b4e09ce869a4b5113cc8a8073416",
+          "blob_hash": "3d74ea34da8fa1bea7d21b749cdf8c26c66cba565530c5bab6a5f279f40abd9b",
+          "chunk_id": "a0e799f001b3171fd9451ded45e70d78f3fa6d09f626b52d595b0699ac264f2b"
+        }
+      ],
+      "missing": [],
+      "provider": {
+        "model": "qwen-coder-3b",
+        "role": "summary",
+        "routing_reason": "summary; risk=low; context=876 bytes; scope=unspecified; previous_failures=0",
+        "latency": 8.35404489992652,
+        "usage": {
+          "input_tokens": 592,
+          "output_tokens": 102
+        },
+        "attempts": 1,
+        "attempt_log": [
+          {
+            "attempt": 1,
+            "model": "qwen-coder-3b",
+            "usage": {
+              "input_tokens": 592,
+              "output_tokens": 102
+            },
+            "latency": 8.352506099967286,
+            "error": null
+          }
+        ],
+        "cached": false,
+        "mode": "live",
+        "input_token_upper_bound": 1810,
+        "output_reservation": 1024
+      },
+      "created_at": "2026-11-14T04:15:24.548455+00:00",
+      "updated_at": "2026-11-14T04:15:24.548472+00:00",
+      "record_version": 1
+    }
+  ],
+  "passed": true
+}

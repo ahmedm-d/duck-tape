@@ -1,0 +1,293 @@
+{
+  "result": "passed",
+  "method": "Actual uvicorn process kill followed by new process using the same SQLite data directory",
+  "port": 8766,
+  "first_pid": 4568,
+  "second_pid": 51360,
+  "persisted_status_at_kill": "Queued",
+  "final_status": "Ready for review",
+  "revision_count": 1,
+  "job_id": "be24db643262b861f32a2177098495f5fafe4a363317214165c498f6f8d7d4ff",
+  "base_snapshot": "927e0480861eab284fe2e6f8f79cd85d0b3539296b273a4d34e9678882ac81b6",
+  "patch_hash": "09764e43ed6a145900e27013c52d82bbea02a5f452daa2ecfa81f4c04e199795",
+  "duration_seconds": 5.213,
+  "approved_knowledge": {
+    "id": "efb36354-8802-4cc4-bc51-da6179417329-integer-cents",
+    "repo_id": "efb36354-8802-4cc4-bc51-da6179417329",
+    "title": "Money uses integer cents",
+    "content": "Use integer cents; never floating-point money. Empty orders return zero.",
+    "scope": "*",
+    "status": "team-approved",
+    "evidence": "README.md:3-4",
+    "last_validated_snapshot": "927e0480861eab284fe2e6f8f79cd85d0b3539296b273a4d34e9678882ac81b6",
+    "version": 2,
+    "author": "Alex \u00b7 demo member",
+    "created_at": "2026-11-14T01:59:42.242632+00:00",
+    "updated_at": "2026-11-14T01:59:42.563767+00:00"
+  },
+  "used_knowledge": [
+    {
+      "id": "efb36354-8802-4cc4-bc51-da6179417329-integer-cents",
+      "title": "Money uses integer cents",
+      "content": "Use integer cents; never floating-point money. Empty orders return zero.",
+      "scope": "*",
+      "version": 2,
+      "updated_at": "2026-11-14T01:59:42.563767+00:00"
+    }
+  ],
+  "checks": [
+    {
+      "id": "9ebc8482-cdca-4043-b219-c7567aae8462",
+      "job_id": "be24db643262b861f32a2177098495f5fafe4a363317214165c498f6f8d7d4ff",
+      "phase": "baseline",
+      "command": "python -m unittest discover -s tests -v",
+      "exit_code": 0,
+      "duration": 0.19806949992198497,
+      "stdout": "test_empty (test_quote.QuoteTest.test_empty) ... ok\ntest_single (test_quote.QuoteTest.test_single) ... ok\ntest_order (test_search.SearchTest.test_order) ... ok\n\n----------------------------------------------------------------------\nRan 3 tests in 0.001s\n\nOK\n",
+      "status": "passed",
+      "environment": "3.13.12",
+      "created_at": "2026-11-14T01:59:44.812002+00:00",
+      "revision_id": "b3f74b60-ffe5-47ea-b0c5-81d367643430",
+      "base_snapshot": "927e0480861eab284fe2e6f8f79cd85d0b3539296b273a4d34e9678882ac81b6",
+      "patch_hash": "09764e43ed6a145900e27013c52d82bbea02a5f452daa2ecfa81f4c04e199795"
+    },
+    {
+      "id": "ce8b47ca-a1d8-4381-9c3b-8c40b9bd4a40",
+      "job_id": "be24db643262b861f32a2177098495f5fafe4a363317214165c498f6f8d7d4ff",
+      "phase": "regression-before",
+      "command": "new regression test against baseline",
+      "exit_code": 1,
+      "duration": 0.17290990008041263,
+      "stdout": "test_empty (test_quote.QuoteTest.test_empty) ... ok\ntest_quantity (test_quote.QuoteTest.test_quantity) ... FAIL\ntest_single (test_quote.QuoteTest.test_single) ... ok\ntest_order (test_search.SearchTest.test_order) ... ok\n\n======================================================================\nFAIL: test_quantity (test_quote.QuoteTest.test_quantity)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"C:\\Users\\ahmed\\Projects\\ducktape\\steward\\data\\restart-check\\9226b19214c4433fa69b7eadc24ce5ff\\worktrees\\be24db643262b861f32a2177098495f5fafe4a363317214165c498f6f8d7d4ff\\30008fba-a4e4-4aaa-9b1b-a65669fd91a7\\tests\\test_quote.py\", line 11, in test_quantity\n    self.assertEqual(quote([{ \"price_cents\": 100, \"quantity\": 2}])[\"total_cents\"], 220)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 110 != 220\n\n----------------------------------------------------------------------\nRan 4 tests in 0.001s\n\nFAILED (failures=1)\n",
+      "status": "failed",
+      "environment": "3.13.12",
+      "created_at": "2026-11-14T01:59:45.003856+00:00",
+      "revision_id": "b3f74b60-ffe5-47ea-b0c5-81d367643430",
+      "base_snapshot": "927e0480861eab284fe2e6f8f79cd85d0b3539296b273a4d34e9678882ac81b6",
+      "patch_hash": "09764e43ed6a145900e27013c52d82bbea02a5f452daa2ecfa81f4c04e199795"
+    },
+    {
+      "id": "b1651ff9-5b88-40d3-8dee-b8a29e27b2f6",
+      "job_id": "be24db643262b861f32a2177098495f5fafe4a363317214165c498f6f8d7d4ff",
+      "phase": "after",
+      "command": "python -m unittest discover -s tests -v",
+      "exit_code": 0,
+      "duration": 0.1785880000097677,
+      "stdout": "test_empty (test_quote.QuoteTest.test_empty) ... ok\ntest_quantity (test_quote.QuoteTest.test_quantity) ... ok\ntest_single (test_quote.QuoteTest.test_single) ... ok\ntest_order (test_search.SearchTest.test_order) ... ok\n\n----------------------------------------------------------------------\nRan 4 tests in 0.000s\n\nOK\n",
+      "status": "passed",
+      "environment": "3.13.12",
+      "created_at": "2026-11-14T01:59:45.376098+00:00",
+      "revision_id": "b3f74b60-ffe5-47ea-b0c5-81d367643430",
+      "base_snapshot": "927e0480861eab284fe2e6f8f79cd85d0b3539296b273a4d34e9678882ac81b6",
+      "patch_hash": "09764e43ed6a145900e27013c52d82bbea02a5f452daa2ecfa81f4c04e199795"
+    }
+  ],
+  "runs": [
+    {
+      "job_id": "be24db643262b861f32a2177098495f5fafe4a363317214165c498f6f8d7d4ff",
+      "status": "complete",
+      "lease_token": "30008fba-a4e4-4aaa-9b1b-a65669fd91a7",
+      "started_at": "2026-11-14T01:59:44.076630+00:00",
+      "base_snapshot": "927e0480861eab284fe2e6f8f79cd85d0b3539296b273a4d34e9678882ac81b6",
+      "id": "fc930644-cfc7-44e3-82fe-8be8635b35eb",
+      "created_at": "2026-11-14T01:59:44.076677+00:00",
+      "updated_at": "2026-11-14T01:59:45.445109+00:00",
+      "context": {
+        "items": [
+          {
+            "path": "tests/test_quote.py",
+            "start_line": 1,
+            "end_line": 8,
+            "content": "import unittest\nfrom app import quote\n\nclass QuoteTest(unittest.TestCase):\n    def test_single(self):\n        self.assertEqual(quote([{ \"price_cents\": 100, \"quantity\": 1}])[\"total_cents\"], 110)\n    def test_empty(self):\n        self.assertEqual(quote([])[\"total_cents\"], 0)",
+            "reason": "exact symbol/path and full-text match; graph tests (parsed/resolved) via app.py; graph calls (inferred) via app.py",
+            "snapshot": "927e0480861eab284fe2e6f8f79cd85d0b3539296b273a4d34e9678882ac81b6",
+            "hash": "cea715cada808496fe54899f97a655356379485ff6bb7505fb526bef5d584ffc",
+            "symbols": [
+              {
+                "name": "QuoteTest",
+                "kind": "ClassDef",
+                "start_line": 4,
+                "end_line": 8,
+                "decorators": [],
+                "summary": "ClassDef QuoteTest, lines 4-8; structural fact, semantic synthesis unavailable"
+              },
+              {
+                "name": "test_single",
+                "kind": "FunctionDef",
+                "start_line": 5,
+                "end_line": 6,
+                "decorators": [],
+                "summary": "FunctionDef test_single, lines 5-6; structural fact, semantic synthesis unavailable"
+              },
+              {
+                "name": "test_empty",
+                "kind": "FunctionDef",
+                "start_line": 7,
+                "end_line": 8,
+                "decorators": [],
+                "summary": "FunctionDef test_empty, lines 7-8; structural fact, semantic synthesis unavailable"
+              }
+            ]
+          },
+          {
+            "path": "app.py",
+            "start_line": 1,
+            "end_line": 5,
+            "content": "from pricing import total\nfrom config import TAX_RATE\n\ndef quote(items):\n    return {\"total_cents\": total(items, TAX_RATE)}",
+            "reason": "exact symbol/path and full-text match; graph imports (parsed/resolved) via pricing.py; graph calls (inferred) via pricing.py; graph tests (parsed/resolved) via tests/test_quote.py; graph calls (inferred) via tests/test_quote.py; graph imports (parsed/resolved) via config.py",
+            "snapshot": "927e0480861eab284fe2e6f8f79cd85d0b3539296b273a4d34e9678882ac81b6",
+            "hash": "c6429acac65fc2c509d13de8963d17b18e18313cb4f9230c417a4b97142d8366",
+            "symbols": [
+              {
+                "name": "quote",
+                "kind": "FunctionDef",
+                "start_line": 4,
+                "end_line": 5,
+                "decorators": [],
+                "summary": "FunctionDef quote, lines 4-5; structural fact, semantic synthesis unavailable"
+              }
+            ]
+          },
+          {
+            "path": "search.py",
+            "start_line": 1,
+            "end_line": 6,
+            "content": "def unique_labels(labels):\n    result = []\n    for label in labels:\n        if label not in result:\n            result.append(label)\n    return result",
+            "reason": "exact symbol/path and full-text match; graph tests (parsed/resolved) via tests/test_search.py; graph calls (inferred) via tests/test_search.py",
+            "snapshot": "927e0480861eab284fe2e6f8f79cd85d0b3539296b273a4d34e9678882ac81b6",
+            "hash": "62c27094c0e4ece62b7dbd344a3cf68674649bf59094d22871858b40daf32fe1",
+            "symbols": [
+              {
+                "name": "unique_labels",
+                "kind": "FunctionDef",
+                "start_line": 1,
+                "end_line": 6,
+                "decorators": [],
+                "summary": "FunctionDef unique_labels, lines 1-6; structural fact, semantic synthesis unavailable"
+              }
+            ]
+          },
+          {
+            "path": "pricing.py",
+            "start_line": 1,
+            "end_line": 3,
+            "content": "def total(items, tax_rate):\n    subtotal = sum(item[\"price_cents\"] for item in items)\n    return subtotal + subtotal * tax_rate // 100",
+            "reason": "exact symbol/path and full-text match; graph imports (parsed/resolved) via app.py; graph calls (inferred) via app.py",
+            "snapshot": "927e0480861eab284fe2e6f8f79cd85d0b3539296b273a4d34e9678882ac81b6",
+            "hash": "71a4eb684db7055366c4edbf0901e3f5093ab54bc621ef9fdf463bc85bba416a",
+            "symbols": [
+              {
+                "name": "total",
+                "kind": "FunctionDef",
+                "start_line": 1,
+                "end_line": 3,
+                "decorators": [],
+                "summary": "FunctionDef total, lines 1-3; structural fact, semantic synthesis unavailable"
+              }
+            ]
+          },
+          {
+            "path": "config.py",
+            "start_line": 1,
+            "end_line": 2,
+            "content": "TAX_RATE = 10\nMAX_ITEMS = 100",
+            "reason": "full-text match; graph imports (parsed/resolved) via app.py",
+            "snapshot": "927e0480861eab284fe2e6f8f79cd85d0b3539296b273a4d34e9678882ac81b6",
+            "hash": "c93c156b540d22f707688afbbc35d2d0c3120a0429180745e48ab89d6a2de42d",
+            "symbols": []
+          },
+          {
+            "path": "tests/test_search.py",
+            "start_line": 1,
+            "end_line": 6,
+            "content": "import unittest\nfrom search import unique_labels\n\nclass SearchTest(unittest.TestCase):\n    def test_order(self):\n        self.assertEqual(unique_labels([\"b\", \"a\", \"b\"]), [\"b\", \"a\"])",
+            "reason": "full-text match; graph tests (parsed/resolved) via search.py; graph calls (inferred) via search.py",
+            "snapshot": "927e0480861eab284fe2e6f8f79cd85d0b3539296b273a4d34e9678882ac81b6",
+            "hash": "8a8a297c2406eede38f789b3abc2cb0a076bb6393d359512b50ea4bcda3a51ba",
+            "symbols": [
+              {
+                "name": "SearchTest",
+                "kind": "ClassDef",
+                "start_line": 4,
+                "end_line": 6,
+                "decorators": [],
+                "summary": "ClassDef SearchTest, lines 4-6; structural fact, semantic synthesis unavailable"
+              },
+              {
+                "name": "test_order",
+                "kind": "FunctionDef",
+                "start_line": 5,
+                "end_line": 6,
+                "decorators": [],
+                "summary": "FunctionDef test_order, lines 5-6; structural fact, semantic synthesis unavailable"
+              }
+            ]
+          },
+          {
+            "path": "README.md",
+            "start_line": 1,
+            "end_line": 5,
+            "content": "# Parcel sample (fixture)\n\nEndpoint app.quote calls pricing.total and config.TAX_RATE.\nConstraint: use integer cents, never floating-point money. Empty orders return zero.\nThe dependency advisory is illustrative fixture data, never a live OSV claim.",
+            "reason": "full-text match",
+            "snapshot": "927e0480861eab284fe2e6f8f79cd85d0b3539296b273a4d34e9678882ac81b6",
+            "hash": "c8a189316273696c20ddc8c548e07d7e2a27fedc32934603d57d822ba4845c8f",
+            "symbols": []
+          },
+          {
+            "path": "requirements.lock",
+            "start_line": 1,
+            "end_line": 2,
+            "content": "# Fixture only; not installed\nfixture-parser==1.0.0",
+            "reason": "repository documentation/configuration context",
+            "snapshot": "927e0480861eab284fe2e6f8f79cd85d0b3539296b273a4d34e9678882ac81b6",
+            "hash": "4a75359bf0c2a67aa1ebac65cf15875edf8e932cfe465f873f59b30e81011ab2",
+            "symbols": []
+          }
+        ],
+        "missing": [
+          "Dynamic calls are incomplete; external systems are not inspected",
+          "Embeddings unavailable; deterministic keyword/graph fallback"
+        ],
+        "mode": "keyword + graph",
+        "snapshot": "927e0480861eab284fe2e6f8f79cd85d0b3539296b273a4d34e9678882ac81b6",
+        "overview": "Repository snapshot 927e0480861e. 8 indexed files; 1 excluded entries; 0 unsupported; 0 failed. 8 source-linked relationships. Structural inventory only: model synthesis unavailable. Dynamic calls and external systems are not fully resolved.",
+        "knowledge": [
+          {
+            "id": "efb36354-8802-4cc4-bc51-da6179417329-integer-cents",
+            "title": "Money uses integer cents",
+            "content": "Use integer cents; never floating-point money. Empty orders return zero.",
+            "scope": "*",
+            "version": 2,
+            "updated_at": "2026-11-14T01:59:42.563767+00:00"
+          }
+        ],
+        "context_hash": "66e8b92ef99fa6f9c5dcbb8b1e78eea9212263be883c134057a8380bfb294101",
+        "latency_ms": 0.964,
+        "repo_id": "efb36354-8802-4cc4-bc51-da6179417329"
+      },
+      "provider": {
+        "model": "reviewed sample fixture",
+        "mode": "offline sample",
+        "usage": null,
+        "latency": 0,
+        "routing_reason": "Explicit bundled sample scenario only"
+      },
+      "candidate_diff": "diff --git a/pricing.py b/pricing.py\nindex 2366e6e..d05c242 100644\n--- a/pricing.py\n+++ b/pricing.py\n@@ -1,3 +1,3 @@\n def total(items, tax_rate):\n-    subtotal = sum(item[\"price_cents\"] for item in items)\n+    subtotal = sum(item[\"price_cents\"] * item.get(\"quantity\", 1) for item in items)\n     return subtotal + subtotal * tax_rate // 100\ndiff --git a/tests/test_quote.py b/tests/test_quote.py\nindex 1773cbf..c37d998 100644\n--- a/tests/test_quote.py\n+++ b/tests/test_quote.py\n@@ -6,3 +6,6 @@ class QuoteTest(unittest.TestCase):\n         self.assertEqual(quote([{ \"price_cents\": 100, \"quantity\": 1}])[\"total_cents\"], 110)\n     def test_empty(self):\n         self.assertEqual(quote([])[\"total_cents\"], 0)\n+\n+    def test_quantity(self):\n+        self.assertEqual(quote([{ \"price_cents\": 100, \"quantity\": 2}])[\"total_cents\"], 220)\n",
+      "candidate_files": [
+        {
+          "path": "pricing.py",
+          "before": "def total(items, tax_rate):\n    subtotal = sum(item[\"price_cents\"] for item in items)\n    return subtotal + subtotal * tax_rate // 100\n",
+          "after": "def total(items, tax_rate):\n    subtotal = sum(item[\"price_cents\"] * item.get(\"quantity\", 1) for item in items)\n    return subtotal + subtotal * tax_rate // 100\n"
+        },
+        {
+          "path": "tests/test_quote.py",
+          "before": "import unittest\nfrom app import quote\n\nclass QuoteTest(unittest.TestCase):\n    def test_single(self):\n        self.assertEqual(quote([{ \"price_cents\": 100, \"quantity\": 1}])[\"total_cents\"], 110)\n    def test_empty(self):\n        self.assertEqual(quote([])[\"total_cents\"], 0)\n",
+          "after": "import unittest\nfrom app import quote\n\nclass QuoteTest(unittest.TestCase):\n    def test_single(self):\n        self.assertEqual(quote([{ \"price_cents\": 100, \"quantity\": 1}])[\"total_cents\"], 110)\n    def test_empty(self):\n        self.assertEqual(quote([])[\"total_cents\"], 0)\n\n    def test_quantity(self):\n        self.assertEqual(quote([{ \"price_cents\": 100, \"quantity\": 2}])[\"total_cents\"], 220)\n"
+        }
+      ],
+      "finished_at": "2026-11-14T01:59:45.445049+00:00",
+      "revision_id": "b3f74b60-ffe5-47ea-b0c5-81d367643430"
+    }
+  ],
+  "data_directory": "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\data\\restart-check\\9226b19214c4433fa69b7eadc24ce5ff"
+}

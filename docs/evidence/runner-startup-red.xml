@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="14" skipped="0" tests="14" time="2.920" timestamp="2026-11-14T05:59:11.231863+00:00" hostname="ahmed"><testcase classname="tests.test_runner_startup" name="test_occupied_tcp_port_and_failed_health_never_launches[False]" time="0.041"><failure message="Failed: Occupied port must never launch another runner">tmp_path = WindowsPath('C:/Users/ahmed/Projects/ducktape/steward/.worktrees/model-calibration/data/tests/6a230e7fc1b041d69fcdaee0b1445109')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000002B430FD7360&gt;
+embedding = False
+
+    @pytest.mark.parametrize('embedding',[False,True])
+    def test_occupied_tcp_port_and_failed_health_never_launches(tmp_path,monkeypatch,embedding):
+        with socket.socket() as listener:
+            if hasattr(socket,'SO_EXCLUSIVEADDRUSE'):
+                listener.setsockopt(socket.SOL_SOCKET,socket.SO_EXCLUSIVEADDRUSE,1)
+            listener.bind(('127.0.0.1',0));listener.listen()
+            installed=manifest(tmp_path,listener.getsockname()[1])
+            monkeypatch.setattr(providers,'configuration',lambda:{'kind':'openai','endpoint':installed['endpoint'],'model':'fixture',
+                'context_limit':8192,'embedding_endpoint':installed['endpoint'],'embedding_model':'fixture'})
+            monkeypatch.setattr(providers,'installed_runtime',lambda **kwargs:installed)
+            monkeypatch.setattr(providers,'health',lambda:{'available':False})
+            monkeypatch.setattr(providers,'request',lambda *args,**kwargs:(_ for _ in ()).throw(TimeoutError()))
+            monkeypatch.setattr(providers.subprocess,'Popen',lambda *args,**kwargs:pytest.fail('Occupied port must never launch another runner'))
+&gt;           result=providers.start_embedding_runner() if embedding else providers.start_local_runner()
+                                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_runner_startup.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+backend\providers.py:101: in start_local_runner
+    result=_launch_installed(installed)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\providers.py:84: in _launch_installed
+    subprocess.Popen([installed['executable'],'-m',installed['model_file'],'--host','127.0.0.1','--port',str(installed['port']),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+args = (['C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\model-calibration\\data\\tests\\6a230e7fc1b041d69fcdaee0...\model-calibration\\data\\tests\\6a230e7fc1b041d69fcdaee0b1445109\\model.gguf', '--host', '127.0.0.1', '--port', ...],)
+kwargs = {'stdout': &lt;_io.TextIOWrapper name='C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\model-calibration\\data...es\\model-calibration\\data\\model-runtime\\server.stderr.log' mode='a' encoding='cp1252'&gt;, 'creationflags': 134217728}
+
+&gt;   monkeypatch.setattr(providers.subprocess,'Popen',lambda *args,**kwargs:pytest.fail('Occupied port must never launch another runner'))
+                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: Occupied port must never launch another runner
+
+tests\test_runner_startup.py:45: Failed</failure></testcase><testcase classname="tests.test_runner_startup" name="test_occupied_tcp_port_and_failed_health_never_launches[True]" time="0.014"><failure message="Failed: Occupied port must never launch another runner">tmp_path = WindowsPath('C:/Users/ahmed/Projects/ducktape/steward/.worktrees/model-calibration/data/tests/b6f22a2de74f45b29c9bd1d4b82adaa5')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000002B4313BBA80&gt;
+embedding = True
+
+    @pytest.mark.parametrize('embedding',[False,True])
+    def test_occupied_tcp_port_and_failed_health_never_launches(tmp_path,monkeypatch,embedding):
+        with socket.socket() as listener:
+            if hasattr(socket,'SO_EXCLUSIVEADDRUSE'):
+                listener.setsockopt(socket.SOL_SOCKET,socket.SO_EXCLUSIVEADDRUSE,1)
+            listener.bind(('127.0.0.1',0));listener.listen()
+            installed=manifest(tmp_path,listener.getsockname()[1])
+            monkeypatch.setattr(providers,'configuration',lambda:{'kind':'openai','endpoint':installed['endpoint'],'model':'fixture',
+                'context_limit':8192,'embedding_endpoint':installed['endpoint'],'embedding_model':'fixture'})
+            monkeypatch.setattr(providers,'installed_runtime',lambda **kwargs:installed)
+            monkeypatch.setattr(providers,'health',lambda:{'available':False})
+            monkeypatch.setattr(providers,'request',lambda *args,**kwargs:(_ for _ in ()).throw(TimeoutError()))
+            monkeypatch.setattr(providers.subprocess,'Popen',lambda *args,**kwargs:pytest.fail('Occupied port must never launch another runner'))
+&gt;           result=providers.start_embedding_runner() if embedding else providers.start_local_runner()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_runner_startup.py:46: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+backend\providers.py:71: in start_embedding_runner
+    return _launch_installed(installed,embedding=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+backend\providers.py:84: in _launch_installed
+    subprocess.Popen([installed['executable'],'-m',installed['model_file'],'--host','127.0.0.1','--port',str(installed['port']),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+args = (['C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\model-calibration\\data\\tests\\b6f22a2de74f45b29c9bd1d4...\model-calibration\\data\\tests\\b6f22a2de74f45b29c9bd1d4b82adaa5\\model.gguf', '--host', '127.0.0.1', '--port', ...],)
+kwargs = {'stdout': &lt;_io.TextIOWrapper name='C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\model-calibration\\data...\model-calibration\\data\\model-runtime\\embedding.stderr.log' mode='a' encoding='cp1252'&gt;, 'creationflags': 134217728}
+
+&gt;   monkeypatch.setattr(providers.subprocess,'Popen',lambda *args,**kwargs:pytest.fail('Occupied port must never launch another runner'))
+                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: Occupied port must never launch another runner
+
+tests\test_runner_startup.py:45: Failed</failure></testcase><testcase classname="tests.test_runner_startup" name="test_startup_timeout_terminates_only_the_new_child" time="0.025"><failure message="assert (not True)">tmp_path = WindowsPath('C:/Users/ahmed/Projects/ducktape/steward/.worktrees/model-calibration/data/tests/879b4e3686fe4f98b31c9caaa5a184e6')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000002B431488DD0&gt;
+
+    def test_startup_timeout_terminates_only_the_new_child(tmp_path,monkeypatch):
+        installed=manifest(tmp_path,available_port());children=[];real_popen=subprocess.Popen
+        def launch(*args,**kwargs):
+            child=real_popen([sys.executable,'-c','import time; time.sleep(10)'],**kwargs)
+            children.append(child);return child
+        monkeypatch.setattr(providers.subprocess,'Popen',launch)
+        monkeypatch.setattr(providers,'RUNNER_BIND_TIMEOUT',0.1,raising=False)
+        try:
+            result=providers._launch_installed(installed)
+&gt;           assert not result['started'] and 'bind' in result['error'].lower()
+E           assert (not True)
+
+tests\test_runner_startup.py:60: AssertionError</failure></testcase><testcase classname="tests.test_runner_startup" name="test_child_exit_is_an_actionable_failure" time="0.020"><failure message="assert (not True)">tmp_path = WindowsPath('C:/Users/ahmed/Projects/ducktape/steward/.worktrees/model-calibration/data/tests/f23cb40a33f34961bfc7d53ad5967a56')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000002B43145C6B0&gt;
+
+    def test_child_exit_is_an_actionable_failure(tmp_path,monkeypatch):
+        installed=manifest(tmp_path,available_port());real_popen=subprocess.Popen
+        monkeypatch.setattr(providers.subprocess,'Popen',lambda *args,**kwargs:real_popen([sys.executable,'-c','raise SystemExit(17)'],**kwargs))
+        result=providers._launch_installed(installed)
+&gt;       assert not result['started'] and '17' in result['error']
+E       assert (not True)
+
+tests\test_runner_startup.py:71: AssertionError</failure></testcase><testcase classname="tests.test_runner_startup" name="test_legacy_runtime_uses_shared_startup_guard" time="0.007"><failure message="Failed: Legacy runner bypassed shared guard">tmp_path = WindowsPath('C:/Users/ahmed/Projects/ducktape/steward/.worktrees/model-calibration/data/tests/7884c5b315e94df782adbcf31aea8245')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000002B43102F570&gt;
+
+    def test_legacy_runtime_uses_shared_startup_guard(tmp_path,monkeypatch):
+        runtime=tmp_path/'data/model-runtime';(runtime/'runner').mkdir(parents=True)
+        (runtime/'runner/llama-server.exe').write_bytes(b'fixture')
+        monkeypatch.setattr(providers,'__file__',str(tmp_path/'backend/providers.py'))
+        monkeypatch.setattr(providers,'configuration',lambda:{'endpoint':'http://127.0.0.1:11435/v1','model':'legacy-fixture'})
+        monkeypatch.setattr(providers,'installed_runtime',lambda:None)
+        monkeypatch.setattr(providers,'health',lambda:{'available':False})
+        calls=[]
+        monkeypatch.setattr(providers,'_start_runner',lambda *args,**kwargs:(calls.append((args,kwargs)) or {'started':False,'error':'fixture startup blocked'}),raising=False)
+        monkeypatch.setattr(providers.subprocess,'Popen',lambda *args,**kwargs:pytest.fail('Legacy runner bypassed shared guard'))
+&gt;       result=providers.start_local_runner()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_runner_startup.py:84: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+backend\providers.py:112: in start_local_runner
+    subprocess.Popen([str(executable),'-m',str(root/model_file),'--host','127.0.0.1','--port','11435','-c','8192','-t','4','--alias',config['model']],stdout=out,stderr=err,creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+args = (['C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\model-calibration\\data\\tests\\7884c5b315e94df782adbcf3...\\7884c5b315e94df782adbcf31aea8245\\data\\model-runtime\\qwen-coder-0.5b.gguf', '--host', '127.0.0.1', '--port', ...],)
+kwargs = {'stdout': &lt;_io.TextIOWrapper name='C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\model-calibration\\data...94df782adbcf31aea8245\\data\\model-runtime\\server.stderr.log' mode='a' encoding='cp1252'&gt;, 'creationflags': 134217728}
+
+&gt;   monkeypatch.setattr(providers.subprocess,'Popen',lambda *args,**kwargs:pytest.fail('Legacy runner bypassed shared guard'))
+                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: Legacy runner bypassed shared guard
+
+tests\test_runner_startup.py:83: Failed</failure></testcase><testcase classname="tests.test_runner_startup" name="test_concurrent_processes_launch_only_one_delayed_listener" time="1.737"><failure message="AssertionError: [{'started': True}, {'started': True}]&#10;assert 2 == 1&#10; +  where 2 = sum(&lt;generator object test_concurrent_processes_launch_only_one_delayed_listener.&lt;locals&gt;.&lt;genexpr&gt; at 0x000002B4314FE810&gt;)">tmp_path = WindowsPath('C:/Users/ahmed/Projects/ducktape/steward/.worktrees/model-calibration/data/tests/2826096664b24d0d969245d671ff51dc')
+
+    def test_concurrent_processes_launch_only_one_delayed_listener(tmp_path):
+        installed=manifest(tmp_path,available_port());(tmp_path/'manifest.json').write_text(json.dumps(installed))
+        helper=tmp_path/'startup_probe.py'
+        helper.write_text('''import json,os,socket,subprocess,sys,time
+    from pathlib import Path
+    from backend import providers
+    root=Path(sys.argv[1]);tag=sys.argv[2]
+    installed=json.loads((root/'manifest.json').read_text())
+    real_popen=subprocess.Popen
+    child_code="""import os,socket,sys,time
+    from pathlib import Path
+    root=Path(sys.argv[1]);port=int(sys.argv[2])
+    with (root/'spawned.txt').open('a') as stream:stream.write(str(os.getpid())+'\\n')
+    time.sleep(0.6)
+    s=socket.socket()
+    if hasattr(socket,'SO_EXCLUSIVEADDRUSE'):s.setsockopt(socket.SOL_SOCKET,socket.SO_EXCLUSIVEADDRUSE,1)
+    s.bind(('127.0.0.1',port));s.listen()
+    deadline=time.monotonic()+15
+    while not (root/'stop').exists() and time.monotonic()&lt;deadline:time.sleep(0.05)
+    s.close()
+    """
+    def spawn(*args,**kwargs):
+        return real_popen([sys.executable,'-c',child_code,str(root),str(installed['port'])],**kwargs)
+    providers.subprocess.Popen=spawn
+    (root/('ready-'+tag)).touch()
+    while not (root/'go').exists():time.sleep(0.01)
+    print(json.dumps(providers._launch_installed(installed)),flush=True)
+    ''')
+        processes=[]
+        env={**os.environ,'PYTHONPATH':str(Path(__file__).resolve().parents[1])}
+        try:
+            for name in ('one','two'):
+                processes.append(subprocess.Popen([sys.executable,str(helper),str(tmp_path),name],stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,env=env,creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0)))
+            until=time.monotonic()+10
+            while not all((tmp_path/('ready-'+tag)).exists() for tag in ('one','two')) and time.monotonic()&lt;until:time.sleep(0.02)
+            assert all((tmp_path/('ready-'+tag)).exists() for tag in ('one','two'))
+            (tmp_path/'go').touch()
+            results=[]
+            for process in processes:
+                out,err=process.communicate(timeout=10)
+                assert process.returncode==0,err
+                results.append(json.loads(out))
+            time.sleep(0.8)
+&gt;           assert sum(result['started'] for result in results)==1,results
+E           AssertionError: [{'started': True}, {'started': True}]
+E           assert 2 == 1
+E            +  where 2 = sum(&lt;generator object test_concurrent_processes_launch_only_one_delayed_listener.&lt;locals&gt;.&lt;genexpr&gt; at 0x000002B4314FE810&gt;)
+
+tests\test_runner_startup.py:132: AssertionError</failure></testcase><testcase classname="tests.test_runner_startup" name="test_manifest_rejects_unrecognized_reasoning[other]" time="0.032"><failure message="AssertionError: assert {'executable': 'C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\model-calibration\\data\\tests\\225d829dcc9...del.gguf', 'port': 62422, 'executable_sha256': 'f80ce3b0bebe55837801f595d63a22e90ff40d5f0b565d25e4afd7206d00fa6b', ...} is None&#10;[+2 more lines; full report in element text]">tmp_path = WindowsPath('C:/Users/ahmed/Projects/ducktape/steward/.worktrees/model-calibration/data/tests/225d829dcc924faaaf9df88ea39fafc6')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000002B4313D1C50&gt;
+reasoning = 'other'
+
+    @pytest.mark.parametrize('reasoning',['other',['off'],'off --port 9999',False])
+    def test_manifest_rejects_unrecognized_reasoning(tmp_path,monkeypatch,reasoning):
+        installed=manifest(tmp_path,available_port());installed['reasoning']=reasoning
+        runtime=tmp_path/'data/model-runtime';runtime.mkdir(parents=True)
+        (runtime/'installed.json').write_text(json.dumps(installed))
+        monkeypatch.setattr(providers,'__file__',str(tmp_path/'backend/providers.py'))
+&gt;       assert providers.installed_runtime() is None
+E       AssertionError: assert {'executable': 'C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\model-calibration\\data\\tests\\225d829dcc9...del.gguf', 'port': 62422, 'executable_sha256': 'f80ce3b0bebe55837801f595d63a22e90ff40d5f0b565d25e4afd7206d00fa6b', ...} is None
+E        +  where {'executable': 'C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\model-calibration\\data\\tests\\225d829dcc9...del.gguf', 'port': 62422, 'executable_sha256': 'f80ce3b0bebe55837801f595d63a22e90ff40d5f0b565d25e4afd7206d00fa6b', ...} = &lt;function installed_runtime at 0x000002B4310D2DE0&gt;()
+E        +    where &lt;function installed_runtime at 0x000002B4310D2DE0&gt; = providers.installed_runtime
+
+tests\test_runner_startup.py:147: AssertionError</failure></testcase><testcase classname="tests.test_runner_startup" name="test_manifest_rejects_unrecognized_reasoning[reasoning1]" time="0.031"><failure message="AssertionError: assert {'executable': 'C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\model-calibration\\data\\tests\\1e271fca624...del.gguf', 'port': 62423, 'executable_sha256': 'f80ce3b0bebe55837801f595d63a22e90ff40d5f0b565d25e4afd7206d00fa6b', ...} is None&#10;[+2 more lines; full report in element text]">tmp_path = WindowsPath('C:/Users/ahmed/Projects/ducktape/steward/.worktrees/model-calibration/data/tests/1e271fca624a4947a3e95a19877e11cb')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000002B4313D2350&gt;
+reasoning = ['off']
+
+    @pytest.mark.parametrize('reasoning',['other',['off'],'off --port 9999',False])
+    def test_manifest_rejects_unrecognized_reasoning(tmp_path,monkeypatch,reasoning):
+        installed=manifest(tmp_path,available_port());installed['reasoning']=reasoning
+        runtime=tmp_path/'data/model-runtime';runtime.mkdir(parents=True)
+        (runtime/'installed.json').write_text(json.dumps(installed))
+        monkeypatch.setattr(providers,'__file__',str(tmp_path/'backend/providers.py'))
+&gt;       assert providers.installed_runtime() is None
+E       AssertionError: assert {'executable': 'C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\model-calibration\\data\\tests\\1e271fca624...del.gguf', 'port': 62423, 'executable_sha256': 'f80ce3b0bebe55837801f595d63a22e90ff40d5f0b565d25e4afd7206d00fa6b', ...} is None
+E        +  where {'executable': 'C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\model-calibration\\data\\tests\\1e271fca624...del.gguf', 'port': 62423, 'executable_sha256': 'f80ce3b0bebe55837801f595d63a22e90ff40d5f0b565d25e4afd7206d00fa6b', ...} = &lt;function installed_runtime at 0x000002B4310D2DE0&gt;()
+E        +    where &lt;function installed_runtime at 0x000002B4310D2DE0&gt; = providers.installed_runtime
+
+tests\test_runner_startup.py:147: AssertionError</failure></testcase><testcase classname="tests.test_runner_startup" name="test_manifest_rejects_unrecognized_reasoning[off --port 9999]" time="0.025"><failure message="AssertionError: assert {'executable': 'C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\model-calibration\\data\\tests\\aff680824c9...del.gguf', 'port': 62424, 'executable_sha256': 'f80ce3b0bebe55837801f595d63a22e90ff40d5f0b565d25e4afd7206d00fa6b', ...} is None&#10;[+2 more lines; full report in element text]">tmp_path = WindowsPath('C:/Users/ahmed/Projects/ducktape/steward/.worktrees/model-calibration/data/tests/aff680824c904ae4a15c7a31f2b836b8')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000002B4314A2E40&gt;
+reasoning = 'off --port 9999'
+
+    @pytest.mark.parametrize('reasoning',['other',['off'],'off --port 9999',False])
+    def test_manifest_rejects_unrecognized_reasoning(tmp_path,monkeypatch,reasoning):
+        installed=manifest(tmp_path,available_port());installed['reasoning']=reasoning
+        runtime=tmp_path/'data/model-runtime';runtime.mkdir(parents=True)
+        (runtime/'installed.json').write_text(json.dumps(installed))
+        monkeypatch.setattr(providers,'__file__',str(tmp_path/'backend/providers.py'))
+&gt;       assert providers.installed_runtime() is None
+E       AssertionError: assert {'executable': 'C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\model-calibration\\data\\tests\\aff680824c9...del.gguf', 'port': 62424, 'executable_sha256': 'f80ce3b0bebe55837801f595d63a22e90ff40d5f0b565d25e4afd7206d00fa6b', ...} is None
+E        +  where {'executable': 'C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\model-calibration\\data\\tests\\aff680824c9...del.gguf', 'port': 62424, 'executable_sha256': 'f80ce3b0bebe55837801f595d63a22e90ff40d5f0b565d25e4afd7206d00fa6b', ...} = &lt;function installed_runtime at 0x000002B4310D2DE0&gt;()
+E        +    where &lt;function installed_runtime at 0x000002B4310D2DE0&gt; = providers.installed_runtime
+
+tests\test_runner_startup.py:147: AssertionError</failure></testcase><testcase classname="tests.test_runner_startup" name="test_manifest_rejects_unrecognized_reasoning[False]" time="0.024"><failure message="AssertionError: assert {'executable': 'C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\model-calibration\\data\\tests\\49f8c82377a...del.gguf', 'port': 62425, 'executable_sha256': 'f80ce3b0bebe55837801f595d63a22e90ff40d5f0b565d25e4afd7206d00fa6b', ...} is None&#10;[+2 more lines; full report in element text]">tmp_path = WindowsPath('C:/Users/ahmed/Projects/ducktape/steward/.worktrees/model-calibration/data/tests/49f8c82377a549e6981f5fde0872fa3a')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000002B4314A36B0&gt;
+reasoning = False
+
+    @pytest.mark.parametrize('reasoning',['other',['off'],'off --port 9999',False])
+    def test_manifest_rejects_unrecognized_reasoning(tmp_path,monkeypatch,reasoning):
+        installed=manifest(tmp_path,available_port());installed['reasoning']=reasoning
+        runtime=tmp_path/'data/model-runtime';runtime.mkdir(parents=True)
+        (runtime/'installed.json').write_text(json.dumps(installed))
+        monkeypatch.setattr(providers,'__file__',str(tmp_path/'backend/providers.py'))
+&gt;       assert providers.installed_runtime() is None
+E       AssertionError: assert {'executable': 'C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\model-calibration\\data\\tests\\49f8c82377a...del.gguf', 'port': 62425, 'executable_sha256': 'f80ce3b0bebe55837801f595d63a22e90ff40d5f0b565d25e4afd7206d00fa6b', ...} is None
+E        +  where {'executable': 'C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\model-calibration\\data\\tests\\49f8c82377a...del.gguf', 'port': 62425, 'executable_sha256': 'f80ce3b0bebe55837801f595d63a22e90ff40d5f0b565d25e4afd7206d00fa6b', ...} = &lt;function installed_runtime at 0x000002B4310D2DE0&gt;()
+E        +    where &lt;function installed_runtime at 0x000002B4310D2DE0&gt; = providers.installed_runtime
+
+tests\test_runner_startup.py:147: AssertionError</failure></testcase><testcase classname="tests.test_runner_startup" name="test_manifest_reasoning_flag_reaches_coding_only[off]" time="0.027"><failure message="Failed: Launcher guard must own process creation">tmp_path = WindowsPath('C:/Users/ahmed/Projects/ducktape/steward/.worktrees/model-calibration/data/tests/6cb9181bca6b41bdb42f942dc246806f')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000002B4314675B0&gt;
+reasoning = 'off'
+
+    @pytest.mark.parametrize('reasoning',['off','on','auto',None])
+    def test_manifest_reasoning_flag_reaches_coding_only(tmp_path,monkeypatch,reasoning):
+        installed=manifest(tmp_path,available_port())
+        if reasoning is not None:installed['reasoning']=reasoning
+        runtime=tmp_path/'data/model-runtime';runtime.mkdir(parents=True)
+        (runtime/'installed.json').write_text(json.dumps(installed))
+        monkeypatch.setattr(providers,'__file__',str(tmp_path/'backend/providers.py'))
+        assert providers.installed_runtime()==installed
+        calls=[]
+        monkeypatch.setattr(providers,'_start_runner',lambda argv,*args:(calls.append(argv) or {'started':True}),raising=False)
+        monkeypatch.setattr(providers.subprocess,'Popen',lambda *args,**kwargs:pytest.fail('Launcher guard must own process creation'))
+&gt;       providers._launch_installed(installed)
+
+tests\test_runner_startup.py:161: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+backend\providers.py:84: in _launch_installed
+    subprocess.Popen([installed['executable'],'-m',installed['model_file'],'--host','127.0.0.1','--port',str(installed['port']),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+args = (['C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\model-calibration\\data\\tests\\6cb9181bca6b41bdb42f942d...\model-calibration\\data\\tests\\6cb9181bca6b41bdb42f942dc246806f\\model.gguf', '--host', '127.0.0.1', '--port', ...],)
+kwargs = {'stdout': &lt;_io.TextIOWrapper name='C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\model-calibration\\data...b41bdb42f942dc246806f\\data\\model-runtime\\server.stderr.log' mode='a' encoding='cp1252'&gt;, 'creationflags': 134217728}
+
+&gt;   monkeypatch.setattr(providers.subprocess,'Popen',lambda *args,**kwargs:pytest.fail('Launcher guard must own process creation'))
+                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: Launcher guard must own process creation
+
+tests\test_runner_startup.py:160: Failed</failure></testcase><testcase classname="tests.test_runner_startup" name="test_manifest_reasoning_flag_reaches_coding_only[on]" time="0.024"><failure message="Failed: Launcher guard must own process creation">tmp_path = WindowsPath('C:/Users/ahmed/Projects/ducktape/steward/.worktrees/model-calibration/data/tests/8f8e78c0d11949cb8035dd85aeefec31')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000002B4314667B0&gt;
+reasoning = 'on'
+
+    @pytest.mark.parametrize('reasoning',['off','on','auto',None])
+    def test_manifest_reasoning_flag_reaches_coding_only(tmp_path,monkeypatch,reasoning):
+        installed=manifest(tmp_path,available_port())
+        if reasoning is not None:installed['reasoning']=reasoning
+        runtime=tmp_path/'data/model-runtime';runtime.mkdir(parents=True)
+        (runtime/'installed.json').write_text(json.dumps(installed))
+        monkeypatch.setattr(providers,'__file__',str(tmp_path/'backend/providers.py'))
+        assert providers.installed_runtime()==installed
+        calls=[]
+        monkeypatch.setattr(providers,'_start_runner',lambda argv,*args:(calls.append(argv) or {'started':True}),raising=False)
+        monkeypatch.setattr(providers.subprocess,'Popen',lambda *args,**kwargs:pytest.fail('Launcher guard must own process creation'))
+&gt;       providers._launch_installed(installed)
+
+tests\test_runner_startup.py:161: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+backend\providers.py:84: in _launch_installed
+    subprocess.Popen([installed['executable'],'-m',installed['model_file'],'--host','127.0.0.1','--port',str(installed['port']),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+args = (['C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\model-calibration\\data\\tests\\8f8e78c0d11949cb8035dd85...\model-calibration\\data\\tests\\8f8e78c0d11949cb8035dd85aeefec31\\model.gguf', '--host', '127.0.0.1', '--port', ...],)
+kwargs = {'stdout': &lt;_io.TextIOWrapper name='C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\model-calibration\\data...949cb8035dd85aeefec31\\data\\model-runtime\\server.stderr.log' mode='a' encoding='cp1252'&gt;, 'creationflags': 134217728}
+
+&gt;   monkeypatch.setattr(providers.subprocess,'Popen',lambda *args,**kwargs:pytest.fail('Launcher guard must own process creation'))
+                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: Launcher guard must own process creation
+
+tests\test_runner_startup.py:160: Failed</failure></testcase><testcase classname="tests.test_runner_startup" name="test_manifest_reasoning_flag_reaches_coding_only[auto]" time="0.036"><failure message="Failed: Launcher guard must own process creation">tmp_path = WindowsPath('C:/Users/ahmed/Projects/ducktape/steward/.worktrees/model-calibration/data/tests/55b1e448867143f78458c78c383341a0')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000002B43142BA00&gt;
+reasoning = 'auto'
+
+    @pytest.mark.parametrize('reasoning',['off','on','auto',None])
+    def test_manifest_reasoning_flag_reaches_coding_only(tmp_path,monkeypatch,reasoning):
+        installed=manifest(tmp_path,available_port())
+        if reasoning is not None:installed['reasoning']=reasoning
+        runtime=tmp_path/'data/model-runtime';runtime.mkdir(parents=True)
+        (runtime/'installed.json').write_text(json.dumps(installed))
+        monkeypatch.setattr(providers,'__file__',str(tmp_path/'backend/providers.py'))
+        assert providers.installed_runtime()==installed
+        calls=[]
+        monkeypatch.setattr(providers,'_start_runner',lambda argv,*args:(calls.append(argv) or {'started':True}),raising=False)
+        monkeypatch.setattr(providers.subprocess,'Popen',lambda *args,**kwargs:pytest.fail('Launcher guard must own process creation'))
+&gt;       providers._launch_installed(installed)
+
+tests\test_runner_startup.py:161: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+backend\providers.py:84: in _launch_installed
+    subprocess.Popen([installed['executable'],'-m',installed['model_file'],'--host','127.0.0.1','--port',str(installed['port']),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+args = (['C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\model-calibration\\data\\tests\\55b1e448867143f78458c78c...\model-calibration\\data\\tests\\55b1e448867143f78458c78c383341a0\\model.gguf', '--host', '127.0.0.1', '--port', ...],)
+kwargs = {'stdout': &lt;_io.TextIOWrapper name='C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\model-calibration\\data...143f78458c78c383341a0\\data\\model-runtime\\server.stderr.log' mode='a' encoding='cp1252'&gt;, 'creationflags': 134217728}
+
+&gt;   monkeypatch.setattr(providers.subprocess,'Popen',lambda *args,**kwargs:pytest.fail('Launcher guard must own process creation'))
+                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: Launcher guard must own process creation
+
+tests\test_runner_startup.py:160: Failed</failure></testcase><testcase classname="tests.test_runner_startup" name="test_manifest_reasoning_flag_reaches_coding_only[None]" time="0.035"><failure message="Failed: Launcher guard must own process creation">tmp_path = WindowsPath('C:/Users/ahmed/Projects/ducktape/steward/.worktrees/model-calibration/data/tests/aa6b67329b8942c6ae2ac09dc978358a')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x000002B4313831D0&gt;
+reasoning = None
+
+    @pytest.mark.parametrize('reasoning',['off','on','auto',None])
+    def test_manifest_reasoning_flag_reaches_coding_only(tmp_path,monkeypatch,reasoning):
+        installed=manifest(tmp_path,available_port())
+        if reasoning is not None:installed['reasoning']=reasoning
+        runtime=tmp_path/'data/model-runtime';runtime.mkdir(parents=True)
+        (runtime/'installed.json').write_text(json.dumps(installed))
+        monkeypatch.setattr(providers,'__file__',str(tmp_path/'backend/providers.py'))
+        assert providers.installed_runtime()==installed
+        calls=[]
+        monkeypatch.setattr(providers,'_start_runner',lambda argv,*args:(calls.append(argv) or {'started':True}),raising=False)
+        monkeypatch.setattr(providers.subprocess,'Popen',lambda *args,**kwargs:pytest.fail('Launcher guard must own process creation'))
+&gt;       providers._launch_installed(installed)
+
+tests\test_runner_startup.py:161: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+backend\providers.py:84: in _launch_installed
+    subprocess.Popen([installed['executable'],'-m',installed['model_file'],'--host','127.0.0.1','--port',str(installed['port']),
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+args = (['C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\model-calibration\\data\\tests\\aa6b67329b8942c6ae2ac09d...\model-calibration\\data\\tests\\aa6b67329b8942c6ae2ac09dc978358a\\model.gguf', '--host', '127.0.0.1', '--port', ...],)
+kwargs = {'stdout': &lt;_io.TextIOWrapper name='C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\model-calibration\\data...942c6ae2ac09dc978358a\\data\\model-runtime\\server.stderr.log' mode='a' encoding='cp1252'&gt;, 'creationflags': 134217728}
+
+&gt;   monkeypatch.setattr(providers.subprocess,'Popen',lambda *args,**kwargs:pytest.fail('Launcher guard must own process creation'))
+                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: Launcher guard must own process creation
+
+tests\test_runner_startup.py:160: Failed</failure></testcase></testsuite></testsuites>

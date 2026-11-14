@@ -1,0 +1,279 @@
+{
+  "kind": "provider_schema_smoke",
+  "qualified": false,
+  "note": "Schema/edit/review smoke is not the 12-task application qualification gate.",
+  "attempts": [
+    {
+      "task": "investigation",
+      "expected_approval": null,
+      "passed": true,
+      "output": {
+        "summary": "The function `greet` returns the string 'Hello world'.",
+        "evidence": [
+          {
+            "path": "greeting.py",
+            "start_line": 1,
+            "end_line": 3
+          }
+        ],
+        "missing": []
+      },
+      "telemetry": {
+        "model": "qwen-coder-1.5b",
+        "role": "investigation",
+        "routing_reason": "investigation; risk=low; context=132 bytes; scope=unspecified; previous_failures=0",
+        "latency": 4.465940100024454,
+        "usage": {
+          "input_tokens": 266,
+          "output_tokens": 68
+        },
+        "attempts": 1,
+        "attempt_log": [
+          {
+            "attempt": 1,
+            "model": "qwen-coder-1.5b",
+            "usage": {
+              "input_tokens": 266,
+              "output_tokens": 68
+            },
+            "latency": 4.465805399930105,
+            "error": null
+          }
+        ],
+        "cached": false,
+        "mode": "live",
+        "input_token_upper_bound": 1066,
+        "output_reservation": 1024
+      }
+    },
+    {
+      "task": "planning",
+      "expected_approval": null,
+      "passed": true,
+      "output": {
+        "steps": [
+          {
+            "description": "Identify the file and line where the greet() function is defined.",
+            "paths": [
+              "greeting.py",
+              "def greet():"
+            ]
+          },
+          {
+            "description": "Replace the return statement in the greet() function with 'return \"Hello Steward\"'.",
+            "paths": [
+              "greeting.py",
+              "return \"Hello world\""
+            ]
+          }
+        ],
+        "acceptance": [
+          "The greet() function now returns 'Hello Steward'.",
+          "The code changes are reflected in the file."
+        ]
+      },
+      "telemetry": {
+        "model": "qwen-coder-1.5b",
+        "role": "planning",
+        "routing_reason": "planning; risk=low; context=143 bytes; scope=unspecified; previous_failures=0",
+        "latency": 7.734381399932317,
+        "usage": {
+          "input_tokens": 474,
+          "output_tokens": 128
+        },
+        "attempts": 1,
+        "attempt_log": [
+          {
+            "attempt": 1,
+            "model": "qwen-coder-1.5b",
+            "usage": {
+              "input_tokens": 474,
+              "output_tokens": 128
+            },
+            "latency": 7.7341548999538645,
+            "error": null
+          }
+        ],
+        "cached": false,
+        "mode": "live",
+        "input_token_upper_bound": 1907,
+        "output_reservation": 1024
+      }
+    },
+    {
+      "task": "implementation",
+      "expected_approval": null,
+      "passed": true,
+      "output": {
+        "edits": [
+          {
+            "op": "update",
+            "path": "greeting.py",
+            "expected_hash": "af035e85c51a2ed583e4e2c1e4e2bcedce14685f13212626e2aa2e7ef84de03e",
+            "destination": "greeting.py",
+            "content": "def greet():\n    return \"Hello Steward\"\n",
+            "replacements": [],
+            "complete_file": true
+          }
+        ],
+        "explanation": "The greet() function is updated to return 'Hello Steward' while preserving its signature. The content of the file is updated to reflect this change."
+      },
+      "telemetry": {
+        "model": "qwen-coder-1.5b",
+        "role": "implementation",
+        "routing_reason": "implementation; risk=low; context=261 bytes; scope=unspecified; previous_failures=0",
+        "latency": 11.216432400047779,
+        "usage": {
+          "input_tokens": 679,
+          "output_tokens": 175
+        },
+        "attempts": 1,
+        "attempt_log": [
+          {
+            "attempt": 1,
+            "model": "qwen-coder-1.5b",
+            "usage": {
+              "input_tokens": 679,
+              "output_tokens": 175
+            },
+            "latency": 11.21614989999216,
+            "error": null
+          }
+        ],
+        "cached": false,
+        "mode": "live",
+        "input_token_upper_bound": 2634,
+        "output_reservation": 1024
+      }
+    },
+    {
+      "task": "review",
+      "expected_approval": true,
+      "passed": false,
+      "output": {
+        "approved": false,
+        "findings": [
+          {
+            "message": "The function `greet` is expected to be a no-argument function, but it returns a string.",
+            "reference": {
+              "path": "greeting.py",
+              "start_line": 1,
+              "end_line": 2
+            }
+          }
+        ]
+      },
+      "telemetry": {
+        "model": "qwen-coder-1.5b",
+        "role": "review",
+        "routing_reason": "review; risk=low; context=226 bytes; scope=unspecified; previous_failures=0",
+        "latency": 5.63659040001221,
+        "usage": {
+          "input_tokens": 331,
+          "output_tokens": 84
+        },
+        "attempts": 1,
+        "attempt_log": [
+          {
+            "attempt": 1,
+            "model": "qwen-coder-1.5b",
+            "usage": {
+              "input_tokens": 331,
+              "output_tokens": 84
+            },
+            "latency": 5.636402799980715,
+            "error": null
+          }
+        ],
+        "cached": false,
+        "mode": "live",
+        "input_token_upper_bound": 1489,
+        "output_reservation": 1024
+      }
+    },
+    {
+      "task": "review",
+      "expected_approval": false,
+      "passed": true,
+      "output": {
+        "approved": false,
+        "findings": [
+          {
+            "message": "The proposed code does not match the job description.",
+            "reference": {
+              "path": "greeting.py",
+              "start_line": 1,
+              "end_line": 3
+            }
+          }
+        ]
+      },
+      "telemetry": {
+        "model": "qwen-coder-1.5b",
+        "role": "review",
+        "routing_reason": "review; risk=low; context=186 bytes; scope=unspecified; previous_failures=0",
+        "latency": 4.06525009998586,
+        "usage": {
+          "input_tokens": 323,
+          "output_tokens": 72
+        },
+        "attempts": 1,
+        "attempt_log": [
+          {
+            "attempt": 1,
+            "model": "qwen-coder-1.5b",
+            "usage": {
+              "input_tokens": 323,
+              "output_tokens": 72
+            },
+            "latency": 4.065091200056486,
+            "error": null
+          }
+        ],
+        "cached": false,
+        "mode": "live",
+        "input_token_upper_bound": 1449,
+        "output_reservation": 1024
+      }
+    }
+  ],
+  "recorded_at": "2026-11-14T02:51:03.921679+00:00",
+  "configuration": {
+    "investigation": {
+      "role": "investigation",
+      "model": "qwen-coder-1.5b",
+      "context_limit": 8192,
+      "max_output_tokens": 4096,
+      "structured_output": true,
+      "schema_version": "steward-schema-1",
+      "qualification": "unqualified"
+    },
+    "planning": {
+      "role": "planning",
+      "model": "qwen-coder-1.5b",
+      "context_limit": 8192,
+      "max_output_tokens": 4096,
+      "structured_output": true,
+      "schema_version": "steward-schema-1",
+      "qualification": "unqualified"
+    },
+    "implementation": {
+      "role": "implementation",
+      "model": "qwen-coder-1.5b",
+      "context_limit": 8192,
+      "max_output_tokens": 4096,
+      "structured_output": true,
+      "schema_version": "steward-schema-1",
+      "qualification": "unqualified"
+    },
+    "review": {
+      "role": "review",
+      "model": "qwen-coder-1.5b",
+      "context_limit": 8192,
+      "max_output_tokens": 4096,
+      "structured_output": true,
+      "schema_version": "steward-schema-1",
+      "qualification": "unqualified"
+    }
+  }
+}

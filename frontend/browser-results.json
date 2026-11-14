@@ -1,0 +1,21 @@
+{
+  "at": "2026-11-14T03:16:39.360Z",
+  "repo": "7a555924-8d60-47e4-bbd5-c6468a28afaa",
+  "checks": [
+    "desktop rendering",
+    "approve-first ticket",
+    "real Git diff",
+    "failing-before/passing-after regression",
+    "captured immutable context",
+    "team note isolation",
+    "checked revision 2",
+    "exact revision approval and managed apply",
+    "feature decision resumes",
+    "evidence-linked repository answer",
+    "research intake",
+    "knowledge promotion",
+    "720px responsive layout",
+    "dark theme",
+    "no browser runtime errors"
+  ]
+}

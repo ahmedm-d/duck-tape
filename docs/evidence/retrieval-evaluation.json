@@ -1,0 +1,497 @@
+{
+  "fixture": "reviewed Python Parcel sample plus fixed TS module chain; labels defined independently of retrieval",
+  "snapshot": "16e2ed4055c3cc388a96ce664b99f03c6ccf731815bd5d92c9e7374515cf56a3",
+  "results": [
+    {
+      "query": "quote",
+      "requested_mode": "keyword",
+      "mode": "keyword only",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "app.py",
+          4,
+          5
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "tests/test_quote.py",
+          4,
+          8
+        ]
+      ],
+      "found_ranges": [
+        [
+          "tests/test_quote.py",
+          1,
+          8
+        ],
+        [
+          "app.py",
+          4,
+          5
+        ],
+        [
+          "ts/api.ts",
+          2,
+          2
+        ],
+        [
+          "README.md",
+          1,
+          5
+        ]
+      ],
+      "file_recall": 0.5,
+      "file_precision": 0.5,
+      "range_recall": 0.5,
+      "range_precision": 0.5,
+      "context_bytes": 4409,
+      "token_upper_bound": 4534,
+      "latency_ms": 20.268,
+      "model_usage": null
+    },
+    {
+      "query": "quote",
+      "requested_mode": "graph",
+      "mode": "keyword + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "app.py",
+          4,
+          5
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "tests/test_quote.py",
+          4,
+          8
+        ]
+      ],
+      "found_ranges": [
+        [
+          "tests/test_quote.py",
+          1,
+          8
+        ],
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "ts/api.ts",
+          2,
+          2
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "README.md",
+          1,
+          5
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ],
+        [
+          "requirements.lock",
+          1,
+          2
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.5,
+      "range_recall": 1.0,
+      "range_precision": 0.5,
+      "context_bytes": 7887,
+      "token_upper_bound": 8005,
+      "latency_ms": 5.548,
+      "model_usage": null
+    },
+    {
+      "query": "quote",
+      "requested_mode": "semantic",
+      "status": "unavailable",
+      "reason": "No actual embedding model configured",
+      "model_usage": null
+    },
+    {
+      "query": "unique_labels",
+      "requested_mode": "keyword",
+      "mode": "keyword only",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "search.py",
+          1,
+          6
+        ],
+        [
+          "tests/test_search.py",
+          4,
+          6
+        ]
+      ],
+      "found_ranges": [
+        [
+          "search.py",
+          1,
+          6
+        ],
+        [
+          "tests/test_search.py",
+          1,
+          6
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 1.0,
+      "range_recall": 1.0,
+      "range_precision": 1.0,
+      "context_bytes": 2683,
+      "token_upper_bound": 2813,
+      "latency_ms": 6.361,
+      "model_usage": null
+    },
+    {
+      "query": "unique_labels",
+      "requested_mode": "graph",
+      "mode": "keyword + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "search.py",
+          1,
+          6
+        ],
+        [
+          "tests/test_search.py",
+          4,
+          6
+        ]
+      ],
+      "found_ranges": [
+        [
+          "search.py",
+          1,
+          6
+        ],
+        [
+          "tests/test_search.py",
+          1,
+          6
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "requirements.lock",
+          1,
+          2
+        ],
+        [
+          "README.md",
+          1,
+          5
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.3333333333333333,
+      "range_recall": 1.0,
+      "range_precision": 0.3333333333333333,
+      "context_bytes": 5980,
+      "token_upper_bound": 6103,
+      "latency_ms": 4.82,
+      "model_usage": null
+    },
+    {
+      "query": "unique_labels",
+      "requested_mode": "semantic",
+      "status": "unavailable",
+      "reason": "No actual embedding model configured",
+      "model_usage": null
+    },
+    {
+      "query": "MAX_ITEMS",
+      "requested_mode": "keyword",
+      "mode": "keyword only",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "config.py",
+          2,
+          2
+        ],
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "tests/test_quote.py",
+          4,
+          8
+        ]
+      ],
+      "found_ranges": [
+        [
+          "config.py",
+          1,
+          2
+        ]
+      ],
+      "file_recall": 0.3333333333333333,
+      "file_precision": 1.0,
+      "range_recall": 0.3333333333333333,
+      "range_precision": 1.0,
+      "context_bytes": 1477,
+      "token_upper_bound": 1609,
+      "latency_ms": 6.672,
+      "model_usage": null
+    },
+    {
+      "query": "MAX_ITEMS",
+      "requested_mode": "graph",
+      "mode": "keyword + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "config.py",
+          2,
+          2
+        ],
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "tests/test_quote.py",
+          4,
+          8
+        ]
+      ],
+      "found_ranges": [
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "tests/test_quote.py",
+          1,
+          8
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ],
+        [
+          "requirements.lock",
+          1,
+          2
+        ],
+        [
+          "README.md",
+          1,
+          5
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.42857142857142855,
+      "range_recall": 1.0,
+      "range_precision": 0.42857142857142855,
+      "context_bytes": 7063,
+      "token_upper_bound": 7183,
+      "latency_ms": 4.585,
+      "model_usage": null
+    },
+    {
+      "query": "MAX_ITEMS",
+      "requested_mode": "semantic",
+      "status": "unavailable",
+      "reason": "No actual embedding model configured",
+      "model_usage": null
+    },
+    {
+      "query": "quoteTS",
+      "requested_mode": "keyword",
+      "mode": "keyword only",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "ts/api.ts",
+          1,
+          2
+        ],
+        [
+          "ts/helper.ts",
+          1,
+          2
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ],
+        [
+          "ts/api.test.ts",
+          1,
+          2
+        ]
+      ],
+      "found_ranges": [
+        [
+          "ts/api.ts",
+          2,
+          2
+        ],
+        [
+          "ts/api.test.ts",
+          1,
+          2
+        ]
+      ],
+      "file_recall": 0.5,
+      "file_precision": 1.0,
+      "range_recall": 0.25,
+      "range_precision": 1.0,
+      "context_bytes": 2400,
+      "token_upper_bound": 2530,
+      "latency_ms": 4.464,
+      "model_usage": null
+    },
+    {
+      "query": "quoteTS",
+      "requested_mode": "graph",
+      "mode": "keyword + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "ts/api.ts",
+          1,
+          2
+        ],
+        [
+          "ts/helper.ts",
+          1,
+          2
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ],
+        [
+          "ts/api.test.ts",
+          1,
+          2
+        ]
+      ],
+      "found_ranges": [
+        [
+          "ts/api.ts",
+          1,
+          2
+        ],
+        [
+          "ts/api.test.ts",
+          1,
+          2
+        ],
+        [
+          "ts/helper.ts",
+          1,
+          2
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "requirements.lock",
+          1,
+          2
+        ],
+        [
+          "README.md",
+          1,
+          5
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.5714285714285714,
+      "range_recall": 1.0,
+      "range_precision": 0.5714285714285714,
+      "context_bytes": 6684,
+      "token_upper_bound": 6804,
+      "latency_ms": 4.908,
+      "model_usage": null
+    },
+    {
+      "query": "quoteTS",
+      "requested_mode": "semantic",
+      "status": "unavailable",
+      "reason": "No actual embedding model configured",
+      "model_usage": null
+    }
+  ],
+  "task_check_success": "Not measured by retrieval benchmark; see worker acceptance tests.",
+  "usage_note": "Unknown usage is null. Unavailable semantic runs are separate from deterministic fallback measurements.",
+  "range_precision_definition": "Fraction of returned source ranges that overlap at least one independently labelled relevant range.",
+  "warning": "Small fixed tasks measure retrieval only. Precision includes extra results; no quality, task-success or latency improvement is claimed."
+}

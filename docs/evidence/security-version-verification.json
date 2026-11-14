@@ -1,0 +1,90 @@
+{
+  "id": "b7414e4ba1194bb4bdeba4b5ceda5c5a",
+  "check_id": "osv-status",
+  "phase": "advisory_after",
+  "kind": "security",
+  "required": true,
+  "status": "passed",
+  "base_snapshot": "actual-osv-before",
+  "patch_hash": "actual-version-comparison",
+  "command": "OSV version queries (before and after)",
+  "exit_code": null,
+  "queries": [
+    {
+      "phase": "before",
+      "package": {
+        "ecosystem": "npm",
+        "name": "lodash",
+        "version": "4.17.20",
+        "path": "package-lock.json"
+      },
+      "retrieved_at": "2026-11-14T04:02:57.825609+00:00",
+      "source": "https://api.osv.dev/v1/query",
+      "advisories": [
+        {
+          "id": "GHSA-29mw-wpgm-hmr9",
+          "aliases": [
+            "CVE-2020-28500"
+          ]
+        },
+        {
+          "id": "GHSA-35jh-r3h4-6jhm",
+          "aliases": [
+            "CVE-2021-23337"
+          ]
+        },
+        {
+          "id": "GHSA-r5fr-rjxr-66jc",
+          "aliases": [
+            "CVE-2026-4800"
+          ]
+        },
+        {
+          "id": "GHSA-xxjr-mmjv-4gpg",
+          "aliases": [
+            "CVE-2025-13465"
+          ]
+        }
+      ]
+    },
+    {
+      "phase": "after",
+      "package": {
+        "ecosystem": "npm",
+        "name": "lodash",
+        "version": "4.17.21",
+        "path": "package-lock.json"
+      },
+      "retrieved_at": "2026-11-14T04:02:58.164421+00:00",
+      "source": "https://api.osv.dev/v1/query",
+      "advisories": [
+        {
+          "id": "GHSA-r5fr-rjxr-66jc",
+          "aliases": [
+            "CVE-2026-4800"
+          ]
+        },
+        {
+          "id": "GHSA-xxjr-mmjv-4gpg",
+          "aliases": [
+            "CVE-2025-13465"
+          ]
+        }
+      ]
+    }
+  ],
+  "advisory_status": "not_matched_after_change",
+  "limitations": [
+    "A version match does not establish exploitability."
+  ],
+  "resolution_gaps": {
+    "before": [],
+    "after": []
+  },
+  "advisory_ids": [
+    "CVE-2021-23337",
+    "GHSA-35jh-r3h4-6jhm"
+  ],
+  "stdout": "The advisory matched the baseline and no longer matches candidate resolved versions. This is dependency-version evidence, not proof about exploitability.",
+  "duration_ms": 756
+}

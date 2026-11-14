@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "tier": "deterministic",
+  "status": "passed",
+  "recorded_at": "2026-11-14T05:07:32.757853+00:00",
+  "results": [
+    {
+      "id": "backend",
+      "tier": "deterministic",
+      "argv": [
+        "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\full-product\\.venv\\Scripts\\python.exe",
+        "-m",
+        "pytest",
+        "tests",
+        "--ignore=tests/live",
+        "-m",
+        "not live",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--junitxml=C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\full-product\\docs\\evidence\\acceptance-final\\20261114T050050Z-ac82897f\\backend.xml"
+      ],
+      "cwd": "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\full-product",
+      "required": true,
+      "status": "passed",
+      "exit_code": 0,
+      "artifacts": [
+        "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\full-product\\docs\\evidence\\acceptance-final\\20261114T050050Z-ac82897f\\backend.log",
+        "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\full-product\\docs\\evidence\\acceptance-final\\20261114T050050Z-ac82897f\\backend.xml"
+      ],
+      "counts": {
+        "total": 387,
+        "skipped": 0,
+        "failed": 0,
+        "passed": 387
+      },
+      "duration_seconds": 359.447
+    },
+    {
+      "id": "restart",
+      "tier": "deterministic",
+      "argv": [
+        "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\full-product\\.venv\\Scripts\\python.exe",
+        "scripts/check_restart.py"
+      ],
+      "cwd": "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\full-product",
+      "required": true,
+      "status": "passed",
+      "exit_code": 0,
+      "artifacts": [
+        "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\full-product\\docs\\evidence\\acceptance-final\\20261114T050050Z-ac82897f\\restart.log"
+      ],
+      "duration_seconds": 15.841
+    },
+    {
+      "id": "frontend-build",
+      "tier": "deterministic",
+      "argv": [
+        "C:\\Program Files\\nodejs\\npm.cmd",
+        "run",
+        "build"
+      ],
+      "cwd": "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\full-product\\frontend",
+      "required": true,
+      "status": "passed",
+      "exit_code": 0,
+      "artifacts": [
+        "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\full-product\\docs\\evidence\\acceptance-final\\20261114T050050Z-ac82897f\\frontend-build.log"
+      ],
+      "duration_seconds": 5.708
+    },
+    {
+      "id": "browser-fixtures",
+      "tier": "deterministic",
+      "argv": [
+        "C:\\Program Files\\nodejs\\npm.cmd",
+        "run",
+        "test:browser",
+        "--",
+        "tests/navigation.spec.ts",
+        "tests/imported-workflows.spec.ts",
+        "tests/evidence.spec.ts",
+        "tests/summaries.spec.ts",
+        "tests/settings.spec.ts",
+        "--project=chromium",
+        "--reporter=json",
+        "--output=C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\full-product\\docs\\evidence\\acceptance-final\\20261114T050050Z-ac82897f\\browser-fixtures-artifacts"
+      ],
+      "cwd": "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\full-product\\frontend",
+      "required": true,
+      "status": "passed",
+      "exit_code": 0,
+      "artifacts": [
+        "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\full-product\\docs\\evidence\\acceptance-final\\20261114T050050Z-ac82897f\\browser-fixtures.log",
+        "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\full-product\\docs\\evidence\\acceptance-final\\20261114T050050Z-ac82897f\\browser-fixtures.json"
+      ],
+      "counts": {
+        "startTime": "2026-11-14T05:07:12.498Z",
+        "duration": 20199.947,
+        "expected": 15,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "duration_seconds": 21.589
+    }
+  ],
+  "scope": "A tier pass proves only that tier. Full live release additionally requires the documented acceptance matrix and independent reviews.",
+  "capabilities": {
+    "git": {
+      "available": true,
+      "reason": "Git executable is required"
+    },
+    "frontend": {
+      "available": true,
+      "reason": "Install Node, npm and frontend dependencies; install Playwright Chromium separately"
+    }
+  },
+  "artifact_directory": "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.worktrees\\full-product\\docs\\evidence\\acceptance-final\\20261114T050050Z-ac82897f",
+  "complete": true
+}

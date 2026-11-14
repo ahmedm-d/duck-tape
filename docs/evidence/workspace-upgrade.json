@@ -1,0 +1,95 @@
+{
+  "backup": "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\data\\backups\\pre-completion-20261114",
+  "original_workspace": "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\data\\workspace",
+  "files": 530,
+  "hashes_verified": true,
+  "sqlite_integrity": "ok",
+  "preserved_record_counts": {
+    "repositories": 3,
+    "jobs": 13,
+    "notes": 4,
+    "revisions": 7,
+    "knowledge": 4
+  },
+  "status": "Upgraded, running; installed acceptance and model evaluation in progress",
+  "installed_commit": "ad9a3d46f9f5a3cbfb8c75b0e3b7b9c62e83f67d",
+  "production_source_sha256": "0730f8ad474740c65adb78c37f1605f0ca8ac6b371a45f1965d0a61e6f738408",
+  "production_files_byte_identical": 43,
+  "preserved_original_ids": 31,
+  "missing_original_ids": [],
+  "original_record_content_changes": [
+    {
+      "kind": "repositories",
+      "id": "82d0505f-ed38-409e-884b-9310a4fbf92e",
+      "changed_fields": [
+        "updated_at",
+        "index",
+        "source_snapshot_id",
+        "record_version"
+      ],
+      "operational_values": {
+        "record_version": {
+          "before": null,
+          "after": 2
+        }
+      }
+    },
+    {
+      "kind": "jobs",
+      "id": "25556c3bba57a3fe3d181619f5ed676e2f65cdaa26bfe85c2320a29d7fd62143",
+      "changed_fields": [
+        "updated_at",
+        "record_version"
+      ],
+      "operational_values": {
+        "record_version": {
+          "before": null,
+          "after": 2
+        }
+      }
+    },
+    {
+      "kind": "repositories",
+      "id": "95d510eb-1204-4c12-adad-7764474285b1",
+      "changed_fields": [
+        "updated_at",
+        "index",
+        "source_snapshot_id",
+        "record_version"
+      ],
+      "operational_values": {
+        "record_version": {
+          "before": null,
+          "after": 2
+        }
+      }
+    },
+    {
+      "kind": "repositories",
+      "id": "a8ec8723-b302-4f99-a912-067e43aa056b",
+      "changed_fields": [
+        "updated_at",
+        "index",
+        "source_snapshot_id",
+        "record_version"
+      ],
+      "operational_values": {
+        "record_version": {
+          "before": null,
+          "after": 2
+        }
+      }
+    }
+  ],
+  "url": "http://127.0.0.1:8765",
+  "launcher_pid": 24900,
+  "api_pid": 20648,
+  "model_timeout_seconds": 240,
+  "setup": "Exact locked Python/frontend dependencies installed; production build passed",
+  "health": {
+    "status": "ok",
+    "workspace": "local",
+    "worker": "running",
+    "monitoring": "running"
+  }
+}

@@ -1,0 +1,140 @@
+{
+  "recorded_at": "2026-11-14T05:11:07.621548+00:00",
+  "source_identity": {
+    "git_base": "ad9a3d46f9f5a3cbfb8c75b0e3b7b9c62e83f67d",
+    "dirty": true,
+    "files": {
+      "backend/__init__.py": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "backend/contracts.py": "525929d512c4cd0acadcb4eea0cc3daf0f9d011b8a00310d29e7d58b4ed24551",
+      "backend/db.py": "d6b8537e3d053af7fb1588c649533ed6fe0fc8a950bdbec7d3e7430cc9008c94",
+      "backend/dependencies.py": "c6d49026eea297c353b36988a385e64c48b1130c51497f7df5b8e6073b90e72c",
+      "backend/edits.py": "bf545e687daf22e515e4c41656ad6b3d9e9f4f11e0ecd3cf27a6f978a79ab3e8",
+      "backend/execution_profiles.py": "0f0973ee68496f603ecf95a14f2fb978ddfcefc4030c50ac621c60b7b678b010",
+      "backend/git_transport.py": "abd636c05104738f3f732bde06c2812f853f726aa7650e51d4e1b5cffab2d4d5",
+      "backend/integration.py": "f0b5384540a6e69859caa09ae014974f2b51c9b4cda8523c7bb64e089f982ecc",
+      "backend/knowledge.py": "19f901af7d0f269a4a4ca7791e3cb62fb81d1452ff696c2967a679efc7878239",
+      "backend/main.py": "750c686a69731f29011176703fdb5c8d66473dc89408cc790976bec1a22d8ccd",
+      "backend/migrations.py": "735080f250606cbb10d0678338ccf21c06c2b9e9fa538e9021f06558afe24c87",
+      "backend/model_schemas.py": "bd2dfe74e31ac4c55aa750062b134de0f1fe7d2a284a33fa886ead7aea571238",
+      "backend/monitoring.py": "f95f6edac502e4f018c198c9ff059f702e5c09cf5626bb2a0b7c5de080ad622c",
+      "backend/network.py": "2414a884fd8342285a9c83a401b0ce3209c6baabdc14fd33f45e00dd26c30c84",
+      "backend/operations.py": "4c37ca6450a0a1e12e3a4edb5322a19202acb325705f76e27824c48323d82d66",
+      "backend/providers.py": "5aed082b7127f0dfe25c288be172580d4896e95e58507c06fb0d850d2f9c9749",
+      "backend/repository.py": "e28ba05bb0db23b08175686e8e4f3e8a2c9edd471a58a8dbee9fb8c19fb76236",
+      "backend/retrieval.py": "b47920b5014325d7166fb6151ba313ee0eea2deb2a3ea7196ddb1fc5b02d5efd",
+      "backend/sample.py": "f9cedad32203d452060f57825f7d897c5041bb6ff4bc1acec1c741f99c65e7b1",
+      "backend/sandbox.py": "ccbbbc583b360a1c49a3782bbbb27af55c42286d756346a15c8cfdd4a640f3b5",
+      "backend/signals.py": "c47ccba506cd7ab364f3d31b50fc42e74d92fe56d9af32bed075039846e2f3e2",
+      "backend/snapshots.py": "c859850414b792574489bfd76b044e06301b7d65a4fdc909ed339c0f602f7b1a",
+      "backend/summaries.py": "5199f19513e3935ecb2bb0c7d66ceac0d15a75248976d590f39830885924e3b1",
+      "backend/symbols.py": "3d65d7da8d7baae9aa0e26bd870415eddb12f16cadf1ff1d2f3d68ff0cf67f6e",
+      "backend/verification.py": "637beb4259dc8e69256f45034b93800e0a6c648d4b428e5a14a5fa18d6e05576",
+      "backend/worker.py": "39e4d006c345e66794994fe3372d012e4542c02bf44a51b50cdd35833eb408f7",
+      "backend/worker_main.py": "11338bd70547b55c0d6c451d9ddc5dfd4c2584b80ff398a2eff1b8abb254448e",
+      "backend/workflow.py": "79b0640e503d050c2a4a1ee7a6b98f404980473eb4bc019ca47ec1fa23354f47",
+      "run.py": "d31930d4b3717c2ef5fc6a830245ceba586af769084337d69f26f85f88b4ef90",
+      "sandbox/images/node.Dockerfile": "84ae2984ea9c7f185cb4b72cbd11c1c3ea21f302796697e0549946206f811a7c",
+      "sandbox/images/python.Dockerfile": "7ccabea4880fc51c281fbd7c2d0296fc60d5c0565e322d4aec2e6e3c32d48132",
+      "sandbox/probes/isolation.js": "a70e0b62999ff0d51a323b38279a53aaf97cf5a99be2fe6aca07749e11b099cd",
+      "sandbox/probes/isolation.py": "10d96c4dab36774f1623f4210a163785fb53722571d019c6803cec4fd10dccc4",
+      "scripts/evaluate_models.py": "0f839a0543651b3c64a531b1bf2d27122ab41926805d1bcb36b41383e96e3ab9",
+      "scripts/qualification_driver.py": "b540be40d1ea83d817cafca942c20f73afc1e08bb12bd352c35fb8950ced0a09",
+      "tests/fixtures/model_eval/manifest.json": "1a9d53e3cabcda2ed4227e69ae8648b46b5181d444a3441d9bf770dab5dd42ed",
+      "tests/fixtures/model_eval/python/requirements.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tests/fixtures/model_eval/python/service.py": "4df95b41046348d9cd2680bc72d08b8510cd6b3b1cd93e0998761ccff2953da4",
+      "tests/fixtures/model_eval/python/tests/test_service.py": "9c470408d66c36df0c413aa14b8dc77e9a5d6f10d5cbc7029f57eb6e1d731d01",
+      "tests/fixtures/model_eval/typescript/package-lock.json": "a3844857c3b5e67c588dbe50551287ab3f70e9d581278ebf3f38efb269fe8b11",
+      "tests/fixtures/model_eval/typescript/package.json": "44292eada45906f99a672429d1725965d528ae615267b06ca135f3f854cbfa69",
+      "tests/fixtures/model_eval/typescript/service.test.ts": "f53c2cb87a18c3e0024468b811e0381789019020ed3527b88ac13cdf8bcc2d30",
+      "tests/fixtures/model_eval/typescript/service.ts": "90faf33efa781cb7fd9eeb439e035421aa811f95d0359b8c67fff94c32933e7a"
+    },
+    "aggregate_sha256": "0730f8ad474740c65adb78c37f1605f0ca8ac6b371a45f1965d0a61e6f738408"
+  },
+  "endpoint": "http://127.0.0.1:11436/v1",
+  "provider_kind": "openai",
+  "model": "qwen-coder-3b",
+  "small_model": "qwen-coder-3b",
+  "context_limit": 16384,
+  "global_max_output_tokens": 1536,
+  "model_timeout_seconds": 240,
+  "embedding_model": "",
+  "semantic_retrieval": false,
+  "qualification_root": "C:/Users/ahmed/Projects/ducktape/steward/data/q3b-final",
+  "cpu_threads": 4,
+  "gpu_layers": 0,
+  "note": "Coding qualification uses deterministic keyword/graph retrieval with embeddings explicitly disabled. Per-role requests may reserve less than the global output limit. Timeout is per transport attempt, with at most two attempts and per-case 1800-second deadline.",
+  "runtime_observations": {
+    "received_at": "2026-11-14T05:56:06.541212+00:00",
+    "reported_by": "Lead read-only process/resource inspection during baseline; no endpoint swap or process termination performed.",
+    "reported_free_memory_gib": 2.6,
+    "reported_total_memory_gib": 31.37,
+    "model_processes": [
+      {
+        "pid": 23900,
+        "reported_working_set_gb": 5.72,
+        "weight_location": "worktree verified3B copy"
+      },
+      {
+        "pid": 36024,
+        "reported_working_set_mb": 82
+      },
+      {
+        "pid": 38348,
+        "reported_working_set_gb": 2.69,
+        "weight_location": "original-project stable verified3B copy",
+        "observed_listener": true
+      }
+    ],
+    "shared_launch_arguments": {
+      "model": "same verified Qwen2.5-Coder3B weights",
+      "port": 11436,
+      "context_limit": 16384,
+      "threads": 4
+    },
+    "other_reported_model_pids": {
+      "nomic": [
+        8836,
+        2556
+      ],
+      "retained_1_5b": [
+        27184
+      ]
+    },
+    "limitation": "Multiple owned llama processes with the same model/endpoint arguments were observed. Baseline latency and available memory were subject to contention; this is not a controlled exclusive-process speed benchmark. Exact model task outputs, checks, failures and source identity remain retained.",
+    "additional_lead_observation": "Later read-only inspection: active PID23900 had an established11436connection, reported6.5GB working set/6.8GBprivate; duplicatePID38348 reported2.27GBworking set and unusedCPU. No processes were stopped or swapped during baseline."
+  },
+  "installed_runtime_manifest": {
+    "endpoint": "http://127.0.0.1:11436/v1",
+    "port": 11436,
+    "alias": "qwen-coder-3b",
+    "context_limit": 16384,
+    "threads": 4,
+    "executable": "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\data\\model-runtime\\runner\\llama-server.exe",
+    "executable_sha256": "eaa3f7cdeb36218a52ae42444684be740a6210e2f5794ba6e10aa73bf20cf3fd",
+    "model_file": "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\data\\model-runtime\\qwen2.5-coder-3b-instruct-q4_k_m.gguf",
+    "model_sha256": "724fb256bec1ff062b2f65e4569e871ad2e95ab2a3989723d1769c54294730b7",
+    "source": "https://huggingface.co/Qwen/Qwen2.5-Coder-3B-Instruct-GGUF",
+    "revision": "f74adce6aa16316c625447af059dbebe4983757c",
+    "license": "qwen-research"
+  },
+  "weight_identity": {
+    "model": "Qwen/Qwen2.5-Coder-3B-Instruct-GGUF",
+    "revision": "f74adce6aa16316c625447af059dbebe4983757c",
+    "quantization": "Q4_K_M",
+    "bytes": 2104932800,
+    "sha256": "724fb256bec1ff062b2f65e4569e871ad2e95ab2a3989723d1769c54294730b7",
+    "provenance": "Previously verified during installation; no additional large-file hash or endpoint probe during this baseline."
+  },
+  "parallel_slots": 4,
+  "parallel_setting": "Runtime default; startup logs previously observed n_slots=4. No explicit --parallel argument was passed for baseline.",
+  "external_interruption": {
+    "cause": "Host/tool suspension or stalling suspected; exact cause unconfirmed.",
+    "monitor_tool_reported_seconds": 7527.8373263,
+    "case11_elapsed_seconds": 7748.3411527000135,
+    "case11_regression_attempt_seconds": 7593.167526100064,
+    "case11_outcome": "Cancelled after deadline; no final behavior verdict",
+    "case12_health_elapsed_seconds": 14549.141407099902,
+    "case12_outcome": "Docker health create command nominal timeout30s; external prerequisite blocked; no provider attempt",
+    "final_report_recorded_at": "2026-11-14T12:13:12.609762+00:00"
+  }
+}

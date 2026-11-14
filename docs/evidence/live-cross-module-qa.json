@@ -1,0 +1,308 @@
+{
+  "question": "Trace quote from app.py through pricing.py and the TAX_RATE in config.py to tests/test_quote.py. Explain where quantity affects the result and cite all four relevant files; distinguish current source from proposed fixes.",
+  "elapsed_seconds": 292.7890857999446,
+  "result": {
+    "answer": "Live synthesis unavailable or invalid (ValueError); structural evidence shown instead.\nOffline structural answer: no live model synthesis is being claimed. Relevant indexed evidence: tests/test_quote.py, app.py, pricing.py, config.py, README.md, search.py.\napp.py → pricing.py (imports, parsed/resolved)\napp.py → config.py (imports, parsed/resolved)\ntests/test_quote.py → app.py (tests, parsed/resolved)\napp.py → pricing.py (calls, parsed/resolved binding)\ntests/test_quote.py → app.py (calls, parsed/resolved binding)\nApplicable approved decisions: Completion review rule: Preserve quantity validation.\nLimits: Dynamic calls are incomplete; external systems are not inspected; Semantic coverage: 14/14 eligible chunks; cached by repository/snapshot/model/content",
+    "citations": [
+      {
+        "path": "tests/test_quote.py",
+        "start_line": 1,
+        "end_line": 8,
+        "snapshot": "5767be30743349ac361c64855c5ee6a8ee9a96aeef3183c7a05d920a22924af4",
+        "repo_id": "9f97a071-6b87-4dc7-bd2b-ebfa602f58d7",
+        "blob_hash": "cea715cada808496fe54899f97a655356379485ff6bb7505fb526bef5d584ffc",
+        "chunk_id": "226025af850cc4a8cd8500b78818ae9dcac132a5ea16c9d93a633a5b2f245c04",
+        "reason": "persisted full-text chunk match; exact symbol/path match; semantic similarity 0.758; graph tests (parsed/resolved) via app.py; preserves resolved import/call evidence ranges"
+      },
+      {
+        "path": "app.py",
+        "start_line": 1,
+        "end_line": 5,
+        "snapshot": "5767be30743349ac361c64855c5ee6a8ee9a96aeef3183c7a05d920a22924af4",
+        "repo_id": "9f97a071-6b87-4dc7-bd2b-ebfa602f58d7",
+        "blob_hash": "c6429acac65fc2c509d13de8963d17b18e18313cb4f9230c417a4b97142d8366",
+        "chunk_id": "48bc8dfd56d1ba448a558aa777ffcd96bb8dd41fb6a0733a59bdcef67ec6e695",
+        "reason": "persisted full-text chunk match; exact symbol/path match; semantic similarity 0.767; graph tests (parsed/resolved) via tests/test_quote.py; graph imports (parsed/resolved) via pricing.py; graph imports (parsed/resolved) via config.py; preserves resolved import/call evidence ranges"
+      },
+      {
+        "path": "pricing.py",
+        "start_line": 1,
+        "end_line": 3,
+        "snapshot": "5767be30743349ac361c64855c5ee6a8ee9a96aeef3183c7a05d920a22924af4",
+        "repo_id": "9f97a071-6b87-4dc7-bd2b-ebfa602f58d7",
+        "blob_hash": "71a4eb684db7055366c4edbf0901e3f5093ab54bc621ef9fdf463bc85bba416a",
+        "chunk_id": "d466815cc31bc4639598955109b4cd9796ee3e937887344b8a40ac827937c005",
+        "reason": "persisted full-text chunk match; exact symbol/path match; semantic similarity 0.686; graph imports (parsed/resolved) via app.py; graph calls (parsed/resolved binding) via app.py; preserves resolved import/call evidence ranges"
+      },
+      {
+        "path": "config.py",
+        "start_line": 1,
+        "end_line": 2,
+        "snapshot": "5767be30743349ac361c64855c5ee6a8ee9a96aeef3183c7a05d920a22924af4",
+        "repo_id": "9f97a071-6b87-4dc7-bd2b-ebfa602f58d7",
+        "blob_hash": "c93c156b540d22f707688afbbc35d2d0c3120a0429180745e48ab89d6a2de42d",
+        "chunk_id": "cf73ed0cb9b733a3f828cc1ae1e36666f3d822c6b5410b9eeadd444a6641014f",
+        "reason": "persisted full-text chunk match; exact symbol/path match; semantic similarity 0.613; graph imports (parsed/resolved) via app.py; preserves resolved import/call evidence ranges"
+      },
+      {
+        "path": "README.md",
+        "start_line": 1,
+        "end_line": 5,
+        "snapshot": "5767be30743349ac361c64855c5ee6a8ee9a96aeef3183c7a05d920a22924af4",
+        "repo_id": "9f97a071-6b87-4dc7-bd2b-ebfa602f58d7",
+        "blob_hash": "c8a189316273696c20ddc8c548e07d7e2a27fedc32934603d57d822ba4845c8f",
+        "chunk_id": "4eb2d0296224223006d653060899c0e7701f7b6378c0b5c5e8de19f58ec60ce0",
+        "reason": "persisted full-text chunk match; semantic similarity 0.786"
+      },
+      {
+        "path": "search.py",
+        "start_line": 1,
+        "end_line": 6,
+        "snapshot": "5767be30743349ac361c64855c5ee6a8ee9a96aeef3183c7a05d920a22924af4",
+        "repo_id": "9f97a071-6b87-4dc7-bd2b-ebfa602f58d7",
+        "blob_hash": "62c27094c0e4ece62b7dbd344a3cf68674649bf59094d22871858b40daf32fe1",
+        "chunk_id": "79a87d90488debf40e1ff8d09aa64a81593e350ff9d2d4a242453aeb151b08cb",
+        "reason": "persisted full-text chunk match; semantic similarity 0.526"
+      }
+    ],
+    "mode": "offline structural",
+    "context": {
+      "items": [
+        {
+          "path": "tests/test_quote.py",
+          "start_line": 1,
+          "end_line": 8,
+          "content": "import unittest\nfrom app import quote\n\nclass QuoteTest(unittest.TestCase):\n    def test_single(self):\n        self.assertEqual(quote([{ \"price_cents\": 100, \"quantity\": 1}])[\"total_cents\"], 110)\n    def test_empty(self):\n        self.assertEqual(quote([])[\"total_cents\"], 0)",
+          "hash": "cea715cada808496fe54899f97a655356379485ff6bb7505fb526bef5d584ffc",
+          "chunk_id": "226025af850cc4a8cd8500b78818ae9dcac132a5ea16c9d93a633a5b2f245c04",
+          "symbols": [
+            {
+              "name": "QuoteTest",
+              "kind": "ClassDef",
+              "start_line": 4,
+              "end_line": 8
+            },
+            {
+              "name": "test_single",
+              "kind": "FunctionDef",
+              "start_line": 5,
+              "end_line": 6
+            },
+            {
+              "name": "test_empty",
+              "kind": "FunctionDef",
+              "start_line": 7,
+              "end_line": 8
+            }
+          ],
+          "repo_id": "9f97a071-6b87-4dc7-bd2b-ebfa602f58d7",
+          "snapshot": "5767be30743349ac361c64855c5ee6a8ee9a96aeef3183c7a05d920a22924af4",
+          "snapshot_id": "5767be30743349ac361c64855c5ee6a8ee9a96aeef3183c7a05d920a22924af4",
+          "blob_hash": "cea715cada808496fe54899f97a655356379485ff6bb7505fb526bef5d584ffc",
+          "reason": "persisted full-text chunk match; exact symbol/path match; semantic similarity 0.758; graph tests (parsed/resolved) via app.py; preserves resolved import/call evidence ranges"
+        },
+        {
+          "path": "app.py",
+          "start_line": 1,
+          "end_line": 5,
+          "content": "from pricing import total\nfrom config import TAX_RATE\n\ndef quote(items):\n    return {\"total_cents\": total(items, TAX_RATE)}",
+          "hash": "c6429acac65fc2c509d13de8963d17b18e18313cb4f9230c417a4b97142d8366",
+          "chunk_id": "48bc8dfd56d1ba448a558aa777ffcd96bb8dd41fb6a0733a59bdcef67ec6e695",
+          "symbols": [
+            {
+              "name": "quote",
+              "kind": "FunctionDef",
+              "start_line": 4,
+              "end_line": 5
+            }
+          ],
+          "repo_id": "9f97a071-6b87-4dc7-bd2b-ebfa602f58d7",
+          "snapshot": "5767be30743349ac361c64855c5ee6a8ee9a96aeef3183c7a05d920a22924af4",
+          "snapshot_id": "5767be30743349ac361c64855c5ee6a8ee9a96aeef3183c7a05d920a22924af4",
+          "blob_hash": "c6429acac65fc2c509d13de8963d17b18e18313cb4f9230c417a4b97142d8366",
+          "reason": "persisted full-text chunk match; exact symbol/path match; semantic similarity 0.767; graph tests (parsed/resolved) via tests/test_quote.py; graph imports (parsed/resolved) via pricing.py; graph imports (parsed/resolved) via config.py; preserves resolved import/call evidence ranges"
+        },
+        {
+          "path": "pricing.py",
+          "start_line": 1,
+          "end_line": 3,
+          "content": "def total(items, tax_rate):\n    subtotal = sum(item[\"price_cents\"] for item in items)\n    return subtotal + subtotal * tax_rate // 100",
+          "hash": "71a4eb684db7055366c4edbf0901e3f5093ab54bc621ef9fdf463bc85bba416a",
+          "chunk_id": "d466815cc31bc4639598955109b4cd9796ee3e937887344b8a40ac827937c005",
+          "symbols": [
+            {
+              "name": "total",
+              "kind": "FunctionDef",
+              "start_line": 1,
+              "end_line": 3
+            }
+          ],
+          "repo_id": "9f97a071-6b87-4dc7-bd2b-ebfa602f58d7",
+          "snapshot": "5767be30743349ac361c64855c5ee6a8ee9a96aeef3183c7a05d920a22924af4",
+          "snapshot_id": "5767be30743349ac361c64855c5ee6a8ee9a96aeef3183c7a05d920a22924af4",
+          "blob_hash": "71a4eb684db7055366c4edbf0901e3f5093ab54bc621ef9fdf463bc85bba416a",
+          "reason": "persisted full-text chunk match; exact symbol/path match; semantic similarity 0.686; graph imports (parsed/resolved) via app.py; graph calls (parsed/resolved binding) via app.py; preserves resolved import/call evidence ranges"
+        },
+        {
+          "path": "config.py",
+          "start_line": 1,
+          "end_line": 2,
+          "content": "TAX_RATE = 10\nMAX_ITEMS = 100",
+          "hash": "c93c156b540d22f707688afbbc35d2d0c3120a0429180745e48ab89d6a2de42d",
+          "chunk_id": "cf73ed0cb9b733a3f828cc1ae1e36666f3d822c6b5410b9eeadd444a6641014f",
+          "symbols": [],
+          "repo_id": "9f97a071-6b87-4dc7-bd2b-ebfa602f58d7",
+          "snapshot": "5767be30743349ac361c64855c5ee6a8ee9a96aeef3183c7a05d920a22924af4",
+          "snapshot_id": "5767be30743349ac361c64855c5ee6a8ee9a96aeef3183c7a05d920a22924af4",
+          "blob_hash": "c93c156b540d22f707688afbbc35d2d0c3120a0429180745e48ab89d6a2de42d",
+          "reason": "persisted full-text chunk match; exact symbol/path match; semantic similarity 0.613; graph imports (parsed/resolved) via app.py; preserves resolved import/call evidence ranges"
+        },
+        {
+          "path": "README.md",
+          "start_line": 1,
+          "end_line": 5,
+          "content": "# Parcel sample (fixture)\n\nEndpoint app.quote calls pricing.total and config.TAX_RATE.\nConstraint: use integer cents, never floating-point money. Empty orders return zero.\nThe dependency advisory is illustrative fixture data, never a live OSV claim.",
+          "hash": "c8a189316273696c20ddc8c548e07d7e2a27fedc32934603d57d822ba4845c8f",
+          "chunk_id": "4eb2d0296224223006d653060899c0e7701f7b6378c0b5c5e8de19f58ec60ce0",
+          "symbols": [],
+          "repo_id": "9f97a071-6b87-4dc7-bd2b-ebfa602f58d7",
+          "snapshot": "5767be30743349ac361c64855c5ee6a8ee9a96aeef3183c7a05d920a22924af4",
+          "snapshot_id": "5767be30743349ac361c64855c5ee6a8ee9a96aeef3183c7a05d920a22924af4",
+          "blob_hash": "c8a189316273696c20ddc8c548e07d7e2a27fedc32934603d57d822ba4845c8f",
+          "reason": "persisted full-text chunk match; semantic similarity 0.786"
+        },
+        {
+          "path": "search.py",
+          "start_line": 1,
+          "end_line": 6,
+          "content": "def unique_labels(labels):\n    result = []\n    for label in labels:\n        if label not in result:\n            result.append(label)\n    return result",
+          "hash": "62c27094c0e4ece62b7dbd344a3cf68674649bf59094d22871858b40daf32fe1",
+          "chunk_id": "79a87d90488debf40e1ff8d09aa64a81593e350ff9d2d4a242453aeb151b08cb",
+          "symbols": [
+            {
+              "name": "unique_labels",
+              "kind": "FunctionDef",
+              "start_line": 1,
+              "end_line": 6
+            }
+          ],
+          "repo_id": "9f97a071-6b87-4dc7-bd2b-ebfa602f58d7",
+          "snapshot": "5767be30743349ac361c64855c5ee6a8ee9a96aeef3183c7a05d920a22924af4",
+          "snapshot_id": "5767be30743349ac361c64855c5ee6a8ee9a96aeef3183c7a05d920a22924af4",
+          "blob_hash": "62c27094c0e4ece62b7dbd344a3cf68674649bf59094d22871858b40daf32fe1",
+          "reason": "persisted full-text chunk match; semantic similarity 0.526"
+        }
+      ],
+      "missing": [
+        "Dynamic calls are incomplete; external systems are not inspected",
+        "Semantic coverage: 14/14 eligible chunks; cached by repository/snapshot/model/content"
+      ],
+      "mode": "keyword + semantic + graph",
+      "snapshot": "5767be30743349ac361c64855c5ee6a8ee9a96aeef3183c7a05d920a22924af4",
+      "snapshot_id": "5767be30743349ac361c64855c5ee6a8ee9a96aeef3183c7a05d920a22924af4",
+      "repo_id": "9f97a071-6b87-4dc7-bd2b-ebfa602f58d7",
+      "overview": "Repository snapshot 927e0480861e. 8 indexed files; 1 excluded entries; 0 unsupported; 0 failed. 8 source-linked relationships. Structural inventory only: model synthesis unavailable. Dynamic calls and external systems are not fully resolved.",
+      "knowledge": [
+        {
+          "id": "f0ca1d43-8e9f-4a4b-b6db-613c05e95ff0",
+          "title": "Completion review rule",
+          "content": "Preserve quantity validation.",
+          "scope": "repository",
+          "version": 2,
+          "updated_at": "2026-11-14T04:31:35.106725+00:00"
+        }
+      ],
+      "context_hash": "f7eecf4ca2334bacb4f08e307b286277a03705235d585bd61a179318a65eaf4f",
+      "token_estimate": 6957,
+      "token_count_method": "conservative UTF-8 byte upper bound",
+      "latency_ms": 474.752
+    }
+  },
+  "required_paths": [
+    "app.py",
+    "pricing.py",
+    "config.py",
+    "tests/test_quote.py"
+  ],
+  "required_citation_recall": 1.0,
+  "live_synthesis_passed": false,
+  "diagnosis": {
+    "failure": "source_citation_validation",
+    "detail": "Model cited app.py lines 4-8, but the supplied immutable evidence for app.py covered only lines 1-5. The range was rejected without trimming or fabricating citations.",
+    "invalid_citation": {
+      "path": "app.py",
+      "start_line": 4,
+      "end_line": 8
+    },
+    "supplied_range": {
+      "path": "app.py",
+      "start_line": 1,
+      "end_line": 5
+    },
+    "schema_valid": true,
+    "source_citations_valid": false,
+    "fallback": "offline structural evidence; no successful live synthesis is claimed",
+    "cache_defect": "The schema-valid response was cached before source citation validation. An identical Retry could replay the invalid result.",
+    "cache_fix": "Citation validation failure now atomically removes only the exact rejected response at its provider cache key. A concurrently replaced response is preserved; valid answers remain cached.",
+    "regression_validation": "Deterministic actual provider-cache transport fixtures cover fresh and pre-existing cached invalid citations, successful Retry, valid cache reuse, and concurrent replacement preservation. No additional inference was made for the fix.",
+    "cache_identity_fix": "QA sends all evidence/context fields except diagnostic latency_ms to the model; returned context retains latency_ms. Identical question/evidence now reuses a valid response even when retrieval timing differs."
+  },
+  "actual_provider_telemetry": {
+    "model": "qwen-coder-3b",
+    "role": "qa",
+    "routing_reason": "qa; risk=low; context=7087 bytes; scope=unspecified; previous_failures=0",
+    "latency": 292.0012783999555,
+    "usage": {
+      "input_tokens": 3677,
+      "output_tokens": 889
+    },
+    "attempts": 2,
+    "attempt_log": [
+      {
+        "attempt": 1,
+        "model": "qwen-coder-3b",
+        "usage": null,
+        "latency": 180.26499639998656,
+        "error": "timeout"
+      },
+      {
+        "attempt": 2,
+        "model": "qwen-coder-3b",
+        "usage": {
+          "input_tokens": 3677,
+          "output_tokens": 889
+        },
+        "latency": 111.22682969993912,
+        "error": null
+      }
+    ],
+    "cached": false,
+    "mode": "live",
+    "input_token_upper_bound": 7910,
+    "output_reservation": 1024
+  },
+  "rejected_model_citations": [
+    {
+      "path": "app.py",
+      "start_line": 4,
+      "end_line": 8
+    },
+    {
+      "path": "pricing.py",
+      "start_line": 1,
+      "end_line": 3
+    },
+    {
+      "path": "config.py",
+      "start_line": 1,
+      "end_line": 2
+    },
+    {
+      "path": "tests/test_quote.py",
+      "start_line": 1,
+      "end_line": 8
+    }
+  ],
+  "provider_recorded_at": "2026-11-14T04:51:37.235608+00:00",
+  "usage_note": "Only the successful transport attempt reported tokens (3677 input, 889 output); the first timed-out attempt usage is unknown, not zero."
+}

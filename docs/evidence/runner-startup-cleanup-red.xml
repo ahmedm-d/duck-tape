@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="2" skipped="0" tests="2" time="0.652" timestamp="2026-11-14T06:02:38.390124+00:00" hostname="ahmed"><testcase classname="tests.test_runner_startup" name="test_post_spawn_probe_failure_stops_owned_child[OSError]" time="0.022"><failure message="AssertionError: assert (1 == 1 and None is not None)&#10; +  where 1 = len([&lt;Popen: returncode: None args: ['C:\\Users\\ahmed\\Projects\\ducktape\\stewa...&gt;])&#10; +  and   None = poll()&#10; +    where poll = &lt;Popen: returncode: None args: ['C:\\Users\\ahmed\\Projects\\ducktape\\stewa...&gt;.poll">tmp_path = WindowsPath('C:/Users/ahmed/Projects/ducktape/steward/.worktrees/model-calibration/data/tests/7754460fcfe8414f8e210a3542ed1287')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x0000022BABBEE190&gt;
+failure = &lt;class 'OSError'&gt;
+
+    @pytest.mark.parametrize('failure',[OSError,KeyboardInterrupt])
+    def test_post_spawn_probe_failure_stops_owned_child(tmp_path,monkeypatch,failure):
+        installed=manifest(tmp_path,available_port());children=[];real_popen=subprocess.Popen
+        def launch(*args,**kwargs):
+            child=real_popen([sys.executable,'-c','import time; time.sleep(10)'],**kwargs)
+            children.append(child);return child
+        def probe(port):
+            if children:raise failure('authored probe failure')
+            return False
+        monkeypatch.setattr(providers.subprocess,'Popen',launch)
+        monkeypatch.setattr(providers,'_port_occupied',probe)
+        try:
+            if failure is KeyboardInterrupt:
+                with pytest.raises(KeyboardInterrupt):providers._launch_installed(installed)
+            else:
+                assert not providers._launch_installed(installed)['started']
+&gt;           assert len(children)==1 and children[0].poll() is not None
+E           AssertionError: assert (1 == 1 and None is not None)
+E            +  where 1 = len([&lt;Popen: returncode: None args: ['C:\\Users\\ahmed\\Projects\\ducktape\\stewa...&gt;])
+E            +  and   None = poll()
+E            +    where poll = &lt;Popen: returncode: None args: ['C:\\Users\\ahmed\\Projects\\ducktape\\stewa...&gt;.poll
+
+tests\test_runner_startup.py:183: AssertionError</failure></testcase><testcase classname="tests.test_runner_startup" name="test_post_spawn_probe_failure_stops_owned_child[KeyboardInterrupt]" time="0.014"><failure message="AssertionError: assert (1 == 1 and None is not None)&#10; +  where 1 = len([&lt;Popen: returncode: None args: ['C:\\Users\\ahmed\\Projects\\ducktape\\stewa...&gt;])&#10; +  and   None = poll()&#10; +    where poll = &lt;Popen: returncode: None args: ['C:\\Users\\ahmed\\Projects\\ducktape\\stewa...&gt;.poll">tmp_path = WindowsPath('C:/Users/ahmed/Projects/ducktape/steward/.worktrees/model-calibration/data/tests/9f75dd9788774b6a81f7c3119aca8f63')
+monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x0000022BABBEFCE0&gt;
+failure = &lt;class 'KeyboardInterrupt'&gt;
+
+    @pytest.mark.parametrize('failure',[OSError,KeyboardInterrupt])
+    def test_post_spawn_probe_failure_stops_owned_child(tmp_path,monkeypatch,failure):
+        installed=manifest(tmp_path,available_port());children=[];real_popen=subprocess.Popen
+        def launch(*args,**kwargs):
+            child=real_popen([sys.executable,'-c','import time; time.sleep(10)'],**kwargs)
+            children.append(child);return child
+        def probe(port):
+            if children:raise failure('authored probe failure')
+            return False
+        monkeypatch.setattr(providers.subprocess,'Popen',launch)
+        monkeypatch.setattr(providers,'_port_occupied',probe)
+        try:
+            if failure is KeyboardInterrupt:
+                with pytest.raises(KeyboardInterrupt):providers._launch_installed(installed)
+            else:
+                assert not providers._launch_installed(installed)['started']
+&gt;           assert len(children)==1 and children[0].poll() is not None
+E           AssertionError: assert (1 == 1 and None is not None)
+E            +  where 1 = len([&lt;Popen: returncode: None args: ['C:\\Users\\ahmed\\Projects\\ducktape\\stewa...&gt;])
+E            +  and   None = poll()
+E            +    where poll = &lt;Popen: returncode: None args: ['C:\\Users\\ahmed\\Projects\\ducktape\\stewa...&gt;.poll
+
+tests\test_runner_startup.py:183: AssertionError</failure></testcase></testsuite></testsuites>

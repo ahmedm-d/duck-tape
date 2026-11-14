@@ -1,0 +1,18 @@
+{
+  "cases/python-bug-regression.json": "96a4c82b47419721e3f5acb2a2615904698bc1f3accff7d04d63ba540a4a0589",
+  "cases/python-cancellation-restart.json": "6bff3715165ab914e76102fbca1458492e9d32ddfd1ea72ed3f0d4df2b701b19",
+  "cases/python-decision-feature.json": "81f9ea9a2e8f3613ac7c60290c00fa237b02597161dd8642f04c032b4d45e68f",
+  "cases/python-knowledge.json": "ebf3b714cfb1303a55aeec050dcce7a4e708271bb2f9bca6f104e09f3afc5a1f",
+  "cases/python-revision.json": "2c06ac7024ae902f694d4ab6e50e8ad54d14a4e0df23823fe3ed95174b76f3f9",
+  "cases/python-unsafe-review.json": "b6ffc864edb4f7dd71fcf6860eb610ce034c3385b77459604cd246d7a007ac83",
+  "cases/typescript-bug-regression.json": "74452c5c610981965f043e65b97632f9d576f03d3b4586d127db413fe676bae6",
+  "cases/typescript-cancellation-restart.json": "8293b0c38e8de0ae86eb0453c4e91e7ae8d5b2481c38c358350f59644827000d",
+  "cases/typescript-decision-feature.json": "62e61b00b946e14c2548494b08a1f835d206ce32e6687a063934ee3d43131759",
+  "cases/typescript-knowledge.json": "b473561045405922ec40c2a98176b46e685d4394595be65401c740a1ecdb081f",
+  "cases/typescript-revision.json": "ed1aba3bc9f4a5a28fd9ef9d700b9e2d538ce88488eb006fa7915ba1093f3064",
+  "cases/typescript-unsafe-review.json": "d407e1c668a3ed965494a3b449569e5750c118b86ee41c57130e352d18461058",
+  "prompts.json": "c1b69b286ae3f83fae598bd04a84668511769faa60c437d04b1a366a0f10d443",
+  "README.md": "789511a4c585e8645e5d0a24f1326f502e3499b47a5c9b2158229e286a70b304",
+  "report.json": "6ac2e1eb385ee884644f4d9c78e7b73c0addaae10103f53c06d2fc5eeae41e23",
+  "runtime.json": "29ecdf6f0366ebd52ea53b1b327ab3a24ce7da19d40bdcd820128629436239de"
+}

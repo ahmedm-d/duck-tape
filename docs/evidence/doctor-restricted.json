@@ -1,0 +1,35 @@
+{
+  "recorded_at": "2026-11-14T03:23:31.543490+00:00",
+  "core_ready": true,
+  "python": "3.13.12",
+  "git": "git version 2.51.0.windows.2",
+  "frontend_built": true,
+  "database": {
+    "schema": 2,
+    "integrity": "ok"
+  },
+  "provider": {
+    "endpoint": "http://127.0.0.1:11434",
+    "kind": "ollama",
+    "small_model": "",
+    "model": "",
+    "context_limit": 16000,
+    "embedding_model": "",
+    "available": false,
+    "mode": "offline sample",
+    "runner_installed": false,
+    "usage": null,
+    "error": "Provider unavailable: ConnectTimeout"
+  },
+  "sandbox": {
+    "available": false,
+    "runtime": "docker-linux",
+    "reason": "permission denied while trying to connect to the docker API at npipe:////./pipe/dockerDesktopLinuxEngine\n"
+  },
+  "mode": "offline sample and analysis",
+  "limits": [
+    "Local demo identity is not production authentication",
+    "Model availability does not establish coding quality",
+    "Unsupported package managers remain analysis/export only"
+  ]
+}

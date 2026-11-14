@@ -1,0 +1,24 @@
+{
+  "retrieved_at": "2026-11-14T01:51:10.777043+00:00",
+  "package": {
+    "ecosystem": "PyPI",
+    "name": "requests",
+    "version": "2.19.1",
+    "path": "requirements.txt"
+  },
+  "status": "live lookup verified",
+  "ids": [
+    "GHSA-9hjg-9r4m-mvj7",
+    "GHSA-9wx4-h78v-vm56",
+    "GHSA-gc5v-m9x4-r6x2",
+    "GHSA-j8r2-6x86-q33q",
+    "GHSA-x84v-xcm2-53pg",
+    "PYSEC-2018-28",
+    "PYSEC-2023-74",
+    "PYSEC-2026-1872",
+    "PYSEC-2026-1873",
+    "PYSEC-2026-2275"
+  ],
+  "source": "https://api.osv.dev/v1/query",
+  "interpretation": "Version matches only, not exploitability proof. This is a test input, not a Steward dependency."
+}

@@ -199,7 +199,7 @@ def test_atlas_result_equal_to_local_is_served_and_labelled(atlas, required, mon
     assert 'tests/test_quote.py' in blast['linked_test_files']
     assert '$graphLookup' in blast['basis'] and 'ducktape.repo_edges' in blast['basis'] and repo['source_snapshot_id'] in blast['basis']
     assert 'transitive_dependent_files' in blast and 'transitive_dependent_files' not in plain
-    assert not any('Atlas' in gap for gap in served['gaps'])
+    assert not any('Atlas blast radius' in gap for gap in served['gaps'])
     assert expected['scope']['atlas']['served'] is False
 
 

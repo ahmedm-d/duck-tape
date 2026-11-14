@@ -9,16 +9,24 @@ test('keeps the hero minimal and presents the requested scroll sequence', async 
   await page.goto('/');
   await expect(page.getByRole('heading', {level: 1})).toHaveText('Duck Tape is on Duck Tape');
   await expect(page.locator('.landing-hero p')).toHaveCount(0);
+  await expect(page.locator('.landing-hero h1')).toHaveCSS('color', 'rgb(255, 255, 255)');
+  await expect(page.getByRole('link', {name: 'Log in', exact: true})).toHaveAttribute('href', '/dashboard');
+  await expect(page.locator('.landing-header img')).toHaveAttribute('src', '/landing/logo.png');
+  await expect(page.locator('.landing-video video')).toHaveCSS('filter', 'none');
   const sections = await page.locator('.landing main > section').evaluateAll(nodes => nodes.map(node => node.id));
   expect(sections).toEqual(['workspace', 'workflow', 'benchmarks']);
   await expect(page.locator('iframe')).toHaveAttribute('src', '/dashboard?preview=1');
   await expect(page.frameLocator('iframe').getByRole('heading', {name: 'Dashboard', exact: true})).toBeVisible();
-  await expect(page.locator('.landing-flow > li')).toHaveCount(5);
+  await expect(page.locator('.landing-flow > li')).toHaveCount(4);
+  await expect(page.locator('.landing-flow-sources')).toContainText('Tickets');
+  await expect(page.frameLocator('iframe').locator('html')).toHaveClass(/landing-demo/);
+  await expect(page.frameLocator('iframe').locator('body')).toHaveCSS('color', 'rgb(240, 240, 245)');
   await expect(page.getByText('Illustrative data, not measured results.')).toBeVisible();
   await page.getByRole('navigation', {name: 'Main navigation'}).getByRole('link', {name: 'Workflow'}).click();
   await expect(page.locator('#workflow')).toBeInViewport();
-  await page.getByRole('link', {name: /Get started/}).click();
+  await page.getByRole('link', {name: /Start creating/}).click();
   await expect(page).toHaveURL(/\/dashboard$/);
+  await expect(page.locator('html')).not.toHaveClass(/landing-demo/);
 });
 
 test('plays the supplied video and supports pausing and resuming', async ({page}) => {

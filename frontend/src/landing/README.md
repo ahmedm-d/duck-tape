@@ -1,68 +1,63 @@
-# Landing redesign
+# Landing design and handoff
 
-## Design and ownership
+## Current direction
 
-User brief: Adaption-inspired spacing and floating navigation, black and blue,
-only “Duck Tape is on Duck Tape” in the hero, the supplied duck video at the
-bottom of the first screen, then the existing workspace preview, a full job
-flow, example benchmark cards, and a small footer.
+The supplied references drive this revision: white headline in a clean system
+font, the supplied duck-D logo at the top right, frosted Log in / Start creating
+buttons, the duck video in its original colours with the lower half fading out,
+and a blue/orange glow behind the dark workspace window.
 
-Keep the existing React page and `/dashboard?preview=1` iframe. A separate
-marketing application or recreated dashboard would add maintenance without
-helping this brief. All styles stay within the landing page. The video uses a
-blue CSS tint; the original upload is preserved. Metrics are illustrative,
-explicitly labelled, and make no live model qualification claims.
+Below the preview, Tickets / Security / Research feed glass Understand / Prepare /
+Check / Review pills with coloured ribbons. The three example metric cards use
+soft grey glass and lavender details, followed by a minimal footer.
 
-This branch owns `frontend/src/landing/**`, `frontend/public/landing/**`, and
-`frontend/tests/landing/**` under `docs/FRONTEND_PARALLEL.md`. There are no
-shared shell, API, configuration, dependency, or backend changes.
+The original video, logo and gradient are kept as supplied. CSS handles the crop,
+fade, and white display of the black transparent logo. Numbers remain explicitly
+illustrative. Both hero buttons open the existing local `/dashboard`; this change
+does not introduce authentication.
 
-## Implementation plan
+## Scope and implementation
 
-Goal: deliver the requested scroll sequence with a usable, accessible preview.
-Architecture: `Landing.tsx` composes the existing iframe and small presentational
-sections; `landing.css` owns the black/blue palette and responsive layout.
-Stack: existing React, TypeScript, Lucide, native video, and Playwright.
+Landing owns `frontend/src/landing/**`, `frontend/public/landing/**`, and
+`frontend/tests/landing/**` under `docs/FRONTEND_PARALLEL.md`.
 
-- [x] Add focused landing browser coverage and confirm it fails on the old page.
-- [x] Replace the hero, add uploaded media/poster and motion controls, retain
-  the workspace preview, and render the connected flow and sample metric cards.
-- [x] Run the production build and landing browser tests, inspect desktop and
-  mobile screenshots, and independently review the diff.
+- `Landing.tsx`: page composition, accessible video controls, workflow and metrics.
+- `landing.css`: scoped typography, glass, gradients, crop and responsive layout.
+- `WorkspacePreview.tsx`: the real `/dashboard?preview=1` iframe; applies a local
+  presentation stylesheet inside that frame only. Saved theme and the actual
+  workspace outside this preview are untouched.
+- `public/landing/`: original media, extracted video poster, logo and gradient.
+- `tests/landing/landing.spec.ts`: focused browser checks using the existing API
+  fixture, with real Chrome media playback.
 
-Review focus: reduced motion (including preference changes), rejected autoplay,
-missing video, narrow-screen overflow, section-anchor navigation, and keeping
-workspace theme preferences intact. Browser tests use the existing mocked API
-fixture; a separate read-only preview check uses the local running API.
+No shared app shell, API, routes, dependencies or backend files changed.
 
-## Verification and handoff
+- [x] Update the focused test and observe it fail against the previous design.
+- [x] Implement the supplied visual direction and preserve the real preview.
+- [x] Check desktop/mobile screenshots and isolated preview styling.
+- [x] Complete final build, browser checks and independent review.
 
-Run from `frontend/` on 2026-11-14:
+## Verification
 
-- `npm run build`: passed (TypeScript and Vite).
-- With `STEWARD_TEST_URL=http://127.0.0.1:4178` and
-  `STEWARD_BROWSER_EXECUTABLE=C:\Program Files\Google\Chrome\Application\chrome.exe`,
-  `npm run test:browser -- tests/landing/landing.spec.ts --reporter=line --workers=2`:
-  9 passed. API responses are mocked; uploaded media plays in real Chrome.
-- With the same environment,
-  `npm run test:browser -- tests/landing/landing.spec.ts tests/navigation.spec.ts tests/workspace.spec.ts --grep-invert 'workspace pages stay usable' --reporter=line --workers=3`:
-  20 passed, 1 failed because the workspace-owned test still asserts the previous
-  headline. The excluded test writes shared workspace screenshots; landing
-  screenshots were checked separately without changing those artifacts.
-- Read-only browser check against the existing local API: real dashboard loads;
-  no page errors or horizontal overflow at 1440×1000 and 390×844.
-- Additional visual checks: 320×568 and 844×390; the video remains in the opening
-  screen and the mobile iframe fits its container.
-- `git diff --check`: passed. Text files use UTF-8/LF.
-- Independent read-only review: no actionable code findings. Implementer
-  separately verified short-screen sizing and mobile preview scaling.
+From `frontend/`, use `STEWARD_TEST_URL=http://127.0.0.1:4178` and
+`STEWARD_BROWSER_EXECUTABLE=C:\Program Files\Google\Chrome\Application\chrome.exe`.
 
-Shared-file handoff requested: `frontend/tests/workspace.spec.ts:4` needs only
-its expected heading changed from `Your codebase. Understood and maintained.`
-to `Duck Tape is on Duck Tape`. No other assertion or workspace behavior changes.
-Awaiting the explicit Workspace handoff before editing that file.
+- `npm run build`: passed.
+- `npm run test:browser -- tests/landing/landing.spec.ts --reporter=line --workers=3`:
+  9 passed.
+- Real local API preview: no page errors; iframe receives its presentation class.
+- Independent review: no actionable findings; preview styling remains isolated.
+- Visual checks: 1440x1000, 390x844, 320x568, and 844x390. Regression coverage includes
+  320x568, reduced motion, failed media, denied autoplay, keyboard access, section
+  navigation, no overflow, and preservation of workspace theme preferences.
 
-No API or component-export changes. Get started still links to `/dashboard`.
-Safari/Firefox, live inference, and the full backend acceptance tier were not run.
-The supplied video is preserved at its original 9.3 MB; benchmark data is example
-content, not measured product performance. No source or credentials were uploaded.
+## Shared test handoff
+
+The previously requested handoff of `frontend/tests/workspace.spec.ts:4` remains
+pending. Its old headline must become `Duck Tape is on Duck Tape`; its
+`Get started` link selector must now become `Start creating`. Leave the rest of
+that workspace-owned test unchanged. The prior broader run had 20 passing checks
+and this one stale-copy failure. No shared test was silently skipped or changed.
+
+Safari/Firefox, actual authentication, live inference and backend acceptance were
+not exercised. This is a landing presentation change, not product qualification.

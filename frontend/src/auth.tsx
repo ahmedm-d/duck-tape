@@ -17,17 +17,19 @@ const AUTH_PATHS:Record<string,Mode>={'/login':'login','/signup':'signup'};
 const NEXT_KEY='duck-tape:after-sign-in';
 
 async function loadConfig():Promise<AuthConfig>{
- try{const res=await fetch('/api/auth/config');const body=res.ok?await res.json():null;
-  return body?.enabled===true&&typeof body.url==='string'&&typeof body.publishable_key==='string'?body:{enabled:false}}
- catch{return {enabled:false}}
+ const res=await fetch('/api/auth/config');
+ if(!res.ok)throw new Error('Unable to load sign-in configuration. Check the server and retry.');
+ const body=await res.json();
+ if(body?.enabled===false)return body;
+ if(body?.enabled===true&&typeof body.url==='string'&&typeof body.publishable_key==='string')return body;
+ throw new Error('Unable to load sign-in configuration. Check the server and retry.');
 }
 // Remember where the visitor was, so signing in returns them there.
 export function rememberPage(){try{if(!AUTH_PATHS[location.pathname]&&location.pathname!=='/')sessionStorage.setItem(NEXT_KEY,location.pathname+location.search)}catch{}}
 function destination(consume=true){let next='';try{next=sessionStorage.getItem(NEXT_KEY)||'';if(consume)sessionStorage.removeItem(NEXT_KEY)}catch{}
  return next.startsWith('/')&&!next.startsWith('//')&&!AUTH_PATHS[next.split('?')[0]]?next:'/dashboard'}
 
-// Started at module load, before any component effect runs, so the workspace can render immediately
-// (it must be mounted to see back/forward navigation) while API calls wait for the token.
+// Resolve configuration and the stored session before mounting the workspace or making API calls.
 type Loaded={config:AuthConfig;client:SupabaseClient|null};
 const loaded:Promise<Loaded>=(previewMode?Promise.resolve<AuthConfig>({enabled:false}):loadConfig()).then(config=>{
  if(!config.enabled)return {config,client:null};
@@ -37,21 +39,27 @@ const loaded:Promise<Loaded>=(previewMode?Promise.resolve<AuthConfig>({enabled:f
 setAuthReady(loaded);
 
 export function AuthGate({children}:{children:React.ReactNode}){
+ const [error,setError]=useState('');
  const [config,setConfig]=useState<AuthConfig|null>(null);
  const [client,setClient]=useState<SupabaseClient|null>(null);
  const [session,setSession]=useState<Session|null|undefined>(undefined);
  const authMode=AUTH_PATHS[location.pathname],required=!!config?.required;
- useEffect(()=>{let active=true;loaded.then(value=>{if(!active)return;setClient(value.client);setConfig(value.config);if(!value.client)setSession(null)});
+ useEffect(()=>{let active=true;loaded.then(value=>{if(!active)return;setClient(value.client);setConfig(value.config);if(!value.client)setSession(null)}).catch(()=>{if(active)setError('Unable to load sign-in configuration. Check the server and retry.')});
   return()=>{active=false}},[]);
  useEffect(()=>{if(!client)return;client.auth.getSession().then(({data})=>setSession(data.session));
   const {data}=client.auth.onAuthStateChange((_event,value)=>setSession(value));
   return()=>data.subscription.unsubscribe()},[client]);
- useEffect(()=>{if(!required)return;const expired=()=>{rememberPage();location.assign('/login')};
-  addEventListener(UNAUTHORIZED_EVENT,expired);return()=>removeEventListener(UNAUTHORIZED_EVENT,expired)},[required]);
+ useEffect(()=>{if(!client)return;let signingOut=false;
+  const expired=async()=>{if(signingOut)return;signingOut=true;rememberPage();
+   try{const {error}=await client.auth.signOut({scope:'local'});if(error)throw error;setSessionToken(null);setSession(null);if(required)location.assign('/login')}
+   catch{setError('Unable to clear the rejected session. Retry to sign in again.');signingOut=false}};
+  addEventListener(UNAUTHORIZED_EVENT,expired);return()=>removeEventListener(UNAUTHORIZED_EVENT,expired)},[client,required]);
  // The workspace reads its route once at load, so leaving an auth page is a full navigation.
  const leave=!!config&&!!authMode&&(!config.enabled||!!session);
  const mustSignIn=required&&session===null&&!authMode&&location.pathname!=='/';
  useEffect(()=>{if(leave)location.replace(destination());else if(mustSignIn){rememberPage();location.replace('/login')}},[leave,mustSignIn]);
+ if(error)return <div className="auth-page"><div className="auth-card"><p role="alert">{error}</p><button onClick={()=>location.reload()}>Retry</button></div></div>;
+ if(!config||session===undefined)return null;
  if(authMode)return !config||leave||session===undefined?null:<AuthPage client={client!} initial={authMode} required={required}/>;
  if(mustSignIn)return null;
  const state:AuthState={enabled:!!config?.enabled,email:session?.user.email??null,signedIn:!!session,

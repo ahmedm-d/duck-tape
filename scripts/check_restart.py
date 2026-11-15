@@ -30,7 +30,8 @@ def main():
     directory.mkdir(parents=True)
     env={**os.environ,'STEWARD_ATLAS_REQUIRED':'0','STEWARD_AUTH_REQUIRED':'0','STEWARD_SUPABASE_URL':'','STEWARD_SUPABASE_PUBLISHABLE_KEY':'','STEWARD_DATA_DIR':str(directory),'STEWARD_MODEL_ENDPOINT':'http://127.0.0.1:1',
         'STEWARD_ATLAS_ENABLED':'0','STEWARD_ATLAS_GRAPH_MIRROR':'0','STEWARD_ATLAS_RETRIEVAL':'0',
-        'STEWARD_MODEL':'restart-check-no-model','PYTHONUNBUFFERED':'1',
+        'STEWARD_MODEL':'restart-check-no-model','STEWARD_MODEL_PROVIDER':'openai','STEWARD_SPECIALIST_MODE':'0','PYTHONUNBUFFERED':'1',
+        'STEWARD_EMBEDDING_MODEL':'','STEWARD_EMBEDDING_ENDPOINT':'',
         'PYTHONPATH':os.pathsep.join(filter(None,[str(ROOT),str(ROOT/'vendor-current'),os.environ.get('PYTHONPATH')]))}
     process=None
     output=(directory/'backend.log').open('w',encoding='utf-8')

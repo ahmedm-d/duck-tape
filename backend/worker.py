@@ -440,6 +440,7 @@ def process_job(job_id):
                 log = telemetry.get('attempt_log') or ([{'usage':telemetry.get('usage')}] if telemetry.get('attempts') else [])
                 output += sum((entry.get('usage') or {}).get('output_tokens') if (entry.get('usage') or {}).get('output_tokens') is not None else telemetry.get('output_reservation',1024) for entry in log)
             return attempts, output
+        max_calls, max_output = (32, 64000) if providers.resolve_target('router', 'router')['specialist'] else (12, 30000)
         def call(task, payload, label, *, agent_role=None):
             guard(job_id, token)
             request = ProviderRequest(task=task, payload=payload, repo_id=repo['id'], snapshot_id=source_id, risk=job.get('risk','medium'),
@@ -465,9 +466,9 @@ def process_job(job_id):
                 save(provider_attempts=[*run.get('provider_attempts',[]),{**previous['telemetry'],'resumed_stage':stage_id,'attempts':0,'usage':None}])
                 return previous['output']
             attempts, output_tokens = budget()
-            if attempts >= 12 or output_tokens+request.max_output_tokens > 30000:
+            if attempts >= max_calls or output_tokens+request.max_output_tokens > max_output:
                 raise ValueError('Job provider call/output budget exhausted')
-            request = request.model_copy(update={'attempt_budget':min(2,12-attempts,(30000-output_tokens)//request.max_output_tokens)})
+            request = request.model_copy(update={'attempt_budget':min(2,max_calls-attempts,(max_output-output_tokens)//request.max_output_tokens)})
             stage = db.put('run_stages', {'id':stage_id,'job_id':job_id,'run_id':run['id'],'stage':task,'label':label,'workflow_key':workflow_key,'budget_key':budget_key,
                                           'input_fingerprint':fingerprint,'input':{**request.model_dump(),'agent_role':agent_role},'status':'running',
                                           'attempt_history':(previous.get('attempt_history',[])+[previous['telemetry']]) if previous else [],
@@ -488,7 +489,7 @@ def process_job(job_id):
                         for path in step['paths']: safe_path(db.DATA_DIR/'worktrees'/job_id,path)
                 db.put('run_stages',{**stage,'status':'complete','output':result.output,'telemetry':result.telemetry})
                 save(provider_attempts=[*run.get('provider_attempts',[]),result.telemetry])
-                if budget()[0] > 12 or budget()[1] > 30000:
+                if budget()[0] > max_calls or budget()[1] > max_output:
                     raise ValueError('Job provider call/output budget exhausted')
                 return result.output
             except BaseException as exc:

@@ -304,3 +304,9 @@ def test_native_implementer_can_finish_with_plain_assistant_text(store, monkeypa
     monkeypatch.setattr(providers, 'request', lambda *a, **kw: envelope)
     req = ProviderRequest(task='tool_turn', payload={}, cache=False).model_copy(update={'agent_role': 'implementer'})
     assert providers.complete(req).output == {'text': 'Updated helper.', 'tool_calls': []}
+
+
+def test_implementer_is_told_controller_tests_are_read_only():
+    message = adapter().prompt_messages('implementer', {})[0]['content']
+    assert 'required_regression_edits and required_acceptance_edits' in message
+    assert 'NEVER create, modify or delete' in message

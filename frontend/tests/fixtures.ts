@@ -6,7 +6,8 @@ export async function fixture(page:Page){
  await page.route('**/api/**',async route=>{
   const url=new URL(route.request().url()); const path=url.pathname.slice(4); calls.push(path);
   let body:any=[];
-  if(path==='/repositories')body=repositories;
+  if(path==='/auth/config')body={enabled:false};
+  else if(path==='/repositories')body=repositories;
   else if(path==='/jobs')body=jobs;
   else if(path==='/settings'||path==='/settings/health')body={providers:{mode:'analysis-only',qualified:false,reason:'No qualified model'},sandbox:{available:false,reason:'Docker unavailable'}};
   else if(path==='/repositories/repo-one'||path==='/repositories/repo-two')body={...repositories.find(r=>path.endsWith(r.id)),index:{snapshot:path.endsWith('repo-one')?'snapshot-one':'snapshot-two',overview:'Indexed project',files:[{path:'pricing.py',status:'indexed',hash:'hash',content:'def total():\n    return 20\n'}],edges:[],gaps:['Dynamic calls are incomplete']}};

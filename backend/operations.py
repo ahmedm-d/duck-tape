@@ -14,7 +14,7 @@ _owner = 'operations-' + uuid.uuid4().hex
 
 
 def submit(kind, subject, payload, *, archive=None, idempotency_key=None):
-    if kind not in {'import', 'upload', 'refresh', 'scan', 'summarize'}:
+    if kind not in {'import', 'upload', 'refresh', 'scan', 'summarize', 'audit'}:
         raise ValueError('Unsupported operation')
     payload = dict(payload)
     if archive is not None:
@@ -101,6 +101,16 @@ def advance(id, owner=None):
             from . import summaries
             checkpoint('summarizing')
             result={'summaries':summaries.build(item['subject'],payload['snapshot_id'],cancel_token)}
+        elif item['kind'] == 'audit':
+            from . import reviews
+            checkpoint('reviewing')
+            result = reviews.execute(item['subject'], payload, cancel_token)
+            def publish_review(con):
+                repo = db.get_in(con, 'repositories', item['subject'])
+                if not repo or (repo.get('source_snapshot_id') or repo['snapshot']) != payload['snapshot_id']:
+                    raise workflow.Conflict('Repository changed before review publication; start a new review')
+                complete_publication(con, result)
+            db.atomic(publish_review)
         else:
             result = main.run_scan(item['subject'], cancel=cancel_token)
         if workflow.get_work(id)['status']=='complete':

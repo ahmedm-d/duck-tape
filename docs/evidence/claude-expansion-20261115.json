@@ -1,0 +1,1494 @@
+{
+  "model": "claude-opus-5-5",
+  "trained_adaption_checkpoint": false,
+  "live_qualification_runs": [
+    {
+      "artifact": "live-bug-1794732700.json",
+      "passed": false,
+      "error": "ValueError: Job Failed: Cannot overwrite controller test edits",
+      "budget": {
+        "repair_rounds": 0,
+        "evidence_rounds": 0,
+        "provider_calls": 7,
+        "output_tokens": 4210,
+        "known_output_tokens": 4210,
+        "unknown_output_reservation": 0,
+        "within_budget": true
+      },
+      "evidence": [
+        {
+          "kind": "provider_health",
+          "available": true,
+          "model": "claude-opus-5-5",
+          "mode": "live"
+        },
+        {
+          "kind": "sandbox_health",
+          "available": true,
+          "runtime": "docker-linux",
+          "image": "sha256:66879db054c590771d6745bdb3e4653caa16b56164a769ddd15eb8c92984a200",
+          "images": {
+            "python": "sha256:66879db054c590771d6745bdb3e4653caa16b56164a769ddd15eb8c92984a200",
+            "node": "sha256:e199042f377f797ed92dad1d2121397bd45f105e460fd6c925e799144349958b"
+          },
+          "probes": {
+            "python_clean_environment": true,
+            "python_cpu_limit": true,
+            "python_memory_limit": true,
+            "python_no_capabilities": true,
+            "python_no_credentials": true,
+            "python_no_network": true,
+            "python_no_new_privileges": true,
+            "python_no_privilege_escalation": true,
+            "python_nonroot": true,
+            "python_process_limit": true,
+            "python_readonly_root": true,
+            "node_nonroot": true,
+            "node_no_credentials": true,
+            "node_clean_environment": true,
+            "node_memory_limit": true,
+            "node_process_limit": true,
+            "node_cpu_limit": true,
+            "node_no_new_privileges": true,
+            "node_no_capabilities": true,
+            "node_no_privilege_escalation": true,
+            "node_readonly_root": true,
+            "node_no_network": true
+          }
+        },
+        {
+          "kind": "worker_started",
+          "pid": 11268,
+          "instance": "089a2b93dc014efcbf5b81feb946033e"
+        },
+        {
+          "kind": "explicit_plan_approval",
+          "plan_hash": "1a8f76faa79462893ddcca88af95cbf3ac1d3f316c8269e188229ac7e7c2c519",
+          "steps": [
+            {
+              "description": "Before editing, confirm that service.py and tests/test_service.py at the job base_snapshot 70fb5df5\u2026 match the supplied content from snapshot 2e1885e3\u2026. service.py should define greet(name=\"world\") and average(values) returning sum(values) / len(values). tests/test_service.py should contain ServiceTests with test_greet and test_average. If either file differs, stop and re-plan against the actual base content.",
+              "paths": [
+                "service.py",
+                "tests/test_service.py"
+              ]
+            },
+            {
+              "description": "Add an empty-input regression to the existing ServiceTests class in tests/test_service.py: def test_average_empty(self): self.assertEqual(average([]), 0). Keep the import line, test_greet and test_average exactly as they are.",
+              "paths": [
+                "tests/test_service.py"
+              ]
+            },
+            {
+              "description": "Run the suite against the unchanged service.py, for example with python -m unittest discover -s tests -t . or python -m unittest tests.test_service, using the repository's existing import setup. test_average_empty should error with ZeroDivisionError. test_greet and test_average should pass. Record this output as the pre-fix evidence.",
+              "paths": [
+                "tests/test_service.py",
+                "service.py"
+              ]
+            },
+            {
+              "description": "Add a minimal guard at the top of average in service.py: if not values: return 0. Keep the existing return sum(values) / len(values) for nonempty input. Do not change greet.",
+              "paths": [
+                "service.py"
+              ]
+            },
+            {
+              "description": "Re-run the same unittest command and confirm that all three tests pass.",
+              "paths": [
+                "tests/test_service.py",
+                "service.py"
+              ]
+            }
+          ],
+          "acceptance": [
+            "Before the fix, the recorded run shows test_average_empty failing with ZeroDivisionError on the unchanged service.py, while test_greet and test_average pass.",
+            "After the fix, average([]) returns 0 and test_average_empty passes.",
+            "average([2, 4]) still equals 3 (nonempty division is unchanged) and test_average passes without modification.",
+            "greet() still returns \"Hello world\" and test_greet passes without modification.",
+            "The only diff in tests/test_service.py is the added test_average_empty method. No existing test is removed, renamed or weakened.",
+            "The only diff in service.py is the empty-input guard inside average. greet is unchanged.",
+            "File contents were confirmed to match base_snapshot 70fb5df5\u2026 before the patch was applied."
+          ]
+        },
+        {
+          "kind": "worker_stopped",
+          "pid": 11268,
+          "exit_code": 0
+        },
+        {
+          "kind": "source_immutability",
+          "passed": true
+        },
+        {
+          "kind": "budget",
+          "passed": true,
+          "repair_rounds": 0,
+          "evidence_rounds": 0,
+          "provider_calls": 7,
+          "output_tokens": 4210,
+          "known_output_tokens": 4210,
+          "unknown_output_reservation": 0,
+          "within_budget": true
+        }
+      ],
+      "attempts": [
+        {
+          "stage_id": "e4a43e6514874d770924e11dd7ec2c9feb2bb8b9c3d61e20effb0bff5dc4f565",
+          "role": "router",
+          "model": "claude-opus-5-5",
+          "routing_reason": "Claude acting as router; prompted role, not an Adaption checkpoint",
+          "latency": 7.135738500044681,
+          "usage": {
+            "input_tokens": 5002,
+            "output_tokens": 545
+          },
+          "attempts": 1,
+          "attempt_log": [
+            {
+              "attempt": 1,
+              "model": "claude-opus-5-5",
+              "usage": {
+                "input_tokens": 5002,
+                "output_tokens": 545
+              },
+              "latency": 7.13448430004064,
+              "error": null
+            }
+          ],
+          "cached": false,
+          "mode": "live",
+          "structured_output_mode": "native_and_validate",
+          "agent_role": "router",
+          "input_token_upper_bound": 9642,
+          "output_reservation": 8192,
+          "cache_key": null
+        },
+        {
+          "stage_id": "81f1b40283ee9eb4ba1e6322165c448934f529b5bb9ed78c4eb7ed3ead84e32f",
+          "role": "ticket_parser",
+          "model": "claude-opus-5-5",
+          "routing_reason": "Claude acting as ticket_parser; prompted role, not an Adaption checkpoint",
+          "latency": 3.919518699985929,
+          "usage": {
+            "input_tokens": 5332,
+            "output_tokens": 167
+          },
+          "attempts": 1,
+          "attempt_log": [
+            {
+              "attempt": 1,
+              "model": "claude-opus-5-5",
+              "usage": {
+                "input_tokens": 5332,
+                "output_tokens": 167
+              },
+              "latency": 3.9182105999207124,
+              "error": null
+            }
+          ],
+          "cached": false,
+          "mode": "live",
+          "structured_output_mode": "native_and_validate",
+          "agent_role": "ticket_parser",
+          "input_token_upper_bound": 10588,
+          "output_reservation": 8192,
+          "cache_key": null
+        },
+        {
+          "stage_id": "b6e8973c8e0fed36677ff89b58ee594b9f91758813e5cd5c2f0abbe8a0f49197",
+          "role": "investigation",
+          "model": "claude-opus-5-5",
+          "routing_reason": "investigation; risk=Unassessed; context=8670 bytes; scope=unspecified; previous_failures=0",
+          "latency": 8.735680599929765,
+          "usage": {
+            "input_tokens": 4443,
+            "output_tokens": 891
+          },
+          "attempts": 1,
+          "attempt_log": [
+            {
+              "attempt": 1,
+              "model": "claude-opus-5-5",
+              "usage": {
+                "input_tokens": 4443,
+                "output_tokens": 891
+              },
+              "latency": 8.734246299951337,
+              "error": null
+            }
+          ],
+          "cached": false,
+          "mode": "live",
+          "structured_output_mode": "json_schema",
+          "agent_role": null,
+          "input_token_upper_bound": 9272,
+          "output_reservation": 8192,
+          "cache_key": null
+        },
+        {
+          "stage_id": "3c9d746bc2e113b199ccc0727cf43e45135311c38e1354e79bf8241defeaf83b",
+          "role": "planning",
+          "model": "claude-opus-5-5",
+          "routing_reason": "planning; risk=Unassessed; context=11121 bytes; scope=unspecified; previous_failures=0",
+          "latency": 12.721655599889345,
+          "usage": {
+            "input_tokens": 6092,
+            "output_tokens": 1073
+          },
+          "attempts": 1,
+          "attempt_log": [
+            {
+              "attempt": 1,
+              "model": "claude-opus-5-5",
+              "usage": {
+                "input_tokens": 6092,
+                "output_tokens": 1073
+              },
+              "latency": 12.707670500036329,
+              "error": null
+            }
+          ],
+          "cached": false,
+          "mode": "live",
+          "structured_output_mode": "json_schema",
+          "agent_role": null,
+          "input_token_upper_bound": 12720,
+          "output_reservation": 8192,
+          "cache_key": null
+        },
+        {
+          "stage_id": "f0b0d5b9c2ca95a7c7a8aac1f52969053fdc81fc2d439901303b3b7ecbb3c087",
+          "role": "document",
+          "model": "claude-opus-5-5",
+          "routing_reason": "Claude acting as test_writer; prompted role, not an Adaption checkpoint",
+          "latency": 10.690197099931538,
+          "usage": {
+            "input_tokens": 4459,
+            "output_tokens": 958
+          },
+          "attempts": 1,
+          "attempt_log": [
+            {
+              "attempt": 1,
+              "model": "claude-opus-5-5",
+              "usage": {
+                "input_tokens": 4459,
+                "output_tokens": 958
+              },
+              "latency": 10.688814700115472,
+              "error": null
+            }
+          ],
+          "cached": false,
+          "mode": "live",
+          "structured_output_mode": "native_and_validate",
+          "agent_role": "test_writer",
+          "input_token_upper_bound": 10401,
+          "output_reservation": 8192,
+          "cache_key": null
+        },
+        {
+          "stage_id": "70f5a9bfc8305a9bbc9586ed1b4324a811e6053dd566b2a143fc27dff202bad5",
+          "role": "tool_turn",
+          "model": "claude-opus-5-5",
+          "routing_reason": "Claude acting as implementer; prompted role, not an Adaption checkpoint",
+          "latency": 4.187211100012064,
+          "usage": {
+            "input_tokens": 6781,
+            "output_tokens": 150
+          },
+          "attempts": 1,
+          "attempt_log": [
+            {
+              "attempt": 1,
+              "model": "claude-opus-5-5",
+              "usage": {
+                "input_tokens": 6781,
+                "output_tokens": 150
+              },
+              "latency": 4.18508159997873,
+              "error": null
+            }
+          ],
+          "cached": false,
+          "mode": "live",
+          "structured_output_mode": "native_and_validate",
+          "agent_role": "implementer",
+          "input_token_upper_bound": 14765,
+          "output_reservation": 8192,
+          "cache_key": null
+        },
+        {
+          "stage_id": "ae3cd94c91b220910ccb968825310ebec433090deef0f10000912cc74b557f13",
+          "role": "tool_turn",
+          "model": "claude-opus-5-5",
+          "routing_reason": "Claude acting as implementer; prompted role, not an Adaption checkpoint",
+          "latency": 5.227680700016208,
+          "usage": {
+            "input_tokens": 7239,
+            "output_tokens": 426
+          },
+          "attempts": 1,
+          "attempt_log": [
+            {
+              "attempt": 1,
+              "model": "claude-opus-5-5",
+              "usage": {
+                "input_tokens": 7239,
+                "output_tokens": 426
+              },
+              "latency": 5.225580199970864,
+              "error": null
+            }
+          ],
+          "cached": false,
+          "mode": "live",
+          "structured_output_mode": "native_and_validate",
+          "agent_role": "implementer",
+          "input_token_upper_bound": 15808,
+          "output_reservation": 8192,
+          "cache_key": null
+        }
+      ]
+    },
+    {
+      "artifact": "live-bug-1794732975.json",
+      "passed": true,
+      "error": null,
+      "budget": {
+        "repair_rounds": 0,
+        "evidence_rounds": 0,
+        "provider_calls": 11,
+        "output_tokens": 8431,
+        "known_output_tokens": 8431,
+        "unknown_output_reservation": 0,
+        "within_budget": true
+      },
+      "evidence": [
+        {
+          "kind": "provider_health",
+          "available": true,
+          "model": "claude-opus-5-5",
+          "mode": "live"
+        },
+        {
+          "kind": "sandbox_health",
+          "available": true,
+          "runtime": "docker-linux",
+          "image": "sha256:66879db054c590771d6745bdb3e4653caa16b56164a769ddd15eb8c92984a200",
+          "images": {
+            "python": "sha256:66879db054c590771d6745bdb3e4653caa16b56164a769ddd15eb8c92984a200",
+            "node": "sha256:e199042f377f797ed92dad1d2121397bd45f105e460fd6c925e799144349958b"
+          },
+          "probes": {
+            "python_clean_environment": true,
+            "python_cpu_limit": true,
+            "python_memory_limit": true,
+            "python_no_capabilities": true,
+            "python_no_credentials": true,
+            "python_no_network": true,
+            "python_no_new_privileges": true,
+            "python_no_privilege_escalation": true,
+            "python_nonroot": true,
+            "python_process_limit": true,
+            "python_readonly_root": true,
+            "node_nonroot": true,
+            "node_no_credentials": true,
+            "node_clean_environment": true,
+            "node_memory_limit": true,
+            "node_process_limit": true,
+            "node_cpu_limit": true,
+            "node_no_new_privileges": true,
+            "node_no_capabilities": true,
+            "node_no_privilege_escalation": true,
+            "node_readonly_root": true,
+            "node_no_network": true
+          }
+        },
+        {
+          "kind": "worker_started",
+          "pid": 49744,
+          "instance": "63cf436009b74b68b9539c75df6ade13"
+        },
+        {
+          "kind": "explicit_plan_approval",
+          "plan_hash": "476dbba93e1a0a1e3bd1750d1c55aab55130fd6f52fa03dff1bb4c6b8970651b",
+          "steps": [
+            {
+              "description": "Test-first: add a new method `test_average_empty` to `ServiceTests` in tests/test_service.py that asserts `average([]) == 0`. Leave the existing `test_greet` and `test_average` methods and the `from service import greet, average` import unchanged.",
+              "paths": [
+                "tests/test_service.py"
+              ]
+            },
+            {
+              "description": "Run the test suite (e.g. `python -m unittest tests.test_service`) against the unchanged service.py. Confirm the new `test_average_empty` fails, erroring with ZeroDivisionError, and that `test_greet` and `test_average` still pass. Record this failing output as evidence before changing anything else.",
+              "paths": [
+                "tests/test_service.py",
+                "service.py"
+              ]
+            },
+            {
+              "description": "Make the minimal fix to `average` in service.py: if `values` is empty, return 0. Otherwise keep returning `sum(values) / len(values)`. Use an emptiness check that works for lists, such as `if not values: return 0`. Do not change `greet`.",
+              "paths": [
+                "service.py"
+              ]
+            },
+            {
+              "description": "Re-run the full test suite and confirm all three tests pass.",
+              "paths": [
+                "tests/test_service.py",
+                "service.py"
+              ]
+            }
+          ],
+          "acceptance": [
+            "tests/test_service.py contains a new `ServiceTests.test_average_empty` asserting `average([]) == 0`.",
+            "Before the fix, a run against the unchanged service.py shows `test_average_empty` failing with ZeroDivisionError while `test_greet` and `test_average` pass.",
+            "After the fix, `python -m unittest tests.test_service` passes all tests: test_greet, test_average and test_average_empty.",
+            "`average([2, 4])` still returns 3, so nonempty means are unchanged.",
+            "`greet()` still returns \"Hello world\", and `greet` in service.py is unmodified.",
+            "The existing tests `test_greet` and `test_average` are unchanged and not weakened, skipped or deleted.",
+            "The diff is limited to service.py (the empty-input guard in `average`) and tests/test_service.py (one added test method)."
+          ]
+        },
+        {
+          "kind": "reviewable_revision",
+          "revision_id": "c1096144ab564e71bcbe9d2e64cc4d10",
+          "patch_hash": "87620c1ab54a250de0e8a4288a8d21425cfcd13d02820a8a206bde36b7d985bb",
+          "checks": [
+            "e27f372ac3934f3c8c1eb5d61500ef6a",
+            "eb02deef1d7243e383f702eb03ce6e22",
+            "da983537fd0c4e74ad3f0666a4da2c18"
+          ]
+        },
+        {
+          "kind": "independent_behavior",
+          "label": "final",
+          "passed": true,
+          "expected": {
+            "default_greeting": "Hello world",
+            "named_greeting": "Hello Ada",
+            "average_empty": 0,
+            "average_2_4": 3
+          },
+          "result": {
+            "id": "2e12716fda5a432889ef2c81cf0ad762",
+            "run_id": "qualification-34691615430b4852b98d15fc6b18c671",
+            "phase": "qualification_holdout",
+            "command": [
+              "python",
+              "-c",
+              "import json\nfrom service import greet,average\nobserved={}\nobserved['default_greeting']=greet()\nobserved['named_greeting']=greet(\"Ada\")\nobserved['average_empty']=average([])\nobserved['average_2_4']=average([2,4])\nprint(\"STEWARD_BEHAVIOR=\"+json.dumps(observed,sort_keys=True))\n"
+            ],
+            "check_id": "independent-final",
+            "kind": "test",
+            "required": true,
+            "exit_code": 0,
+            "status": "passed",
+            "duration": 0.2194805999752134,
+            "stdout": "STEWARD_BEHAVIOR={\"average_2_4\": 3.0, \"average_empty\": 0, \"default_greeting\": \"Hello world\", \"named_greeting\": \"Hello Ada\"}\n",
+            "truncated": false,
+            "environment": "sha256:66879db054c590771d6745bdb3e4653caa16b56164a769ddd15eb8c92984a200",
+            "base_snapshot": "bc9f62b439da83aef1dbd7fe355dc7407befa28fbd66c5f03a0c1e0d4316c812",
+            "patch_hash": "87620c1ab54a250de0e8a4288a8d21425cfcd13d02820a8a206bde36b7d985bb"
+          }
+        },
+        {
+          "kind": "worker_stopped",
+          "pid": 49744,
+          "exit_code": 0
+        },
+        {
+          "kind": "source_immutability",
+          "passed": true
+        },
+        {
+          "kind": "budget",
+          "passed": true,
+          "repair_rounds": 0,
+          "evidence_rounds": 0,
+          "provider_calls": 11,
+          "output_tokens": 8431,
+          "known_output_tokens": 8431,
+          "unknown_output_reservation": 0,
+          "within_budget": true
+        }
+      ],
+      "attempts": [
+        {
+          "stage_id": "6303fcb218814367ac70ec51fd54652dfed285187356fed307157fa6a69c091c",
+          "role": "router",
+          "model": "claude-opus-5-5",
+          "routing_reason": "Claude acting as router; prompted role, not an Adaption checkpoint",
+          "latency": 6.066080300020985,
+          "usage": {
+            "input_tokens": 5047,
+            "output_tokens": 479
+          },
+          "attempts": 1,
+          "attempt_log": [
+            {
+              "attempt": 1,
+              "model": "claude-opus-5-5",
+              "usage": {
+                "input_tokens": 5047,
+                "output_tokens": 479
+              },
+              "latency": 6.064775399980135,
+              "error": null
+            }
+          ],
+          "cached": false,
+          "mode": "live",
+          "structured_output_mode": "native_and_validate",
+          "agent_role": "router",
+          "input_token_upper_bound": 9642,
+          "output_reservation": 8192,
+          "cache_key": null
+        },
+        {
+          "stage_id": "48f27635f4357716034ee9a56b5ac5a601d5133bb86f6d000e8f1c4b529220fa",
+          "role": "ticket_parser",
+          "model": "claude-opus-5-5",
+          "routing_reason": "Claude acting as ticket_parser; prompted role, not an Adaption checkpoint",
+          "latency": 3.1026204999070615,
+          "usage": {
+            "input_tokens": 5341,
+            "output_tokens": 168
+          },
+          "attempts": 1,
+          "attempt_log": [
+            {
+              "attempt": 1,
+              "model": "claude-opus-5-5",
+              "usage": {
+                "input_tokens": 5341,
+                "output_tokens": 168
+              },
+              "latency": 3.101531899999827,
+              "error": null
+            }
+          ],
+          "cached": false,
+          "mode": "live",
+          "structured_output_mode": "native_and_validate",
+          "agent_role": "ticket_parser",
+          "input_token_upper_bound": 10503,
+          "output_reservation": 8192,
+          "cache_key": null
+        },
+        {
+          "stage_id": "6ba61d168ee269663117ca0a57b99233c358ce4595f089f33db65d153c8dd289",
+          "role": "investigation",
+          "model": "claude-opus-5-5",
+          "routing_reason": "investigation; risk=Unassessed; context=8583 bytes; scope=unspecified; previous_failures=0",
+          "latency": 8.53913819999434,
+          "usage": {
+            "input_tokens": 4453,
+            "output_tokens": 857
+          },
+          "attempts": 1,
+          "attempt_log": [
+            {
+              "attempt": 1,
+              "model": "claude-opus-5-5",
+              "usage": {
+                "input_tokens": 4453,
+                "output_tokens": 857
+              },
+              "latency": 8.537983300047927,
+              "error": null
+            }
+          ],
+          "cached": false,
+          "mode": "live",
+          "structured_output_mode": "json_schema",
+          "agent_role": null,
+          "input_token_upper_bound": 9185,
+          "output_reservation": 8192,
+          "cache_key": null
+        },
+        {
+          "stage_id": "84a001bfa3b5412ef3e09b53d58ab4b8be44d5762deba1557731d4dae7f9eaea",
+          "role": "planning",
+          "model": "claude-opus-5-5",
+          "routing_reason": "planning; risk=Unassessed; context=10938 bytes; scope=unspecified; previous_failures=0",
+          "latency": 7.321080600027926,
+          "usage": {
+            "input_tokens": 6064,
+            "output_tokens": 674
+          },
+          "attempts": 1,
+          "attempt_log": [
+            {
+              "attempt": 1,
+              "model": "claude-opus-5-5",
+              "usage": {
+                "input_tokens": 6064,
+                "output_tokens": 674
+              },
+              "latency": 7.319690800039098,
+              "error": null
+            }
+          ],
+          "cached": false,
+          "mode": "live",
+          "structured_output_mode": "json_schema",
+          "agent_role": null,
+          "input_token_upper_bound": 12537,
+          "output_reservation": 8192,
+          "cache_key": null
+        },
+        {
+          "stage_id": "105e762d64bae7d7499779d18ab934021553531da9691e23935ee14ae15672e2",
+          "role": "document",
+          "model": "claude-opus-5-5",
+          "routing_reason": "Claude acting as test_writer; prompted role, not an Adaption checkpoint",
+          "latency": 9.731586700072512,
+          "usage": {
+            "input_tokens": 4500,
+            "output_tokens": 998
+          },
+          "attempts": 1,
+          "attempt_log": [
+            {
+              "attempt": 1,
+              "model": "claude-opus-5-5",
+              "usage": {
+                "input_tokens": 4500,
+                "output_tokens": 998
+              },
+              "latency": 9.729552800068632,
+              "error": null
+            }
+          ],
+          "cached": false,
+          "mode": "live",
+          "structured_output_mode": "native_and_validate",
+          "agent_role": "test_writer",
+          "input_token_upper_bound": 10339,
+          "output_reservation": 8192,
+          "cache_key": null
+        },
+        {
+          "stage_id": "9e58bda6cfe0bf9c0b793158b695d17ec9f067b82eb584c5dba8363eba8f9ad4",
+          "role": "tool_turn",
+          "model": "claude-opus-5-5",
+          "routing_reason": "Claude acting as implementer; prompted role, not an Adaption checkpoint",
+          "latency": 3.2581153999781236,
+          "usage": {
+            "input_tokens": 6761,
+            "output_tokens": 146
+          },
+          "attempts": 1,
+          "attempt_log": [
+            {
+              "attempt": 1,
+              "model": "claude-opus-5-5",
+              "usage": {
+                "input_tokens": 6761,
+                "output_tokens": 146
+              },
+              "latency": 3.2562119000358507,
+              "error": null
+            }
+          ],
+          "cached": false,
+          "mode": "live",
+          "structured_output_mode": "native_and_validate",
+          "agent_role": "implementer",
+          "input_token_upper_bound": 14491,
+          "output_reservation": 8192,
+          "cache_key": null
+        },
+        {
+          "stage_id": "caa65543454ca8bceb509e0d3b100feabcdb3517d5f4c87e89a323c13f01f639",
+          "role": "tool_turn",
+          "model": "claude-opus-5-5",
+          "routing_reason": "Claude acting as implementer; prompted role, not an Adaption checkpoint",
+          "latency": 3.6121787999290973,
+          "usage": {
+            "input_tokens": 6996,
+            "output_tokens": 155
+          },
+          "attempts": 1,
+          "attempt_log": [
+            {
+              "attempt": 1,
+              "model": "claude-opus-5-5",
+              "usage": {
+                "input_tokens": 6996,
+                "output_tokens": 155
+              },
+              "latency": 3.6076873999554664,
+              "error": null
+            }
+          ],
+          "cached": false,
+          "mode": "live",
+          "structured_output_mode": "native_and_validate",
+          "agent_role": "implementer",
+          "input_token_upper_bound": 15069,
+          "output_reservation": 8192,
+          "cache_key": null
+        },
+        {
+          "stage_id": "b5862493cd70483fa7a37c76e6f7f878ba25323ee74c040229e3ec050ee8d3ae",
+          "role": "tool_turn",
+          "model": "claude-opus-5-5",
+          "routing_reason": "Claude acting as implementer; prompted role, not an Adaption checkpoint",
+          "latency": 3.174707700032741,
+          "usage": {
+            "input_tokens": 7230,
+            "output_tokens": 229
+          },
+          "attempts": 1,
+          "attempt_log": [
+            {
+              "attempt": 1,
+              "model": "claude-opus-5-5",
+              "usage": {
+                "input_tokens": 7230,
+                "output_tokens": 229
+              },
+              "latency": 3.1732439000625163,
+              "error": null
+            }
+          ],
+          "cached": false,
+          "mode": "live",
+          "structured_output_mode": "native_and_validate",
+          "agent_role": "implementer",
+          "input_token_upper_bound": 15614,
+          "output_reservation": 8192,
+          "cache_key": null
+        },
+        {
+          "stage_id": "6cb2d7638ff1f989501b85b7d13248d0c7ffd9f062ed8a3afeea7c1e714fa24c",
+          "role": "document",
+          "model": "claude-opus-5-5",
+          "routing_reason": "Claude acting as reviewer_dpo; prompted role, not an Adaption checkpoint",
+          "latency": 24.274464400019497,
+          "usage": {
+            "input_tokens": 5200,
+            "output_tokens": 2417
+          },
+          "attempts": 1,
+          "attempt_log": [
+            {
+              "attempt": 1,
+              "model": "claude-opus-5-5",
+              "usage": {
+                "input_tokens": 5200,
+                "output_tokens": 2417
+              },
+              "latency": 24.270739999949,
+              "error": null
+            }
+          ],
+          "cached": false,
+          "mode": "live",
+          "structured_output_mode": "native_and_validate",
+          "agent_role": "reviewer_dpo",
+          "input_token_upper_bound": 11696,
+          "output_reservation": 8192,
+          "cache_key": null
+        },
+        {
+          "stage_id": "ed8b20caf9aa0fc6c354d752585b9df67cd18ef5023a04aa51654cdbe3a1bc12",
+          "role": "review",
+          "model": "claude-opus-5-5",
+          "routing_reason": "review; risk=Unassessed; context=15757 bytes; scope=unspecified; previous_failures=0",
+          "latency": 1.8789738999912515,
+          "usage": {
+            "input_tokens": 7459,
+            "output_tokens": 16
+          },
+          "attempts": 1,
+          "attempt_log": [
+            {
+              "attempt": 1,
+              "model": "claude-opus-5-5",
+              "usage": {
+                "input_tokens": 7459,
+                "output_tokens": 16
+              },
+              "latency": 1.877577600069344,
+              "error": null
+            }
+          ],
+          "cached": false,
+          "mode": "live",
+          "structured_output_mode": "json_schema",
+          "agent_role": null,
+          "input_token_upper_bound": 16688,
+          "output_reservation": 8192,
+          "cache_key": null
+        },
+        {
+          "stage_id": "d9b3ca6ca9a65d4a0f9f0bca659daaa87a88f155e4fc3c1818e5961b2f3b200f",
+          "role": "document",
+          "model": "claude-opus-5-5",
+          "routing_reason": "Claude acting as commit_pr_writer; prompted role, not an Adaption checkpoint",
+          "latency": 21.284705700003542,
+          "usage": {
+            "input_tokens": 6897,
+            "output_tokens": 2292
+          },
+          "attempts": 1,
+          "attempt_log": [
+            {
+              "attempt": 1,
+              "model": "claude-opus-5-5",
+              "usage": {
+                "input_tokens": 6897,
+                "output_tokens": 2292
+              },
+              "latency": 21.282880199956708,
+              "error": null
+            }
+          ],
+          "cached": false,
+          "mode": "live",
+          "structured_output_mode": "native_and_validate",
+          "agent_role": "commit_pr_writer",
+          "input_token_upper_bound": 16235,
+          "output_reservation": 8192,
+          "cache_key": null
+        }
+      ]
+    },
+    {
+      "artifact": "live-bug.json",
+      "passed": false,
+      "error": "ValueError: Job Failed: Provider invalid_schema",
+      "budget": {
+        "repair_rounds": 0,
+        "evidence_rounds": 0,
+        "provider_calls": 2,
+        "output_tokens": 1262,
+        "known_output_tokens": 1262,
+        "unknown_output_reservation": 0,
+        "within_budget": true
+      },
+      "evidence": [
+        {
+          "kind": "provider_health",
+          "available": true,
+          "model": "claude-opus-5-5",
+          "mode": "live"
+        },
+        {
+          "kind": "sandbox_health",
+          "available": true,
+          "runtime": "docker-linux",
+          "image": "sha256:66879db054c590771d6745bdb3e4653caa16b56164a769ddd15eb8c92984a200",
+          "images": {
+            "python": "sha256:66879db054c590771d6745bdb3e4653caa16b56164a769ddd15eb8c92984a200",
+            "node": "sha256:e199042f377f797ed92dad1d2121397bd45f105e460fd6c925e799144349958b"
+          },
+          "probes": {
+            "python_clean_environment": true,
+            "python_cpu_limit": true,
+            "python_memory_limit": true,
+            "python_no_capabilities": true,
+            "python_no_credentials": true,
+            "python_no_network": true,
+            "python_no_new_privileges": true,
+            "python_no_privilege_escalation": true,
+            "python_nonroot": true,
+            "python_process_limit": true,
+            "python_readonly_root": true,
+            "node_nonroot": true,
+            "node_no_credentials": true,
+            "node_clean_environment": true,
+            "node_memory_limit": true,
+            "node_process_limit": true,
+            "node_cpu_limit": true,
+            "node_no_new_privileges": true,
+            "node_no_capabilities": true,
+            "node_no_privilege_escalation": true,
+            "node_readonly_root": true,
+            "node_no_network": true
+          }
+        },
+        {
+          "kind": "worker_started",
+          "pid": 27524,
+          "instance": "aedf6211db044910934e4fcda8cccf08"
+        },
+        {
+          "kind": "worker_stopped",
+          "pid": 27524,
+          "exit_code": 0
+        },
+        {
+          "kind": "source_immutability",
+          "passed": true
+        },
+        {
+          "kind": "budget",
+          "passed": true,
+          "repair_rounds": 0,
+          "evidence_rounds": 0,
+          "provider_calls": 2,
+          "output_tokens": 1262,
+          "known_output_tokens": 1262,
+          "unknown_output_reservation": 0,
+          "within_budget": true
+        }
+      ],
+      "attempts": [
+        {
+          "stage_id": "1df6a6cff076f32bb9f72c948a5c1206ee59c97207b8166117681e4ae7b0061c",
+          "role": "router",
+          "model": "claude-opus-5-5",
+          "routing_reason": "Claude acting as router; prompted role, not an Adaption checkpoint",
+          "latency": 17.769589900039136,
+          "usage": {
+            "input_tokens": 3757,
+            "output_tokens": 599
+          },
+          "attempts": 2,
+          "attempt_log": [
+            {
+              "attempt": 1,
+              "model": "claude-opus-5-5",
+              "usage": {
+                "input_tokens": 3757,
+                "output_tokens": 663
+              },
+              "latency": 9.138414800050668,
+              "error": "invalid_schema"
+            },
+            {
+              "attempt": 2,
+              "model": "claude-opus-5-5",
+              "usage": {
+                "input_tokens": 3757,
+                "output_tokens": 599
+              },
+              "latency": 8.100464299903251,
+              "error": "invalid_schema"
+            }
+          ],
+          "cached": false,
+          "mode": "live",
+          "structured_output_mode": "native_and_validate",
+          "agent_role": "router",
+          "input_token_upper_bound": 8351,
+          "output_reservation": 8192,
+          "cache_key": null
+        }
+      ]
+    }
+  ],
+  "live_reviews": [
+    {
+      "id": "f7e395f5-d7bc-4163-8281-1167c2fb4be5",
+      "status": "complete",
+      "kind": "security",
+      "pr": null,
+      "finding_count": 3,
+      "provider": [
+        {
+          "model": "claude-opus-5-5",
+          "role": "document",
+          "routing_reason": "Claude acting as security_reviewer_dpo; prompted role, not an Adaption checkpoint",
+          "latency": 27.31497850001324,
+          "usage": {
+            "input_tokens": 6169,
+            "output_tokens": 2675
+          },
+          "attempts": 1,
+          "attempt_log": [
+            {
+              "attempt": 1,
+              "model": "claude-opus-5-5",
+              "usage": {
+                "input_tokens": 6169,
+                "output_tokens": 2675
+              },
+              "latency": 27.312170100049116,
+              "error": null
+            }
+          ],
+          "cached": false,
+          "mode": "live",
+          "structured_output_mode": "native_and_validate",
+          "agent_role": "security_reviewer_dpo",
+          "input_token_upper_bound": 13285,
+          "output_reservation": 4096,
+          "cache_key": null
+        },
+        {
+          "model": "claude-opus-5-5",
+          "role": "audit",
+          "routing_reason": "audit; risk=high; context=17482 bytes; scope=unspecified; previous_failures=0",
+          "latency": 26.76294190005865,
+          "usage": {
+            "input_tokens": 8938,
+            "output_tokens": 2784
+          },
+          "attempts": 1,
+          "attempt_log": [
+            {
+              "attempt": 1,
+              "model": "claude-opus-5-5",
+              "usage": {
+                "input_tokens": 8938,
+                "output_tokens": 2784
+              },
+              "latency": 26.759218199993484,
+              "error": null
+            }
+          ],
+          "cached": false,
+          "mode": "live",
+          "structured_output_mode": "json_schema",
+          "agent_role": null,
+          "input_token_upper_bound": 19006,
+          "output_reservation": 4096,
+          "cache_key": null
+        }
+      ],
+      "checks_executed": false
+    },
+    {
+      "id": "a1a798fe-16bf-4f10-a151-ee57f7c91763",
+      "status": "complete",
+      "kind": "pr",
+      "pr": {
+        "repository": "ahmedm-d/duck-tape-demo-shop",
+        "number": 1,
+        "head": "32e259a8a294aee216eb51064a8a42af50bbb7a9",
+        "base": "48f0f99e05ff4b42068c6fa01d0e975c31cd5707",
+        "url": "https://github.com/ahmedm-d/duck-tape-demo-shop/pull/1"
+      },
+      "finding_count": 6,
+      "provider": [
+        {
+          "model": "claude-opus-5-5",
+          "role": "document",
+          "routing_reason": "Claude acting as reviewer_dpo; prompted role, not an Adaption checkpoint",
+          "latency": 28.09639999992214,
+          "usage": {
+            "input_tokens": 2170,
+            "output_tokens": 2900
+          },
+          "attempts": 1,
+          "attempt_log": [
+            {
+              "attempt": 1,
+              "model": "claude-opus-5-5",
+              "usage": {
+                "input_tokens": 2170,
+                "output_tokens": 2900
+              },
+              "latency": 28.095400999998674,
+              "error": null
+            }
+          ],
+          "cached": false,
+          "mode": "live",
+          "structured_output_mode": "native_and_validate",
+          "agent_role": "reviewer_dpo",
+          "input_token_upper_bound": 4924,
+          "output_reservation": 4096,
+          "cache_key": null
+        },
+        {
+          "model": "claude-opus-5-5",
+          "role": "audit",
+          "routing_reason": "audit; risk=high; context=8905 bytes; scope=unspecified; previous_failures=0",
+          "latency": 25.286556200007908,
+          "usage": {
+            "input_tokens": 4862,
+            "output_tokens": 2684
+          },
+          "attempts": 1,
+          "attempt_log": [
+            {
+              "attempt": 1,
+              "model": "claude-opus-5-5",
+              "usage": {
+                "input_tokens": 4862,
+                "output_tokens": 2684
+              },
+              "latency": 25.285498499986716,
+              "error": null
+            }
+          ],
+          "cached": false,
+          "mode": "live",
+          "structured_output_mode": "json_schema",
+          "agent_role": null,
+          "input_token_upper_bound": 10391,
+          "output_reservation": 4096,
+          "cache_key": null
+        }
+      ],
+      "checks_executed": false
+    }
+  ],
+  "auxiliary_role_attempts": [
+    {
+      "role": "log_classifier",
+      "passed": true,
+      "error": null,
+      "telemetry": {
+        "model": "claude-opus-5-5",
+        "role": "log_classifier",
+        "routing_reason": "Claude acting as log_classifier; prompted role, not an Adaption checkpoint",
+        "latency": 5.906478699995205,
+        "usage": {
+          "input_tokens": 879,
+          "output_tokens": 363
+        },
+        "attempts": 1,
+        "attempt_log": [
+          {
+            "attempt": 1,
+            "model": "claude-opus-5-5",
+            "usage": {
+              "input_tokens": 879,
+              "output_tokens": 363
+            },
+            "latency": 5.906274799956009,
+            "error": null
+          }
+        ],
+        "cached": false,
+        "mode": "live",
+        "structured_output_mode": "native_and_validate",
+        "agent_role": "log_classifier",
+        "input_token_upper_bound": 1387,
+        "output_reservation": 2048,
+        "cache_key": null
+      }
+    },
+    {
+      "role": "db_migration",
+      "passed": false,
+      "error": "Provider truncated",
+      "telemetry": {
+        "model": "claude-opus-5-5",
+        "role": "document",
+        "routing_reason": "Claude acting as db_migration; prompted role, not an Adaption checkpoint",
+        "latency": 19.869479299988598,
+        "usage": {
+          "input_tokens": 262,
+          "output_tokens": 2048
+        },
+        "attempts": 1,
+        "attempt_log": [
+          {
+            "attempt": 1,
+            "model": "claude-opus-5-5",
+            "usage": {
+              "input_tokens": 262,
+              "output_tokens": 2048
+            },
+            "latency": 19.86929670011159,
+            "error": "truncated"
+          }
+        ],
+        "cached": false,
+        "mode": "live",
+        "structured_output_mode": "native_and_validate",
+        "agent_role": "db_migration",
+        "input_token_upper_bound": 716,
+        "output_reservation": 2048,
+        "cache_key": null
+      }
+    },
+    {
+      "role": "iac",
+      "passed": false,
+      "error": "Provider truncated",
+      "telemetry": {
+        "model": "claude-opus-5-5",
+        "role": "document",
+        "routing_reason": "Claude acting as iac; prompted role, not an Adaption checkpoint",
+        "latency": 20.61090939992573,
+        "usage": {
+          "input_tokens": 258,
+          "output_tokens": 2048
+        },
+        "attempts": 1,
+        "attempt_log": [
+          {
+            "attempt": 1,
+            "model": "claude-opus-5-5",
+            "usage": {
+              "input_tokens": 258,
+              "output_tokens": 2048
+            },
+            "latency": 20.610785800032318,
+            "error": "truncated"
+          }
+        ],
+        "cached": false,
+        "mode": "live",
+        "structured_output_mode": "native_and_validate",
+        "agent_role": "iac",
+        "input_token_upper_bound": 698,
+        "output_reservation": 2048,
+        "cache_key": null
+      }
+    },
+    {
+      "role": "frontend_ui",
+      "passed": true,
+      "error": null,
+      "telemetry": {
+        "model": "claude-opus-5-5",
+        "role": "document",
+        "routing_reason": "Claude acting as frontend_ui; prompted role, not an Adaption checkpoint",
+        "latency": 16.03017839998938,
+        "usage": {
+          "input_tokens": 231,
+          "output_tokens": 1625
+        },
+        "attempts": 1,
+        "attempt_log": [
+          {
+            "attempt": 1,
+            "model": "claude-opus-5-5",
+            "usage": {
+              "input_tokens": 231,
+              "output_tokens": 1625
+            },
+            "latency": 16.03004940005485,
+            "error": null
+          }
+        ],
+        "cached": false,
+        "mode": "live",
+        "structured_output_mode": "native_and_validate",
+        "agent_role": "frontend_ui",
+        "input_token_upper_bound": 697,
+        "output_reservation": 2048,
+        "cache_key": null
+      }
+    }
+  ],
+  "auxiliary_role_rechecks": [
+    {
+      "role": "db_migration",
+      "passed": true,
+      "telemetry": {
+        "model": "claude-opus-5-5",
+        "role": "document",
+        "routing_reason": "Claude acting as db_migration; prompted role, not an Adaption checkpoint",
+        "latency": 12.385608599986881,
+        "usage": {
+          "input_tokens": 218,
+          "output_tokens": 1285
+        },
+        "attempts": 1,
+        "attempt_log": [
+          {
+            "attempt": 1,
+            "model": "claude-opus-5-5",
+            "usage": {
+              "input_tokens": 218,
+              "output_tokens": 1285
+            },
+            "latency": 12.38546480005607,
+            "error": null
+          }
+        ],
+        "cached": false,
+        "mode": "live",
+        "structured_output_mode": "native_and_validate",
+        "agent_role": "db_migration",
+        "input_token_upper_bound": 637,
+        "output_reservation": 4096,
+        "cache_key": null
+      }
+    },
+    {
+      "role": "iac",
+      "passed": true,
+      "telemetry": {
+        "model": "claude-opus-5-5",
+        "role": "document",
+        "routing_reason": "Claude acting as iac; prompted role, not an Adaption checkpoint",
+        "latency": 14.631134700030088,
+        "usage": {
+          "input_tokens": 221,
+          "output_tokens": 1491
+        },
+        "attempts": 1,
+        "attempt_log": [
+          {
+            "attempt": 1,
+            "model": "claude-opus-5-5",
+            "usage": {
+              "input_tokens": 221,
+              "output_tokens": 1491
+            },
+            "latency": 14.630719600012526,
+            "error": null
+          }
+        ],
+        "cached": false,
+        "mode": "live",
+        "structured_output_mode": "native_and_validate",
+        "agent_role": "iac",
+        "input_token_upper_bound": 645,
+        "output_reservation": 4096,
+        "cache_key": null
+      }
+    }
+  ],
+  "deterministic_checks": {
+    "focused_backend": 126,
+    "review_budget_followup": 25,
+    "browser_review_auth": 24,
+    "browser_final_model_reviews": 3,
+    "live_ui": {
+      "url": "http://127.0.0.1:8783/ahmedm-d/duck-tape-demo-shop/reviews",
+      "claude_visible": true,
+      "hypotheses_visible": true,
+      "page_errors": []
+    }
+  },
+  "acceptance_gate": {
+    "schema_version": 1,
+    "tier": "deterministic",
+    "status": "failed",
+    "recorded_at": "2026-11-15T09:30:22.663172+00:00",
+    "results": [
+      {
+        "id": "backend",
+        "tier": "deterministic",
+        "argv": [
+          "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.venv\\Scripts\\python.exe",
+          "-m",
+          "pytest",
+          "tests",
+          "--ignore=tests/live",
+          "-m",
+          "not live",
+          "-q",
+          "-p",
+          "no:cacheprovider",
+          "--junitxml=C:\\Users\\ahmed\\Projects\\duck-tape-integration-20261115\\data\\claude-expansion-final-acceptance\\20261115T091544Z-79d40c68\\backend.xml"
+        ],
+        "cwd": "C:\\Users\\ahmed\\Projects\\duck-tape-integration-20261115",
+        "required": true,
+        "status": "failed",
+        "exit_code": null,
+        "artifacts": [
+          "C:\\Users\\ahmed\\Projects\\duck-tape-integration-20261115\\data\\claude-expansion-final-acceptance\\20261115T091544Z-79d40c68\\backend.log"
+        ],
+        "reason": "Required command exceeded its deadline",
+        "duration_seconds": 600.866
+      },
+      {
+        "id": "restart",
+        "tier": "deterministic",
+        "argv": [
+          "C:\\Users\\ahmed\\Projects\\ducktape\\steward\\.venv\\Scripts\\python.exe",
+          "scripts/check_restart.py"
+        ],
+        "cwd": "C:\\Users\\ahmed\\Projects\\duck-tape-integration-20261115",
+        "required": true,
+        "status": "passed",
+        "exit_code": 0,
+        "artifacts": [
+          "C:\\Users\\ahmed\\Projects\\duck-tape-integration-20261115\\data\\claude-expansion-final-acceptance\\20261115T091544Z-79d40c68\\restart.log"
+        ],
+        "duration_seconds": 207.908
+      },
+      {
+        "id": "frontend-build",
+        "tier": "deterministic",
+        "argv": [
+          "C:\\Program Files\\nodejs\\npm.cmd",
+          "run",
+          "build"
+        ],
+        "cwd": "C:\\Users\\ahmed\\Projects\\duck-tape-integration-20261115\\frontend",
+        "required": true,
+        "status": "passed",
+        "exit_code": 0,
+        "artifacts": [
+          "C:\\Users\\ahmed\\Projects\\duck-tape-integration-20261115\\data\\claude-expansion-final-acceptance\\20261115T091544Z-79d40c68\\frontend-build.log"
+        ],
+        "duration_seconds": 12.656
+      },
+      {
+        "id": "browser-fixtures",
+        "tier": "deterministic",
+        "argv": [
+          "C:\\Program Files\\nodejs\\npm.cmd",
+          "run",
+          "test:browser",
+          "--",
+          "tests/navigation.spec.ts",
+          "tests/imported-workflows.spec.ts",
+          "tests/evidence.spec.ts",
+          "tests/summaries.spec.ts",
+          "tests/settings.spec.ts",
+          "tests/workspace.spec.ts",
+          "tests/global-navigation.spec.ts",
+          "tests/global-catalogue.spec.ts",
+          "tests/auth.spec.ts",
+          "tests/check-summary.spec.ts",
+          "tests/model-reviews.spec.ts",
+          "tests/reviews.spec.ts",
+          "--project=chromium",
+          "--reporter=json",
+          "--output=C:\\Users\\ahmed\\Projects\\duck-tape-integration-20261115\\data\\claude-expansion-final-acceptance\\20261115T091544Z-79d40c68\\browser-fixtures-artifacts"
+        ],
+        "cwd": "C:\\Users\\ahmed\\Projects\\duck-tape-integration-20261115\\frontend",
+        "required": true,
+        "status": "passed",
+        "exit_code": 0,
+        "artifacts": [
+          "C:\\Users\\ahmed\\Projects\\duck-tape-integration-20261115\\data\\claude-expansion-final-acceptance\\20261115T091544Z-79d40c68\\browser-fixtures.log",
+          "C:\\Users\\ahmed\\Projects\\duck-tape-integration-20261115\\data\\claude-expansion-final-acceptance\\20261115T091544Z-79d40c68\\browser-fixtures.json"
+        ],
+        "counts": {
+          "startTime": "2026-11-15T09:29:29.774Z",
+          "duration": 52796.905,
+          "expected": 63,
+          "skipped": 0,
+          "unexpected": 0,
+          "flaky": 0
+        },
+        "duration_seconds": 56.237
+      }
+    ],
+    "scope": "A tier pass proves only that tier. Full live release additionally requires the documented acceptance matrix and independent reviews.",
+    "capabilities": {
+      "git": {
+        "available": true,
+        "reason": "Git executable is required"
+      },
+      "frontend": {
+        "available": true,
+        "reason": "Install Node, npm and frontend dependencies; install Playwright Chromium separately"
+      }
+    },
+    "artifact_directory": "C:\\Users\\ahmed\\Projects\\duck-tape-integration-20261115\\data\\claude-expansion-final-acceptance\\20261115T091544Z-79d40c68",
+    "complete": true
+  },
+  "backend_partition_evidence": {
+    "collected": 946,
+    "prefix_completed": 767,
+    "prefix_passed": 766,
+    "prefix_skipped": 1,
+    "prefix_failures": 0,
+    "tail_start_index": 750,
+    "tail_first_attempt_passed": 192,
+    "tail_first_attempt_failed": 4,
+    "reason": "Native adapter fixture inherited specialist disable flag; fixture now clears it to exercise automatic routing. One-shot backend gate timed out at 600 seconds.",
+    "handoff_recheck_passed": 7,
+    "covered_unique_passed": 945,
+    "covered_unique_skipped": 1,
+    "single_command_gate_passed": false
+  }
+}

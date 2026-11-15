@@ -105,3 +105,19 @@ test('sign-in pages fall through to the workspace when the server has sign-in di
  await expect(page).toHaveURL(/\/dashboard$/);
  await expect(page.getByRole('heading',{name:'Dashboard'})).toBeVisible();
 });
+
+for(const failure of ['server','network','invalid'])test(`auth configuration ${failure} failure is retryable`,async({page})=>{
+ await fixture(page);let failed=true;
+ await page.route('**/api/auth/config',route=>failed?(failure==='network'?route.abort():route.fulfill({status:failure==='server'?503:200,json:{detail:'Unavailable'}})):route.fulfill({json:{enabled:false}}));
+ await page.goto('/dashboard');await expect(page.getByRole('alert')).toContainText('Unable to load sign-in configuration');
+ failed=false;await page.getByRole('button',{name:'Retry'}).click();await expect(page.getByRole('heading',{name:'Dashboard'})).toBeVisible();
+});
+test('server rejection clears persisted session',async({page})=>{
+ await signInEnabled(page,true);await page.goto('/login');
+ await page.getByLabel('Email').fill('dev@example.com');await page.getByLabel('Password').fill('correct-horse');await page.getByRole('button',{name:'Sign in'}).click();
+ await expect(page.getByRole('heading',{name:'Dashboard'})).toBeVisible();
+ await page.route('**/api/repositories?summary=true',route=>route.fulfill({status:401,json:{detail:'Session revoked'}}));await page.reload();
+ await expect(page.getByRole('heading',{name:'Sign in'})).toBeVisible();
+ expect(await page.evaluate(()=>localStorage.getItem('sb-example-ref-auth-token'))).toBeNull();
+ await page.reload();await expect(page.getByRole('heading',{name:'Sign in'})).toBeVisible();
+});

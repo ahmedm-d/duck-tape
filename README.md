@@ -16,6 +16,8 @@ For parallel frontend work, use the [Workspace/Dashboard and Landing sections](d
 
 The fresh [model benchmark](benchmark.md) compares Adaption-hosted Qwen and Anthropic Claude on identical static smoke tasks, with local Qwen reproduction instructions and explicit limits.
 
+Claude now supports the specialist workflow and cited security/PR reviews. See [Claude coverage and live verification](docs/CLAUDE_COVERAGE.md) for configuration, demo steps and limits. These are prompted Claude roles, not trained Adaption checkpoints.
+
 ## Three-person hackathon workspace
 
 Start with the [A/B/C team plan](docs/hackathon/TEAM_PLAN.md), [three copy-paste kickoff prompts](docs/hackathon/START_HERE.md), [knowledge handoff contract](docs/hackathon/KNOWLEDGE_CONTRACT.md) and [repository rules](CONTRIBUTING.md).

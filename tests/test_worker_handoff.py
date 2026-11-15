@@ -17,7 +17,8 @@ def short_store(monkeypatch):
     base = Path(__file__).resolve().parents[1] / 'data' / 'tests' / f'h{uuid.uuid4().hex[:4]}'
     base.mkdir(parents=True, exist_ok=True)
     monkeypatch.setattr(db, 'DATA_DIR', base)
-    for name in ('STEWARD_EMBEDDING_MODEL', 'STEWARD_ATLAS_RETRIEVAL', 'STEWARD_GRAPH_ENGINE'):
+    # These tests configure fixture adapters and exercise automatic specialist selection.
+    for name in ('STEWARD_EMBEDDING_MODEL', 'STEWARD_ATLAS_RETRIEVAL', 'STEWARD_GRAPH_ENGINE', 'STEWARD_SPECIALIST_MODE'):
         monkeypatch.delenv(name, raising=False)
     db.init()
     try:

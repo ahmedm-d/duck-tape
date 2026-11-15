@@ -14,6 +14,12 @@ def test_deterministic_commands_exclude_opt_in_tests_and_inherited_live_configur
         assert gate['env']['STEWARD_TEST_URL'] is None
         assert gate['env']['STEWARD_ATLAS_REQUIRED']=='0'
         assert gate['env']['STEWARD_AUTH_REQUIRED']=='0'
+        assert gate['env']['STEWARD_SPECIALIST_MODE']=='0'
+        assert gate['env']['STEWARD_MODEL_PROVIDER']=='openai'
+        assert gate['env']['STEWARD_EMBEDDING_MODEL']==''
+        assert gate['env']['STEWARD_EMBEDDING_ENDPOINT']==''
+        assert gate['env']['STEWARD_MODEL_ENDPOINT']=='http://127.0.0.1:1'
+        assert gate['env']['STEWARD_DATA_DIR']==str(tmp_path/'runtime')
         assert gate['env']['STEWARD_SUPABASE_URL']=='' and gate['env']['STEWARD_SUPABASE_PUBLISHABLE_KEY']==''
         for name in ('STEWARD_ATLAS_ENABLED','STEWARD_ATLAS_GRAPH_MIRROR','STEWARD_ATLAS_RETRIEVAL'):
             assert gate['env'][name]=='0'

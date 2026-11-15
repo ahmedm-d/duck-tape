@@ -959,6 +959,9 @@ def repository_knowledge_map(id:str,body:dict):
             'links':links,'applicability':assessment,'coverage':'unknown'}
 
 
+from .reviews import router as review_router
+app.include_router(review_router)
+
 DIST=Path(__file__).resolve().parents[1]/'frontend'/'dist'
 if DIST.exists():
     app.mount('/assets',StaticFiles(directory=DIST/'assets'),name='assets')

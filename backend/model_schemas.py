@@ -98,6 +98,11 @@ def acceptance_ids(payload):
 
 
 def schema_for(task, legacy=False, *, payload=None):
+    if task == 'audit':
+        return obj({'summary': string(8000), 'findings': array(obj({
+            'message': string(8000), 'severity': {'type': 'string', 'enum': ['low','medium','high','critical']},
+            'reference': REFERENCE, 'verification': string(4000)}), maximum=30),
+            'limitations': array(string(2000), maximum=30)})
     if task in ('router', 'ticket_parser'):
         return {'anyOf': [ROUTER if task == 'router' else TICKET, DECISION]}
     if task in ('log_classifier', 'document', 'tool_turn'):

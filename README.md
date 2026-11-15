@@ -85,10 +85,12 @@ Prerequisites: Python 3.13+, Node 22.12+, Git and the private Atlas configuratio
 
 ```powershell
 python scripts/setup.py
-.venv/Scripts/python run.py
+.venv/Scripts/python run.py --port 8783
 ```
 
-Open **http://127.0.0.1:8765**. On macOS/Linux use `.venv/bin/python`. One startup command supervises the API and a separate persistent worker. The initial sample is seeded once; existing data is preserved. Persistent data defaults to `data/workspace/`. Model weights and machine-specific runtime manifests are not included in a clone.
+Open **http://localhost:8783/** for the integrated landing page and backend. On macOS/Linux use `.venv/bin/python`. One startup command supervises the API and a separate persistent worker. The initial sample is seeded once; existing data is preserved. Persistent data defaults to `data/workspace/`. Model weights and machine-specific runtime manifests are not included in a clone.
+
+Set `STEWARD_SEED_SAMPLE=0` in `.env` to start without automatically loading the sample project, including after restarts. The sample remains available through the workspace's sample action.
 
 For sandbox execution, install a working Linux Docker runtime and build the pinned images with `python scripts/setup.py --sandbox`. The optional setup command performs no privileged installation. If Docker is unavailable, repository analysis and patch export still work; only the reviewed sample fixtures can execute through the restricted host fallback.
 

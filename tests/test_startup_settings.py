@@ -65,3 +65,19 @@ def test_lifespan_probes_sync_runners_outside_the_api_event_loop(tmp_path,monkey
         async with main.lifespan(main.app):
             assert called==['coding','embedding']
     asyncio.run(start())
+
+
+def test_empty_workspace_stays_empty_across_restarts(tmp_path, monkeypatch):
+    import asyncio
+    from backend import main, providers
+    monkeypatch.setattr(db, 'DATA_DIR', tmp_path)
+    monkeypatch.setenv('STEWARD_SEED_SAMPLE', '0')
+    monkeypatch.delenv('STEWARD_EMBEDDED_WORKER', raising=False)
+    monkeypatch.setattr(providers, 'start_local_runner', lambda: None)
+    monkeypatch.setattr(providers, 'start_embedding_runner', lambda: None)
+    async def restart():
+        for _ in range(2):
+            async with main.lifespan(main.app):
+                assert db.list_records('repositories') == []
+                assert db.list_records('jobs') == []
+    asyncio.run(restart())

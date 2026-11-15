@@ -121,8 +121,9 @@ async def lifespan(app):
     db.init()
     await asyncio.to_thread(start_local_runner)
     await asyncio.to_thread(start_embedding_runner)
-    repo = seed_sample()
-    seed_jobs(repo)
+    if os.environ.get('STEWARD_SEED_SAMPLE', '1') != '0':
+        repo = seed_sample()
+        seed_jobs(repo)
     for r in db.list_records('repositories'):
         if not r.get('source_snapshot_id'):
             from . import snapshots

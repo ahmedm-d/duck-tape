@@ -73,3 +73,28 @@ def test_atlas_respects_path_filter_and_explicit_opt_out(store, monkeypatch):
     calls.clear()
     retrieval.retrieve('repo', snapshot['id'], 'handler', 4000, atlas=False)
     assert calls == []
+
+
+def test_atlas_distractors_preserve_fixed_graph_task_recall(store, monkeypatch):
+    files = {
+        'api.py': 'from shared import calculate\n\ndef endpoint():\n    return calculate()\n',
+        'shared.py': 'from config import RATE\n\ndef calculate():\n    return RATE\n',
+        'config.py': 'RATE = 2\n',
+        'test_api.py': 'from api import endpoint\n\ndef test_endpoint():\n    assert endpoint() == 2\n',
+        **{f'unrelated_{number}.py': f'VALUE = {number}\n' for number in range(5)},
+    }
+    snapshot = register(store, 'repo', files)
+    calls = []
+    monkeypatch.setattr(data_platforms, 'atlas_search', fake_search(calls, [(f'unrelated_{number}.py', 1.0) for number in range(5)]))
+    expected = {'api.py', 'shared.py', 'config.py', 'test_api.py'}
+    baseline = retrieval.retrieve('repo', snapshot['id'], 'endpoint', 8000, limit=4, semantic=False, atlas=False)
+    augmented = retrieval.retrieve('repo', snapshot['id'], 'endpoint', 8000, limit=4, semantic=False, atlas=True)
+    recall = lambda result: len(expected & {item['path'] for item in result['items']}) / len(expected)
+    assert recall(baseline) == 1.0
+    assert recall(augmented) == recall(baseline)
+    assert calls and 'atlas' in augmented['mode']
+    spare = retrieval.retrieve('repo', snapshot['id'], 'endpoint', 8000, limit=5, semantic=False, atlas=True)
+    assert recall(spare) == 1.0
+    extra = [item for item in spare['items'] if item['path'] not in expected]
+    assert len(extra) == 1 and 'Atlas vector candidate' in extra[0]['reason']
+    assert extra[0]['repo_id'] == 'repo' and extra[0]['snapshot_id'] == snapshot['id']

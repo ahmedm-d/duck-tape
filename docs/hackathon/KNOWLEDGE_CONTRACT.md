@@ -1,17 +1,19 @@
 # Repository and global knowledge handoff
 
-This is the **B/C integration contract**. B's side is now implemented in `backend/applicability.py` and the `/api/repositories/{id}/profile`, `/applicability` and `/applicability/intake` routes, tested against labelled fixtures in `tests/fixtures/catalogue/`. C's catalogue pipeline and Atlas catalogue lookup are still planned. Reuse existing typed provider, retrieval and intake boundaries. Agree concrete schema changes with the current integration captain before parallel implementation.
+This is the **B/C integration contract**. Repository profiles and applicability are implemented in `backend/applicability.py`; public curation, revisioned publication and Atlas lookup are implemented in `backend/global_pipeline.py` and `integrations/global/`. The backend connects those records to durable scans and source-bound jobs. Tests use labelled fixtures; live evidence is recorded separately. Reuse existing typed provider, retrieval and intake boundaries and coordinate shared schema changes with the integration captain.
 
 ## Responsibilities and storage
 
 | Object | Owner | Storage / trust boundary |
 | --- | --- | --- |
-| Private repository profile | B | Local immutable snapshot/evidence; no automatic upload of code, dependency lists or decisions to a public pipeline. |
-| Public global entry | C | Public-source processing in Databricks; curated runtime catalogue in separate Atlas collections/indexes. This pipeline is new work. |
+| Private repository profile | B | Local immutable snapshot/evidence; no automatic upload of code, dependency lists or decisions to a public pipeline (the private Atlas projection described below is separate). |
+| Public global entry | C | Public-source processing in Databricks; curated runtime catalogue in separate Atlas collections/indexes. |
 | Applicability match | B | Computed locally from the two objects and passed to existing repository signal intake. |
 | Agent context and edits | A | Bounded source-linked evidence, matched public facts and scoped approved decisions through existing model schemas/worker. |
 
-Existing Atlas `evidence_vectors` contains source-derived vectors and identifiers scoped to repository/snapshot/embedding space, with local source hydration. Keep it separate from proposed public `global_entries`/revision collections and their access policy. These new collection names are proposals, not current config variables or provisioned resources. Even embeddings and dependency lists can reveal private information. Remote embedding services receive the text they embed only when explicitly configured for that transfer.
+**Atlas is required (Option B).** Production (`run.py`) runs with `STEWARD_ATLAS_REQUIRED=1` by default and will not start without a working private Atlas connection. Duck Tape therefore projects repository knowledge to the team's private Atlas project by design. Sent: hashed-ID chunk vectors (`ducktape.evidence_vectors`); graph nodes and edges with file paths, symbol names and declaration lines (`ducktape.repo_nodes`, `ducktape.repo_edges`); team-approved, non-stale knowledge text (`ducktape.approved_knowledge`). Never sent: team notes, drafts, file bodies, secret-bearing files, jobs or patches, credentials. SQLite stays authoritative for workflow state, leases, approvals and the approval decision; Atlas holds the current snapshot's projection and can be rebuilt from SQLite. `STEWARD_ATLAS_REQUIRED=0` is the test/CI escape hatch. The private repository profile and applicability matching still run locally, and the public catalogue stays a separate public collection set that never receives repository content or decisions; a catalogue query carries only the ecosystem and package names being looked up.
+
+Atlas `evidence_vectors` contains source-derived vectors and identifiers scoped to repository/snapshot/embedding space, with local source hydration. It is separate from `ducktape_public` catalogue records and their access policy. Graph/approved-knowledge collections reconcile to one current projection after successful sync; vector upserts retain older namespaces and do not implement automatic retention cleanup. Retrieval accepts only the requested locally valid namespace, so historical vectors cannot become current evidence. Even embeddings and dependency lists can reveal private information. Remote embedding services receive the text they embed only when explicitly configured for that transfer. Required mode makes the private Atlas projection mandatory, not remote embedding. Declaration text is limited to parsed Python headers; ambiguous/non-Python declarations are withheld, while graph paths, labels and line references remain.
 
 SQLite remains authoritative for workflow state, repository knowledge approval, leases, checks and patch approval. Team notes stay outside model inputs, retrieval, training and cloud analytics. `backend/knowledge.py`'s `global` scope is repository-wide, not shared global knowledge.
 
@@ -25,7 +27,7 @@ SQLite remains authoritative for workflow state, repository knowledge approval, 
 
 A receives a bounded context bundle with actual file ranges/hashes, current match provenance, missing evidence and relevant approved decision versions. Public articles and repository text are untrusted evidence, never permission changes. Revision comments remain job-local unless separately promoted and approved as knowledge.
 
-## Databricks to Atlas pipeline (C, planned)
+## Databricks to Atlas pipeline (C, implemented adapters)
 
 1. Fetch bounded public OSV/curated source records with attribution and retrieval time. Reuse the application's public URL validation; reject private addresses and unsafe redirects. Preserve source failures and partial coverage.
 2. Normalize ecosystems, aliases, affected/fixed version rules and evidence; validate the agreed schema. Retain source revisions and withdrawal status. Unsupported versions remain unknown.
@@ -33,7 +35,7 @@ A receives a bounded context bundle with actual file ranges/hashes, current matc
 4. Publish validated revisions to the separate Atlas catalogue idempotently, marking a revision available only after its complete validated content is stored. Retry publication without duplicating entries or losing the previous valid revision.
 5. Offer bounded package/ecosystem queries for B. Runtime repository matching reads the published catalogue; it does not need to start a Databricks pipeline for every request. Label stale/offline results.
 
-Start with OSV plus one sourced improvement. Existing `scripts/integrations.py` has private-vector commands and agent-metrics export only; these catalogue stages and their commands still need implementation. Existing terminal metrics remain a separate Databricks evaluation dataset with no source, prompts, notes or logs.
+OSV and attributed improvements have implemented CLI ingestion, revisioned catalogue queries and publication commands in `scripts/integrations.py`. The recorded Databricks-to-local-restore-to-Atlas path is distinct from direct scheduled cloud publication, which still needs qualification. Terminal metrics remain a separate Databricks evaluation dataset with no source, prompts, notes or logs.
 
 ## Existing intake and lifecycle
 

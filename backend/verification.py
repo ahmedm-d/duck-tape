@@ -21,6 +21,8 @@ def _benchmark(output):
 def run(run_id,base,candidate,plan,cancel=None):
     base,candidate,plan=sandbox.data(base),sandbox.data(candidate),sandbox.data(plan)
     files=sandbox.source_files(base)
+    modes={sandbox.data(item)['path']:sandbox.data(item).get('mode',0o644) for item in base.get('files',[])} if isinstance(base.get('files'),list) else {}
+    changed_modes=dict(modes)
     base_id=base.get('id',base.get('snapshot',''))
     patch=candidate['patch_hash']
     if candidate.get('base_snapshot')!=base_id: raise ValueError('Candidate belongs to another source snapshot')
@@ -29,7 +31,9 @@ def run(run_id,base,candidate,plan,cancel=None):
         path=item['path']
         after=item.get('after',item.get('content'))
         if after is None: changed.pop(path,None)
-        else: changed[path]=after
+        else:
+            changed[path]=after
+            changed_modes[path]=item.get('mode',modes.get(path,0o644))
     sandbox.source_files({'files':changed})
     results=[]
     benchmarks=[sandbox.data(command) for command in plan.get('commands',[]) if sandbox.data(command).get('purpose',sandbox.data(command).get('kind'))=='benchmark']
@@ -58,14 +62,15 @@ def run(run_id,base,candidate,plan,cancel=None):
             if count(after)<count(before): weakened.append(name+' reduces test declarations')
     if weakened: results.append(_record('test_integrity','failed',base_id,patch,required=True,stdout='; '.join(weakened)))
     test_edits={name:content for name,content in changed.items() if tests(name) and files.get(name)!=content}
-    phases=[('baseline',files)]
-    if test_edits: phases.append(('regression_before',{**files,**test_edits}))
-    phases.append(('candidate',changed))
+    phases=[('baseline',files,modes)]
+    if test_edits: phases.append(('regression_before',{**files,**test_edits},{**modes,**{name:changed_modes[name] for name in test_edits}}))
+    phases.append(('candidate',changed,changed_modes))
     environments=[]
     try:
-        for phase,tree in phases:
+        for phase,tree,tree_modes in phases:
             phase_id=run_id
-            prepared=dependencies.prepare(phase_id,{'id':base_id,'files':tree},plan,cancel)
+            entries=[{'path':name,'content':content,'mode':tree_modes.get(name,0o644)} for name,content in tree.items()]
+            prepared=dependencies.prepare(phase_id,{'id':base_id,'files':entries},plan,cancel)
             sid=prepared['sandbox_id']; environments.append(phase_id)
             # Benchmarks run before repository test/build commands can mutate their files.
             for original in sorted(plan.get('commands',[]),key=lambda value:sandbox.data(value).get('purpose',sandbox.data(value).get('kind'))!='benchmark'):

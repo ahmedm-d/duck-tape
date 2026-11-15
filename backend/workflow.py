@@ -55,6 +55,8 @@ def transition(job_id, action, payload, expected_version=None):
         }
         if action not in allowed or status not in allowed[action]:
             raise Conflict(f'Illegal transition: {action} from {status}')
+        if j.get('catalogue') and j.get('stale') and action in {'approve','retry','revise','decide','accept'}:
+            raise Conflict('Catalogue evidence is stale; re-assess applicability and submit current evidence before retrying')
         if action == 'note':
             db.put_in(con, 'notes', {'job_id': job_id, 'text': _text(payload), 'author': AUTHOR, 'kind': 'team-note'})
             return j

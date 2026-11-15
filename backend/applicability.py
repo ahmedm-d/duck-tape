@@ -267,8 +267,8 @@ def match(profile: dict, entry: dict) -> dict:
             elif verdict is None:
                 unknowns.append(f'{package["name"]} {package["version"]} in {package["path"]} cannot be compared with the affected-version rules')
         blocking = [gap for gap in profile['gaps'] if gap['ecosystem'] in (None, ecosystem)]
-        if not present and blocking:
-            unknowns.append(f'{rule["package"]} was not resolved, and {len(blocking)} unresolved {ECOSYSTEMS[ecosystem]} manifest gap(s) leave its presence unknown')
+        if blocking:
+            unknowns.append(f'{len(blocking)} unresolved {ECOSYSTEMS[ecosystem]} manifest gap(s) leave additional affected copies of {rule["package"]} and their presence unknown')
     status = 'matched' if evidence else 'unknown' if unknowns else 'not_matched'
     vulnerability = entry['kind'] == 'vulnerability'
     entry_status = entry.get('status', 'active')

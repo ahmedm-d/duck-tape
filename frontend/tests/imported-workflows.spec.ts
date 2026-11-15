@@ -21,7 +21,7 @@ for(const previousRevision of [false,true])test(`unverified candidate exports ex
 test('failed candidate checks and exact captured evidence remain inspectable',async({page})=>{
  await fixture(page);await page.goto('/#/repositories/repo-one/jobs/job-one');
  await expect(page.getByRole('heading',{name:'Fix quoted prices'})).toBeVisible();
- await page.getByRole('button',{name:'Evidence',exact:true}).click();
+ await page.getByRole('button',{name:'Checks',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Candidate checks'})).toBeVisible();
  await page.locator('details').filter({hasText:'candidate'}).first().click();
  await expect(page.getByText('AssertionError: expected integer cents',{exact:true})).toBeVisible();
@@ -33,6 +33,7 @@ test('knowledge approval names the version and snapshot being reviewed',async({p
  await fixture(page);let approval:any;
  await page.route('**/api/knowledge/knowledge-one/approve',async route=>{approval=route.request().postDataJSON();await route.fulfill({json:{id:'knowledge-one',version:3,status:'team-approved'}})});
  await page.goto('/#/repositories/repo-one/knowledge');
+ await page.getByRole('button',{name:'Decisions',exact:true}).click();
  await page.getByRole('button',{name:'Approve version 2'}).click();
  await expect.poll(()=>approval).toEqual({version:2,snapshot:'snapshot-one'});
 });
@@ -41,8 +42,8 @@ test('switching repositories discards a pending answer from the previous snapsho
  await fixture(page);let release:()=>void=()=>{};const waiting=new Promise<void>(resolve=>release=resolve);
  await page.route('**/api/repositories/repo-one/ask',async route=>{await waiting;await route.fulfill({json:{answer:'OLD_REPOSITORY_ANSWER',mode:'fixture',citations:[]}}).catch(()=>{})});
  await page.goto('/#/repositories/repo-one/repository');
- await page.getByLabel('Repository question').fill('How does this work?');await page.getByRole('button',{name:'Ask',exact:true}).click();
- await page.getByRole('combobox',{name:'Repository',exact:true}).selectOption('repo-two');release();
+ await page.getByLabel('Project question').fill('How does this work?');await page.getByRole('button',{name:'Ask',exact:true}).click();
+ await page.getByLabel('Switch project').selectOption('repo-two');release();
  await expect(page.getByText('OLD_REPOSITORY_ANSWER')).toHaveCount(0);
 });
 

@@ -17,4 +17,5 @@ pytest-cache-files-*/
 *.tsbuildinfo
 *.log
 test-results/
+frontend/test-results-*/
 .worktrees/

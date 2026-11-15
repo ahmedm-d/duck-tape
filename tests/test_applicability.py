@@ -78,6 +78,17 @@ def test_python_gap_does_not_block_unrelated_npm_decision():
     assert applicability.match(profile, entry())['status'] == 'not_matched'
 
 
+def test_safe_pin_does_not_hide_an_unresolved_copy():
+    profile = applicability.build_profile(index({'a/requirements.txt': 'requests==2.32.0\n',
+                                                'b/requirements.txt': 'requests>=2.0\n'}))
+    advisory = entry(affected=[{'ecosystem': 'PyPI', 'package': 'requests',
+                               'ranges': [{'introduced': '0', 'fixed': '2.32.0'}]}])
+    assert applicability.match(profile, advisory)['status'] == 'unknown'
+    affected = applicability.build_profile(index({'a/requirements.txt': 'requests==2.31.0\n',
+                                                 'b/requirements.txt': 'requests>=2.0\n'}))
+    assert applicability.match(affected, advisory)['status'] == 'matched'
+
+
 def test_explicit_versions_non_numeric_ranges_and_pypi_name_normalisation():
     profile = applicability.build_profile(index({'requirements.txt': 'Zope_Interface==5.4.0\n'}))
     listed = entry(affected=[{'ecosystem': 'PyPI', 'package': 'zope.interface', 'versions': ['5.4.0']}])

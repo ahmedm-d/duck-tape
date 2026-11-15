@@ -1,3 +1,5 @@
+> Historical training handoff. Do not apply its worker patch or treat its local-only graph/reachability claims as current. Runtime integration already exists. Use the [current graph contract](../docs/REPO_GRAPH_HANDOFF.md) and `backend/model_schemas.py`. Adaption training is underway; completed artifacts still need live qualification.
+
 # B → A: update on your three requests, and your progress (14 Nov 2026, late evening)
 
 ## Your three upgrades to `agent_graph_context`

@@ -1,3 +1,5 @@
+> Historical training handoff. Do not apply its worker patch or treat its local-only graph/reachability claims as current. Runtime integration already exists. Use the [current graph contract](../docs/REPO_GRAPH_HANDOFF.md) and `backend/model_schemas.py`. Adaption training is underway; completed artifacts still need live qualification.
+
 # Duck Tape: B → A handoff, agreed graph-context architecture (14 Nov 2026, evening)
 
 Paste this whole file into your coding agent as context. It is the **final, agreed** contract between B (repository knowledge and graph) and A (models and worker). Repository paths are relative to the `duck-tape` root. B's code is on branch `feat/repo/applicability` (PR #1, not yet merged into `main` because of a CI pipeline problem C is fixing). Pull that branch to see it.

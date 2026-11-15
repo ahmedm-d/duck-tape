@@ -1,5 +1,7 @@
+import {previewMode,demoResponse} from './demo';
 export type Row=Record<string,any>;
 export async function api(path:string,method='GET',body?:unknown,signal?:AbortSignal){
+ if(previewMode)return demoResponse(path,method);
  const res=await fetch('/api'+path,{method,signal,headers:body instanceof FormData?{}:{'Content-Type':'application/json'},body:body===undefined?undefined:body instanceof FormData?body:JSON.stringify(body)});
  if(!res.ok){let message;try{const error=await res.json();message=typeof error.detail==='string'?error.detail:JSON.stringify(error.detail||error)}catch{message=res.statusText}throw new Error(message)}
  return res.status===204?null:res.json();

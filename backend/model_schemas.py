@@ -1,5 +1,5 @@
 """One schema source for constrained generation and local trust-boundary validation."""
-SCHEMA_VERSION = 'steward-schema-3'
+SCHEMA_VERSION = 'steward-schema-4'
 
 
 def obj(properties):
@@ -51,6 +51,21 @@ QA = obj({'answer': TEXT, 'citations': array(REFERENCE)})
 INVESTIGATION = obj({'summary': TEXT, 'evidence': array(REFERENCE), 'missing': array(string(1000))})
 PLAN = obj({'steps': array(obj({'description': TEXT, 'paths': array(PATH)}), 1, 20),
             'acceptance': array(TEXT, 1, 20)})
+AGENT_ROLES = ['ticket_parser', 'retriever', 'implementer', 'test_writer', 'reviewer_dpo',
+               'security_reviewer_dpo', 'db_migration', 'iac', 'frontend_ui', 'human_decision']
+ROUTER = obj({'next_agent': {'type': 'string', 'enum': AGENT_ROLES}, 'routing_reason': PATH,
+              'risk_level': {'type': 'string', 'enum': ['low', 'medium', 'high']},
+              'token_budget': {'type': 'integer', 'minimum': 256, 'maximum': 65536}})
+TICKET = obj({'title': PATH, 'source': {'type': 'string', 'enum': ['ticket', 'request', 'security', 'analysis', 'research']},
+              'type': {'type': 'string', 'enum': ['feature', 'fix', 'refactor', 'security', 'performance']},
+              'priority': {'type': 'string', 'enum': ['critical', 'high', 'medium', 'low']},
+              'candidate_files_or_symbols': array(PATH)})
+LOG_CLASSIFICATION = obj({'failure_category': {'type': 'string', 'enum': [
+    'regression', 'baseline_failure', 'flaky_test', 'missing_dependency', 'syntax_error', 'sandbox_blocked']},
+    'failing_tests': array(PATH), 'root_cause_summary': PATH, 'recommended_action': PATH})
+DOCUMENT = obj({'text': {'type': 'string', 'minLength': 1, 'maxLength': 200000}})
+TOOL_TURN = obj({'text': TEXT, 'tool_calls': array(obj({
+    'id': PATH, 'name': PATH, 'arguments': TEXT}), 0, 8)})
 
 
 def test_operations(payload):
@@ -83,6 +98,11 @@ def acceptance_ids(payload):
 
 
 def schema_for(task, legacy=False, *, payload=None):
+    if task in ('router', 'ticket_parser'):
+        return {'anyOf': [ROUTER if task == 'router' else TICKET, DECISION]}
+    if task in ('log_classifier', 'document', 'tool_turn'):
+        return {'log_classifier': LOG_CLASSIFICATION, 'document': DOCUMENT,
+                'tool_turn': {'anyOf': [TOOL_TURN, DECISION]}}[task]
     if not legacy and payload is not None and task in ('acceptance', 'regression'):
         operations = test_operations(payload)
         if task == 'regression':
@@ -139,7 +159,7 @@ def check(value, schema):
         if type(value) is not bool:
             raise ValueError('Invalid model boolean')
     elif kind == 'integer':
-        if type(value) is not int or value < schema.get('minimum', 0):
+        if type(value) is not int or value < schema.get('minimum', 0) or value > schema.get('maximum', float('inf')):
             raise ValueError('Invalid model integer')
     elif kind == 'null':
         if value is not None:

@@ -179,6 +179,16 @@ def _graph_context_block(repo, snapshot_id, query, job, *, approved=None, cancel
     return f"<graph_context>\n{json.dumps(graph_ctx)}\n</graph_context>"
 
 
+def route_stage(stage, payload, invoke):
+    """Routing can add specialist evidence or request a decision, never skip a gate."""
+    if not providers.resolve_target('router', 'router')['specialist']:
+        return None
+    result = invoke('router', {**payload, 'stage': stage}, 'router-' + stage, agent_role='router')
+    if result.get('next_agent') == 'human_decision':
+        raise ValueError('Router requested a human decision without concrete options; retry with a decision card')
+    return result
+
+
 def _process_legacy_fixture(job_id):
     token=str(uuid.uuid4())
     def claim(job):
@@ -380,7 +390,7 @@ def process_job(job_id):
         guard(job_id, token)
         if 'provider_attempts' in fields:
             records=fields['provider_attempts']
-            coding=next((item for item in records if item.get('role') in ('implementation','repair')),records[0] if records else {})
+            coding=next((item for item in records if item.get('role') in ('implementation','repair') or item.get('agent_role') == 'implementer'),records[0] if records else {})
             review=next((item for item in reversed(records) if item.get('role')=='review'),None)
             fields['provider']={**coding,'stages':records,'review':review}
         run = db.put('runs', {**run, **fields})
@@ -402,12 +412,12 @@ def process_job(job_id):
         decisions = [record for record in db.list_records('decisions') if record.get('job_id') == job_id]
         decisions = [{**record, 'selected': job.get('selected_decisions', {}).get(record['id'], record.get('selected'))} for record in decisions]
         approved = [record for record in db.list_records('knowledge') if record.get('repo_id') == repo['id'] and record.get('status') == 'team-approved']
-        retrieval_snapshot_id = repo.get('source_snapshot_id') or repo['snapshot']
+        retrieval_snapshot_id = source_id
         initial_query = job['title']+' '+job['description']
         context = retrieval.retrieve(repo['id'], retrieval_snapshot_id, initial_query, knowledge=approved, cancel=cancel)
         context.pop('latency_ms',None)
         context.update(snapshot=repo['snapshot'], repo_id=repo['id'])
-        seed_job = {**{key: job.get(key) for key in ('id','title','description','base_snapshot','current_revision','revision_instructions','retry_generation','applicability')},
+        seed_job = {**{key: job.get(key) for key in ('id','title','description','source','type','priority','base_snapshot','current_revision','revision_instructions','retry_generation','applicability')},
                     **({'catalogue': job['catalogue']} if 'catalogue' in job else {})}
         seed = {'job': seed_job,
                 'source_snapshot_id': source_id, 'knowledge': approved,
@@ -430,19 +440,23 @@ def process_job(job_id):
                 log = telemetry.get('attempt_log') or ([{'usage':telemetry.get('usage')}] if telemetry.get('attempts') else [])
                 output += sum((entry.get('usage') or {}).get('output_tokens') if (entry.get('usage') or {}).get('output_tokens') is not None else telemetry.get('output_reservation',1024) for entry in log)
             return attempts, output
-        def call(task, payload, label):
+        def call(task, payload, label, *, agent_role=None):
             guard(job_id, token)
             request = ProviderRequest(task=task, payload=payload, repo_id=repo['id'], snapshot_id=source_id, risk=job.get('risk','medium'),
                                       max_output_tokens=min(2048, providers.capabilities(task)['max_output_tokens']), failure_count=len(payload.get('feedback', [])), cache=False)
-            config=providers.configuration()
+            if agent_role:
+                # Compatible with B's pending optional ProviderRequest.agent_role field.
+                request = request.model_copy(update={'agent_role': agent_role})
+            config=providers.resolve_target(task, agent_role)
             serialized=json.dumps(payload,separators=(',',':'))
             try:
-                resolved_model,_=providers.route(task,request.risk,len(serialized.encode()),request.scope,request.failure_count)
+                resolved_model = config['model'] if config['specialist'] else providers.route(task,request.risk,len(serialized.encode()),request.scope,request.failure_count)[0]
             except providers.ProviderError as exc:
                 if exc.code!='no_model_configured': raise
                 resolved_model=None  # Live completion still rejects unconfigured providers.
             provider_identity={'endpoint':config['endpoint'],'kind':config['kind'],'model':resolved_model,
-                               'capabilities':providers.capabilities(task),'prompt':providers.PROMPT_VERSION,'schema':model_schemas.schema_for(task,payload=payload)}
+                               'capabilities':providers.capabilities(task),'prompt':providers.PROMPT_VERSION,'schema':model_schemas.schema_for(task,payload=payload),
+                               'agent_role':agent_role,'serving_endpoint':config['serving_endpoint'],'context_limit':config['context_limit']}
             fingerprint = workflow.input_fingerprint({'request':request.model_dump(), 'workflow_key':workflow_key, 'label':label,'provider':provider_identity})
             stage_id = workflow.input_fingerprint({'job_id':job_id,'fingerprint':fingerprint})
             previous = db.get('run_stages',stage_id)
@@ -455,13 +469,14 @@ def process_job(job_id):
                 raise ValueError('Job provider call/output budget exhausted')
             request = request.model_copy(update={'attempt_budget':min(2,12-attempts,(30000-output_tokens)//request.max_output_tokens)})
             stage = db.put('run_stages', {'id':stage_id,'job_id':job_id,'run_id':run['id'],'stage':task,'label':label,'workflow_key':workflow_key,'budget_key':budget_key,
-                                          'input_fingerprint':fingerprint,'input':request.model_dump(),'status':'running',
+                                          'input_fingerprint':fingerprint,'input':{**request.model_dump(),'agent_role':agent_role},'status':'running',
                                           'attempt_history':(previous.get('attempt_history',[])+[previous['telemetry']]) if previous else [],
                                           'telemetry': {'attempts':1,'usage':None,'output_reservation':request.max_output_tokens}})
             telemetry=stage['telemetry']
             try:
                 result = providers.complete(request, cancel)
-                telemetry=result.telemetry
+                telemetry={**result.telemetry,'role':task,'agent_role':agent_role}
+                result=result.model_copy(update={'telemetry':telemetry})
                 guard(job_id, token)
                 model_schemas.validate(result.output,task,payload=payload)
                 if task=='investigation':
@@ -480,6 +495,23 @@ def process_job(job_id):
                 db.put('run_stages',{**stage,'status':'failed' if isinstance(exc,Exception) else 'interrupted','error':type(exc).__name__,
                                      'telemetry':getattr(exc,'telemetry',None) or telemetry})
                 raise
+        def generate(task, payload, label):
+            from . import agent_adapters, agent_session
+            if task in ('implementation', 'repair') and providers.resolve_target('tool_turn', 'implementer')['specialist']:
+                response = agent_session.run(source_id, payload,
+                    lambda body, turn: call('tool_turn', body, label + '-turn-' + str(turn), agent_role='implementer'),
+                    db.DATA_DIR/'worktrees'/job_id[:12]/token[:8]/('native-'+label), cancel=cancel)
+                model_schemas.validate(response, task, payload=payload)
+                return response
+            if task in ('regression', 'acceptance') and providers.resolve_target('document', 'test_writer')['specialist']:
+                document = call('document', payload, label+'-native', agent_role='test_writer')
+                if task == 'regression':
+                    response = agent_adapters.document_operations(document, source_id)
+                    model_schemas.validate(response, task, payload=payload)
+                    return response
+                # Markdown has no criterion-to-test coverage contract; retain the strict acceptance controller.
+                payload = {**payload, 'test_writer_proposal': document}
+            return call(task, payload, label)
         def decision(output, label):
             details = output['decision']
             identity = workflow.input_fingerprint({'job':job_id,'workflow':workflow_key,'label':label,'decision':details})
@@ -523,6 +555,26 @@ def process_job(job_id):
         paths = {item['path'] for item in context['items']}
         if not constraints(paths): return
         base_payload = {'job':seed['job'],'context':context,'approved_knowledge':approved,'approved_decisions':[record for record in decisions if record.get('selected')],'graph_context':_graph_context_block(repo,retrieval_snapshot_id,initial_query,job,approved=approved,cancel=cancel),'snapshot':source_id}
+        routing = route_stage('investigation', base_payload, call)
+        if routing:
+            if 'decision' in routing:
+                if decision(routing, 'router'): return
+                raise ValueError('Selected routing decision must be incorporated')
+            save(specialist_routing=routing)
+            base_payload['routing_advice'] = routing
+        if providers.resolve_target('ticket_parser', 'ticket_parser')['specialist']:
+            ticket = call('ticket_parser', base_payload, 'ticket-parser', agent_role='ticket_parser')
+            if 'decision' in ticket:
+                if decision(ticket, 'ticket'): return
+                raise ValueError('Selected ticket decision must be incorporated')
+            # Parsed labels do not change source policy or the job's required verification.
+            base_payload['parsed_ticket'] = ticket
+            save(parsed_ticket=ticket)
+        specialist = 'security_reviewer_dpo' if job.get('type') == 'security' else (routing or {}).get('next_agent')
+        if specialist in ('security_reviewer_dpo', 'db_migration', 'iac', 'frontend_ui') and providers.resolve_target('document', specialist)['specialist']:
+            document = call('document', base_payload, 'specialist-investigation', agent_role=specialist)
+            base_payload['specialist_investigation'] = document
+            save(specialist_investigation=document)
         investigation = call('investigation',base_payload,'investigation')
         save(investigation=investigation)
         plan = call('planning',{**base_payload,'investigation':investigation},'planning')
@@ -598,7 +650,7 @@ def process_job(job_id):
             if test_role=='acceptance':
                 regression_payload.update(acceptance_criteria=[{'id':'criterion-'+str(number),'description':description} for number,description in enumerate(plan['acceptance'],1)],
                                           instruction='Write only executable feature acceptance tests. Cover every supplied criterion id with an exact test function name or JS/TS test label. files are editable tests; read_only_sources must not be edited. Leave implementation unchanged; preserve existing unrelated assertions.')
-            regression=call(test_role,regression_payload,test_role)
+            regression=generate(test_role,regression_payload,test_role)
             def check_regression(output,destination):
                 nonlocal acceptance_sources
                 if 'edits' not in output:
@@ -619,7 +671,7 @@ def process_job(job_id):
             except ValueError as exc:
                 save(**{test_role+'_failure':{'output':regression,'error':str(exc)[:1000]}})
                 regression_repairs=1
-                regression=call(test_role,{**regression_payload,'feedback':[{'error':str(exc)[:1000],'previous_edits':regression.get('edits',[])}],
+                regression=generate(test_role,{**regression_payload,'feedback':[{'error':str(exc)[:1000],'previous_edits':regression.get('edits',[])}],
                                               'instruction':'Correct the indicated test references and edit preconditions. Change only test files. Existing supplied test paths need UPDATE with the supplied hash, not CREATE; preserve criterion coverage.'},test_role+'-correction')
                 check_regression(regression,db.DATA_DIR/'worktrees'/job_id[:12]/token[:8]/(test_role+'-corrected'))
             regression_operations=regression['edits']
@@ -634,7 +686,7 @@ def process_job(job_id):
         guard(job_id,token,status='Implementing')
         for attempt in range(3-regression_repairs):
             task = 'implementation' if attempt==0 else 'repair'
-            response = call(task,{**payload,'feedback':feedback},task+'-'+str(attempt))
+            response = generate(task,{**payload,'feedback':feedback},task+'-'+str(attempt))
             while 'request_context' in response and evidence_rounds<2:
                 evidence_rounds+=1
                 query=response['request_context']
@@ -647,7 +699,7 @@ def process_job(job_id):
                 if not constraints(paths): return
                 payload.update(context=compact_context(),approved_knowledge=approved,graph_context=_graph_context_block(repo,retrieval_snapshot_id,query,job,approved=approved,cancel=cancel))
                 save(context=context,evidence_rounds=evidence_rounds)
-                response=call(task,{**payload,'feedback':feedback},task+'-context-'+str(evidence_rounds))
+                response=generate(task,{**payload,'feedback':feedback},task+'-context-'+str(evidence_rounds))
             if 'request_context' in response: raise ValueError('Evidence request budget exhausted')
             if 'decision' in response:
                 if decision(response,'implementation'): return
@@ -670,7 +722,7 @@ def process_job(job_id):
                     data=edits.read_file(source_id,path,hashlib.sha256(source_files[path]).hexdigest())
                     full_files.append({'path':path,'hash':hashlib.sha256(data).hexdigest(),'complete':True,'content':data.decode('utf-8')})
                 payload.update(files=full_files,context=compact_context(),approved_knowledge=approved)
-                response=call(task,{**payload,'feedback':feedback},task+'-affected-'+str(evidence_rounds))
+                response=generate(task,{**payload,'feedback':feedback},task+'-affected-'+str(evidence_rounds))
                 if 'edits' not in response: raise ValueError('Affected-file evidence needs concrete edits')
                 if regression_operations:
                     combined={operation['path']:operation for operation in regression_operations}
@@ -732,10 +784,18 @@ def process_job(job_id):
                             excerpt.update(stdout=text[-limit:],stdout_truncated=len(text)>limit)
                         excerpts.append(excerpt)
                     feedback=[{'kind':'verification','checks':excerpts,'assessment':assessment}]
+                    if providers.resolve_target('log_classifier', 'log_classifier')['specialist']:
+                        classification = call('log_classifier', {**base_payload, 'checks':excerpts, 'assessment':assessment},
+                                              'log-classification-'+str(attempt), agent_role='log_classifier')
+                        save(log_classification=classification)
+                        feedback[0]['classification'] = classification
                 else:
                     review_payload={'job':seed['job'],'approved_knowledge':approved,'approved_decisions':payload['approved_decisions'],
                                     'proposed_sources':[{'path':item['path'],'content':item['after']} for item in candidate.files if not item['binary']],
                                     'checks':result,'patch':candidate.diff,'plan':plan,'acceptance_coverage':acceptance_coverage,'graph_context':payload.get('graph_context')}
+                    if providers.resolve_target('document', 'reviewer_dpo')['specialist']:
+                        review_payload['specialist_review'] = call('document', review_payload, 'native-review-'+str(attempt), agent_role='reviewer_dpo')
+                        save(specialist_review=review_payload['specialist_review'])
                     review=call('review',review_payload,'review-'+str(attempt))
                     save(review=review)
                     references={item['path']:item.get('after') for item in candidate.files}
@@ -752,6 +812,13 @@ def process_job(job_id):
                     if not review['approved']:
                         feedback=[{'kind':'review','review':review}]
                     else:
+                        specialist_explanation = None
+                        if providers.resolve_target('document', 'commit_pr_writer')['specialist']:
+                            from .agent_adapters import document_sections
+                            document = call('document', {**review_payload, 'assessment':assessment, 'review':review},
+                                            'explanation-'+str(attempt), agent_role='commit_pr_writer')
+                            specialist_explanation = document_sections(document)
+                            save(specialist_explanation=specialist_explanation)
                         guard(job_id,token,status='Verifying')
                         number=1+max([item['number'] for item in db.list_records('revisions') if item.get('job_id')==job_id] or [0])
                         revision={'id':uuid.uuid4().hex,'job_id':job_id,'number':number,'diff':candidate.diff,'files':candidate.files,'patch_hash':candidate.patch_hash,
@@ -759,6 +826,8 @@ def process_job(job_id):
                                   'context':context,'provider':run.get('provider',{}),'review':review,'explanation':response['explanation'],
                                   'assessment':assessment,'acceptance_coverage':acceptance_coverage,
                                   'confidence':'Supported by sandbox checks and separate model review','uncertainty':assessment['limitations'],'created_at':db.now(),'author':'Duck Tape'}
+                        if specialist_explanation:
+                            revision.update(specialist_explanation=specialist_explanation, explanation=specialist_explanation['summary'])
                         for item in result: item.update(revision_id=revision['id'],base_snapshot=repo['snapshot'])
                         publish(job_id,token,revision,result)
                         return

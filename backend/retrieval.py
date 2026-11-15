@@ -119,7 +119,7 @@ def _cosine(first, second):
     return sum(a*b for a, b in zip(first, second)) / divisor if divisor else 0
 
 
-def _atlas_candidates(repo_id, snapshot_id, query, available, limit, cancel):
+def _atlas_candidates(repo_id, snapshot_id, query, available, limit, cancel, required=False):
     """Opt-in Atlas vector candidates, accepted only when they resolve to local eligible chunks."""
     from . import data_platforms
     _check(cancel)
@@ -130,6 +130,8 @@ def _atlas_candidates(repo_id, snapshot_id, query, available, limit, cancel):
     except Exception as exc:
         _check(cancel)
         reason = str(exc) if isinstance(exc, data_platforms.DataPlatformError) else type(exc).__name__
+        if required:
+            return [], f'Atlas was required but unavailable ({reason}); degraded to local keyword/graph fallback'
         return [], f'Atlas candidates unavailable ({reason}); local keyword/graph fallback'
     _check(cancel)
     hits = [(item['chunk_id'], item['score']) for item in result.get('matches', []) if item.get('chunk_id') in available]
@@ -146,6 +148,9 @@ def _graphify_edges(repo_id, snapshot_id, cancel):
         built = graphify_graph.graphify(repo_id, snapshot_id, cancel=cancel)
     except graphify_graph.GraphifyUnavailable as exc:
         return [], f'Graphify graph unavailable ({exc}); built-in import/call graph only'
+    if built.get('repo_id') != repo_id or built.get('snapshot_id') != snapshot_id:
+        raise ValueError('Graph scope does not match the requested repository snapshot')
+    _check(cancel)
     nodes = {node['id']: node for node in built['nodes']}
     edges, seen = [], set()
     for edge in built['edges']:
@@ -230,14 +235,10 @@ def retrieve(repo_id, snapshot_id, query=None, budget_tokens=7000, paths=None, *
         except Exception as exc:
             _check(cancel)
             semantic_note = f'Embedding provider unavailable ({type(exc).__name__}); keyword/graph fallback'
-    use_atlas = not legacy and (atlas if atlas is not None else os.getenv('STEWARD_ATLAS_RETRIEVAL') == '1')
+    from .atlas_mode import atlas_required
+    required = atlas is None and atlas_required()
+    use_atlas = not legacy and (atlas if atlas is not None else required or os.getenv('STEWARD_ATLAS_RETRIEVAL') == '1')
     atlas_used, atlas_note = False, None
-    if use_atlas and available:
-        hits, atlas_note = _atlas_candidates(repo_id, snapshot_id, query, available, limit, cancel)
-        for key, score in hits:
-            scores[key] = scores.get(key, 0) + score * 20
-            reasons.setdefault(key, []).append(f'Atlas vector candidate {score:.3f}')
-        atlas_used = bool(hits)
     by_path = {}
     for key, chunk in available.items():
         by_path.setdefault(chunk['path'], []).append(key)
@@ -275,6 +276,13 @@ def retrieve(repo_id, snapshot_id, query=None, budget_tokens=7000, paths=None, *
             if available[keys[0]].get('category') in {'documentation', 'configuration', 'dependencies'}:
                 scores.setdefault(keys[0], 1)
                 reasons.setdefault(keys[0], ['repository documentation/configuration context'])
+    local_scores = dict(scores)
+    if use_atlas and available:
+        hits, atlas_note = _atlas_candidates(repo_id, snapshot_id, query, available, limit, cancel, required)
+        for key, score in hits:
+            scores.setdefault(key, score * 20)
+            reasons.setdefault(key, []).append(f'Atlas vector candidate {score:.3f}')
+        atlas_used = bool(hits)
     missing = list(index.get('gaps', [])) + metadata.get('gaps', [])
     if graph or use_semantic:
         missing.append(semantic_note)
@@ -305,7 +313,8 @@ def retrieve(repo_id, snapshot_id, query=None, budget_tokens=7000, paths=None, *
         raise ValueError('Applicable approved constraints or context metadata exceed the model budget')
     remaining = budget_tokens - base_cost
     items = []
-    for key in sorted(scores, key=lambda item: (-scores[item], available[item]['end_line'] - available[item]['start_line'], available[item]['path'], available[item]['start_line'])):
+    # Atlas augments spare context slots without displacing local graph evidence.
+    for key in sorted(scores, key=lambda item: (item not in local_scores, -scores[item], available[item]['end_line'] - available[item]['start_line'], available[item]['path'], available[item]['start_line'])):
         _check(cancel)
         chunk = available[key]
         if any(item['path'] == chunk['path'] and item['start_line'] <= chunk['end_line'] and chunk['start_line'] <= item['end_line'] for item in items):

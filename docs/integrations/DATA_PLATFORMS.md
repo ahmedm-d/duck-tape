@@ -1,6 +1,6 @@
 # Duck Tape internal data infrastructure
 
-MongoDB Atlas provides Duck Tape's internal repository-memory projection and evidence retrieval; Databricks provides Duck Tape's internal agent evaluation and terminal-run analytics. Server operators configure this infrastructure for Duck Tape itself. These adapters do not install features into client repositories. SQLite remains authoritative for snapshots, checks, approvals, jobs, and leases. Importing this module, inspecting local status, and running jobs never uploads data. Each manual bootstrap operation requires its own enabled integration.
+MongoDB Atlas provides Duck Tape's internal repository-memory projection and evidence retrieval; Databricks provides Duck Tape's internal agent evaluation and terminal-run analytics. These are Duck Tape infrastructure, not features installed into client repositories. SQLite remains authoritative for snapshots, checks, approvals, jobs and leases. Normal startup requires private Atlas; snapshot and approved-knowledge changes schedule its projection automatically. Local status inspection does not connect. Databricks export remains explicit; private projection and public catalogue credentials remain separate.
 
 ## Environment
 
@@ -8,6 +8,7 @@ Duck Tape operators set these in the Duck Tape server/CLI process environment. D
 
 | Variable | Default / requirement |
 | --- | --- |
+| `STEWARD_ATLAS_REQUIRED` | `1`; startup requires a working private Atlas connection; `0` for isolated tests/demo controllers |
 | `STEWARD_ATLAS_ENABLED` | Disabled unless exactly `1` |
 | `STEWARD_ATLAS_URI` | Required `mongodb+srv://user:password@cluster.mongodb.net/` Atlas URI; percent-encode credentials |
 | `STEWARD_ATLAS_DATABASE` | `ducktape` |
@@ -24,7 +25,7 @@ Atlas reuses the existing embedding-provider configuration. Start with local emb
 
 ## Atlas setup and operation
 
-Install the optional pinned driver with `python -m pip install -r requirements-cloud.txt`. This uses PyMongo 4.20.0 (Python 3.11+); the core local application does not require it. The driver enforces TLS verification, bounded connection/request timeouts, and an Atlas SRV hostname. URI options are limited to `retryWrites`, `w`, `appName`, and `authSource`. Write concern must be `majority` or a positive integer when provided; unacknowledged writes (`w=0`) are rejected.
+Install the pinned driver and OS trust-store integration with `python -m pip install -r requirements.lock`. The driver enforces TLS verification, bounded connection/request timeouts and an Atlas SRV hostname. Private projection rejects database names ending in `_public`. URI options are limited to `retryWrites`, `w`, `appName` and `authSource`. Write concern must be `majority` or a positive integer when provided; unacknowledged writes (`w=0`) are rejected.
 
 Create the database/collection and a database user with only the needed access in your Atlas account. Restrict its network access to your development machine. Provision one vector index manually on that collection, using `integrations/atlas/vector-index.json` as a 768-dimension example. Generate the exact definition for your configured dimension using the local function below; the adapter validates the existing index instead of creating or changing it.
 
@@ -41,9 +42,11 @@ print(data_platforms.atlas_search(repo_id, snapshot_id, 'where is input validate
 
 The adapter upserts by a deterministic ID, so rerunning a partial upload is safe. The initial limit is 2,000 chunks per snapshot and embedding batches of 32. It never deletes cloud records. Index creation and subsequent indexing are asynchronous: `index_ready` indicates the existing index is queryable, not that every newly written vector is already searchable. An index still building can receive vectors, but search reports it as unavailable. A mismatched index definition fails before upload. [PyMongo indexes](https://www.mongodb.com/docs/languages/python/pymongo-driver/current/indexes/)
 
-Search applies repository, snapshot, and embedding-space filters before nearest-neighbor matching. It returns at most 24 results; query text is limited to 12 KiB and credential-pattern matches are rejected. Returned IDs must resolve to locally allowed immutable chunks; all displayed source content comes from those local chunks. A remote ID, namespace, or score mismatch is discarded. The optional driver must be installed for actual Atlas calls. [Vector query API](https://www.mongodb.com/docs/vector-search/query/aggregation-stages/vector-search-stage/)
+Search applies repository, snapshot, and embedding-space filters before nearest-neighbor matching. It returns at most 24 results; query text is limited to 12 KiB and credential-pattern matches are rejected. Returned IDs must resolve to locally allowed immutable chunks; all displayed source content comes from those local chunks. A remote ID, namespace, or score mismatch is discarded. The pinned driver is installed with requirements.lock for actual Atlas calls. [Vector query API](https://www.mongodb.com/docs/vector-search/query/aggregation-stages/vector-search-stage/)
 
 Atlas Free supports at most three total Search/Vector Search indexes, so this setup uses one. The former Atlas Data API reached end of life on September 30, 2025; this adapter uses the supported database driver. [Atlas limits](https://www.mongodb.com/docs/search/deployment/feature-compatibility/), [Data API retirement](https://www.mongodb.com/docs/api/doc/atlas-app-services-admin-api-v3)
+
+After changing embedding endpoint/model/dimensions or graph engine, explicitly call `POST /api/repositories/{id}/atlas-graph-mirror` to rebuild; automatic sync invalidation tracks snapshot and approved-knowledge revisions, not provider configuration. Search-index readiness is separate from successful upload. Graph/knowledge writes serialize across processes sharing the local store; this is not a distributed multi-host writer lock. Historical hashed vector namespaces are retained; retrieval validates only the requested namespace against local source.
 
 ## Databricks setup and operation
 
@@ -184,14 +187,14 @@ handoff; the captain still runs aggregate acceptance on the integrated commit.
 
 Run `python -m pytest tests/test_data_platforms.py -q`. The tests use local SQLite, a fake MongoDB collection, and `httpx.MockTransport`. They cover disabled/no-network behavior, upload privacy, namespace separation, invalid embeddings, index readiness, exact evidence binding, failed-run inclusion, unknown usage, retries, SQL parameters, and safe cloud errors.
 
-No live cloud accounts are exercised by these tests. Worker retrieval integration, automatic exports, retention/deletion, cloud scheduling, and database migration are outside this initial adapter. Snapshot chunking and operational state remain local. The optional driver pin follows the [official PyMongo 4.20.0 release notes](https://pymongo.readthedocs.io/en/stable/changelog.html).
+No live cloud accounts are exercised by these tests. Worker retrieval integration, automatic exports, retention/deletion, cloud scheduling, and database migration are outside this initial adapter. Snapshot chunking and operational state remain local. The driver pin follows the [official PyMongo 4.20.0 release notes](https://pymongo.readthedocs.io/en/stable/changelog.html).
 
 
 ## Integrated public catalogue and live evidence
 
 The C feature branch now mounts **Global catalogue** in Duck Tape. Exact public
 queries use `GET /api/global-catalogue?ecosystem=PyPI&package=requests&limit=25`,
-with `provider=local` by default and explicit `provider=atlas` for the separately
+with `provider=atlas` by default in required mode (otherwise `local`), using the separately
 enabled public cloud reader. `/api/global-catalogue/graph` exposes bounded public
 entry/package/source relationships with attribution and lifecycle evidence.
 No relationship asserts a private repository/version match or grants permissions.

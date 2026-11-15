@@ -1,0 +1,35 @@
+# A to B handoff; base f36a7fd. Apply after B review.
+# Atomic applicability binding already exists through _create_job(enrich=bind, expected_snapshot=..., catalogue_binding=...) inside db.atomic; preserve it.
+# This patch adds the optional request role and aligns intake evidence/race checks with immutable source identity.
+diff --git a/backend/contracts.py b/backend/contracts.py
+--- a/backend/contracts.py
++++ b/backend/contracts.py
+@@ -118,5 +118,6 @@
+ class ProviderRequest(Record):
+     task: str
++    agent_role: str | None = None
+     payload: dict
+     risk: str = 'low'
+     repo_id: str = ''
+
+diff --git a/backend/main.py b/backend/main.py
+--- a/backend/main.py
++++ b/backend/main.py
+@@ -405,13 +405,15 @@
+ def _create_job(body, *, enrich=None, expected_snapshot=None, catalogue_binding=None, cancel=None):
+     from .retrieval import retrieve
+     evidence_repo=require('repositories',body.repo_id)
+-    context=retrieve({**evidence_repo['index'],'snapshot':evidence_repo['snapshot'],'repo_id':evidence_repo['id']},body.title+' '+body.description,semantic=False)
++    evidence_snapshot=evidence_repo.get('source_snapshot_id') or evidence_repo['snapshot']
++    context=retrieve(evidence_repo['id'],evidence_snapshot,body.title+' '+body.description,semantic=False,cancel=cancel)
+     affected=list(dict.fromkeys(item['path'] for item in context['items']))
+     def create(con):
+         if cancel: cancel.raise_if_cancelled()
+         repo=db.get_in(con,'repositories',body.repo_id)
+         if not repo: raise HTTPException(404,'Repository not found')
+-        if repo['snapshot']!=evidence_repo['snapshot']: raise HTTPException(409,'Repository changed during intake; retry')
++        if repo['snapshot']!=evidence_repo['snapshot'] or (repo.get('source_snapshot_id') or repo['snapshot'])!=evidence_snapshot:
++            raise HTTPException(409,'Repository changed during intake; retry')
+         if expected_snapshot and (repo.get('source_snapshot_id') or repo['snapshot'])!=expected_snapshot:
+             raise HTTPException(409,'Repository changed during catalogue matching; re-assess applicability')
+         existing=[json.loads(row[0]) for row in con.execute("SELECT data FROM records WHERE kind='jobs'").fetchall()]

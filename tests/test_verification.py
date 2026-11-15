@@ -1,4 +1,60 @@
+import pytest
 from backend import verification
+
+
+@pytest.mark.parametrize('metadata_only', [False, True])
+def test_verification_preserves_executable_modes_in_each_phase(tmp_path, monkeypatch, metadata_only):
+    import io
+    import tarfile
+    from backend import sandbox
+
+    archives = []
+
+    def runtime(argv, **kwargs):
+        if argv[:2] == ['image', 'inspect']:
+            return 'sha256:' + 'a' * 64
+        if argv[:2] == ['container', 'create']:
+            return 'container-id'
+        if argv[:2] == ['exec', '-i']:
+            with tarfile.open(fileobj=io.BytesIO(kwargs['input'])) as archive:
+                members = {item.name: (item.mode, archive.extractfile(item).read()) for item in archive}
+                if members:
+                    archives.append(members)
+        return ''
+
+    engine = sandbox.DockerSandbox(tmp_path, runtime=runtime)
+    engine._healthy = {'available': True}
+    monkeypatch.setattr(sandbox, 'engine', lambda: engine)
+    monkeypatch.setattr(sandbox, 'cancel', lambda run_id: None)
+    base = {'id': 'base', 'files': [
+        {'path': 'run.sh', 'content': '#!/bin/sh\nold', 'mode': 0o100755},
+        {'path': 'move.sh', 'content': '#!/bin/sh\nmove', 'mode': 0o100755},
+        {'path': 'tests/test_old.py', 'content': 'def test_old(): pass', 'mode': 0o100755},
+    ]}
+    if metadata_only:
+        from backend import snapshots
+        contents = {item['path']: item.pop('content') for item in base['files']}
+        monkeypatch.setattr(snapshots, 'read_files', lambda snapshot_id: contents)
+    candidate = {'base_snapshot': 'base', 'patch_hash': 'patch', 'files': [
+        {'path': 'run.sh', 'after': '#!/bin/sh\nnew'},
+        {'path': 'move.sh', 'after': None, 'mode': None},
+        {'path': 'moved.sh', 'after': '#!/bin/sh\nmove', 'mode': 0o755},
+        {'path': 'new.py', 'after': 'value = 1'},
+        {'path': 'tests/test_old.py', 'after': 'def test_old(): assert True', 'mode': 0o755},
+        {'path': 'tests/test_new.py', 'after': 'def test_new(): pass', 'mode': 0o644},
+    ]}
+    verification.run('run', base, candidate, {'commands': []})
+
+    baseline, regression, changed = archives
+    assert baseline['run.sh'] == (0o755, b'#!/bin/sh\nold')
+    assert regression['run.sh'] == baseline['run.sh']
+    assert regression['move.sh'] == baseline['move.sh']
+    assert regression['tests/test_old.py'] == (0o755, b'def test_old(): assert True')
+    assert regression['tests/test_new.py'][0] == 0o644
+    assert changed['run.sh'] == (0o755, b'#!/bin/sh\nnew')
+    assert changed['moved.sh'] == (0o755, b'#!/bin/sh\nmove')
+    assert 'move.sh' not in changed
+    assert changed['new.py'][0] == 0o644
 
 def result(phase,status='passed',**kwargs):
     return {'phase':phase,'status':status,'check_id':'tests','required':True,'environment':'same','base_snapshot':'base','patch_hash':'patch',**kwargs}

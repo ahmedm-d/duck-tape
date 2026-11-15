@@ -1,0 +1,76 @@
+{
+  "specialist_mode": "auto",
+  "pools": {
+    "gemma4": {
+      "provider_env": "STEWARD_GEMMA_PROVIDER",
+      "endpoint_env": "STEWARD_GEMMA_ENDPOINT",
+      "key_env": "STEWARD_GEMMA_KEY",
+      "context_limit_env": "STEWARD_GEMMA_CONTEXT_LIMIT",
+      "serving_endpoint_env": "STEWARD_GEMMA_SERVING_ENDPOINT"
+    },
+    "qwen": {
+      "provider_env": "STEWARD_QWEN_PROVIDER",
+      "endpoint_env": "STEWARD_QWEN_ENDPOINT",
+      "key_env": "STEWARD_QWEN_KEY",
+      "context_limit_env": "STEWARD_QWEN_CONTEXT_LIMIT",
+      "serving_endpoint_env": "STEWARD_QWEN_SERVING_ENDPOINT"
+    }
+  },
+  "adapters": {
+    "router": {
+      "pool": "gemma4",
+      "slug": "router",
+      "model_env": "STEWARD_SPECIALIST_ROUTER_MODEL"
+    },
+    "ticket_parser": {
+      "pool": "gemma4",
+      "slug": "ticket_parser",
+      "model_env": "STEWARD_SPECIALIST_TICKET_PARSER_MODEL"
+    },
+    "commit_pr_writer": {
+      "pool": "gemma4",
+      "slug": "commit_pr_writer",
+      "model_env": "STEWARD_SPECIALIST_COMMIT_PR_WRITER_MODEL"
+    },
+    "log_classifier": {
+      "pool": "gemma4",
+      "slug": "log_classifier",
+      "model_env": "STEWARD_SPECIALIST_LOG_CLASSIFIER_MODEL"
+    },
+    "implementer": {
+      "pool": "qwen",
+      "slug": "implementer",
+      "model_env": "STEWARD_SPECIALIST_IMPLEMENTER_MODEL"
+    },
+    "test_writer": {
+      "pool": "qwen",
+      "slug": "test_writer",
+      "model_env": "STEWARD_SPECIALIST_TEST_WRITER_MODEL"
+    },
+    "reviewer_dpo": {
+      "pool": "qwen",
+      "slug": "reviewer_dpo",
+      "model_env": "STEWARD_SPECIALIST_REVIEWER_DPO_MODEL"
+    },
+    "security_reviewer_dpo": {
+      "pool": "qwen",
+      "slug": "security_reviewer_dpo",
+      "model_env": "STEWARD_SPECIALIST_SECURITY_REVIEWER_DPO_MODEL"
+    },
+    "db_migration": {
+      "pool": "qwen",
+      "slug": "db_migration",
+      "model_env": "STEWARD_SPECIALIST_DB_MIGRATION_MODEL"
+    },
+    "iac": {
+      "pool": "qwen",
+      "slug": "iac",
+      "model_env": "STEWARD_SPECIALIST_IAC_MODEL"
+    },
+    "frontend_ui": {
+      "pool": "qwen",
+      "slug": "frontend_ui",
+      "model_env": "STEWARD_SPECIALIST_FRONTEND_UI_MODEL"
+    }
+  }
+}

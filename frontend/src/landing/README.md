@@ -13,8 +13,10 @@ have been removed. Hero buttons use the existing `/login` and `/signup` routes;
 when accounts are disabled, these routes continue to `/dashboard`.
 
 Below the preview, Tickets / Security / Research feed glass Understand / Prepare /
-Check / Review pills with coloured ribbons. The three metric cards remain
-explicitly illustrative, followed by a minimal footer.
+Check / Review pills with coloured ribbons. Three cards summarize the team-reported
+benchmark score, example count and specialist count. All 12 results follow in gain
+order, with per-check counts, evaluation methods and regressions. The original
+illustrative runtime, check-count and turnaround figures have been removed.
 
 ## Scope and implementation
 
@@ -64,3 +66,17 @@ The earlier stale-copy failure is resolved by these selector updates.
 
 Integration validation: 14 landing/auth browser checks passed after merging
 current main. Full deterministic acceptance is recorded in the merge PR.
+
+## Benchmark content
+
+Results reproduce the team-supplied evaluation report shared on 15 November 2026:
+600 examples, 50 per slice; 1,240/2,368 baseline rubric checks and 2,210/2,368
+compared checks. The displayed 52.4% and 93.3% are pooled rubric scores across
+multiple methods, not end-to-end task success rates.
+
+Generation compares zero-shot Adaption `gemma-4-31b-it` with the same model plus
+contract/few-shot prompting. Security/code review score rejected/chosen dataset
+responses offline. Retrieval compares local vector and hybrid/graph pipelines.
+The page discloses the test-writer diff-validity drop (80% to 62%), IaC regression
+(-0.5 percentage points), pending independent reproduction and separate Claude
+backend evaluation. No claim of trained-checkpoint improvement is made.

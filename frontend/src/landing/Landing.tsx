@@ -1,6 +1,6 @@
 import {
-  ArrowDown, ArrowUpRight, BookOpen, Check, FileCheck2,
-  ShieldCheck, Ticket, Timer, Zap,
+  ArrowDown, ArrowUpRight, BookOpen, FileCheck2,
+  ShieldCheck, Ticket, Zap,
 } from 'lucide-react';
 import {WorkspacePreview} from './WorkspacePreview';
 import './landing.css';
@@ -48,41 +48,77 @@ function JobFlow() {
   </div>;
 }
 
+const benchmarks = [
+  {name: 'Security review', base: 7, compared: 200, total: 200, method: 'Preference pairs'},
+  {name: 'Code review', base: 4, compared: 165, total: 168, method: 'Preference pairs'},
+  {name: 'Repository retrieval', base: 30, compared: 190, total: 200, method: 'Local retrieval'},
+  {name: 'Test generation', base: 84, compared: 166, total: 200, method: 'Prompted model'},
+  {name: 'Code implementation', base: 100, compared: 180, total: 200, method: 'Prompted model'},
+  {name: 'Frontend / UI generation', base: 135, compared: 200, total: 200, method: 'Prompted model'},
+  {name: 'Task routing', base: 102, compared: 162, total: 200, method: 'Prompted model'},
+  {name: 'Ticket parsing', base: 103, compared: 159, total: 200, method: 'Prompted model'},
+  {name: 'Log classification', base: 146, compared: 196, total: 200, method: 'Prompted model'},
+  {name: 'Database migrations', base: 160, compared: 196, total: 200, method: 'Prompted model'},
+  {name: 'Commit / PR writing', base: 172, compared: 200, total: 200, method: 'Prompted model'},
+  {name: 'Infrastructure as code', base: 197, compared: 196, total: 200, method: 'Prompted model'},
+];
+
 function Benchmarks() {
-  return <div className="landing-stat-grid">
-    <article className="landing-stat-card">
-      <div className="landing-card-label"><span>BENCHMARK</span><span>01 / EXAMPLE</span></div>
-      <div className="landing-card-icon"><Zap size={25} strokeWidth={1.5} aria-hidden="true"/></div>
-      <h3>Faster checks.</h3>
-      <div className="landing-stat-value">2.4<span>×</span></div>
-      <div className="landing-bars" aria-label="Example check runtime: before 120 seconds, after 50 seconds">
-        <div><span>Before</span><i/><span>120s</span></div>
-        <div><span>After</span><i/><span>50s</span></div>
-      </div>
-    </article>
-    <article className="landing-stat-card">
-      <div className="landing-card-label"><span>VERIFICATION</span><span>02 / EXAMPLE</span></div>
-      <div className="landing-card-icon"><FileCheck2 size={25} strokeWidth={1.5} aria-hidden="true"/></div>
-      <h3>Checks passed.</h3>
-      <div className="landing-stat-value">18<span>/20</span></div>
-      <div className="landing-check-grid" aria-hidden="true">
-        {Array.from({length: 20}, (_, index) => <span key={index} className={index < 18 ? 'is-passing' : ''}>{index < 18 ? <Check size={12}/> : '–'}</span>)}
-      </div>
-      <p className="landing-visually-hidden">18 checks passed. 2 need work.</p>
-    </article>
-    <article className="landing-stat-card">
-      <div className="landing-card-label"><span>TURNAROUND</span><span>03 / EXAMPLE</span></div>
-      <div className="landing-card-icon"><Timer size={25} strokeWidth={1.5} aria-hidden="true"/></div>
-      <h3>Time to review.</h3>
-      <div className="landing-stat-value landing-stat-time">4<span>m</span> 12<span>s</span></div>
-      <svg className="landing-sparkline" viewBox="0 0 300 66" aria-hidden="true">
-        <path className="landing-chart-grid" d="M0 15H300M0 40H300M0 65H300"/>
-        <path className="landing-chart-area" d="M0 7L28 14L55 11L83 29L110 23L137 35L165 31L193 47L220 43L248 52L275 48L300 56V66H0Z"/>
-        <path className="landing-chart-line" d="M0 7L28 14L55 11L83 29L110 23L137 35L165 31L193 47L220 43L248 52L275 48L300 56"/>
-      </svg>
-      <p className="landing-visually-hidden">Median time from job to review.</p>
-    </article>
-  </div>;
+  return <>
+    <div className="landing-stat-grid">
+      <article className="landing-stat-card">
+        <div className="landing-card-label"><span>RUBRIC SCORE</span><span>ALL METHODS</span></div>
+        <div className="landing-card-icon"><FileCheck2 size={25} strokeWidth={1.5} aria-hidden="true"/></div>
+        <h3>Checks passed.</h3>
+        <div className="landing-stat-value">93.3<span>%</span></div>
+        <p className="landing-stat-detail">2,210 / 2,368 rubric checks passed.</p>
+        <p className="landing-stat-detail">52.4% baseline. Pooled across evaluation methods.</p>
+      </article>
+      <article className="landing-stat-card">
+        <div className="landing-card-label"><span>EVALUATION SIZE</span><span>50 PER SPECIALIST</span></div>
+        <div className="landing-card-icon"><BookOpen size={25} strokeWidth={1.5} aria-hidden="true"/></div>
+        <h3>Examples evaluated.</h3>
+        <div className="landing-stat-value">600</div>
+        <p className="landing-stat-detail">50 held-out examples for each benchmark.</p>
+      </article>
+      <article className="landing-stat-card">
+        <div className="landing-card-label"><span>SPECIALIST COVERAGE</span><span>FULL REPORTED SET</span></div>
+        <div className="landing-card-icon"><Zap size={25} strokeWidth={1.5} aria-hidden="true"/></div>
+        <h3>Benchmarks covered.</h3>
+        <div className="landing-stat-value">12</div>
+        <p className="landing-stat-detail">Generation, preference scoring and retrieval.</p>
+      </article>
+    </div>
+
+    <div className="landing-benchmark-table" role="region" aria-label="Specialist benchmark results" tabIndex={0}>
+      <table aria-describedby="benchmark-methods">
+        <caption className="landing-visually-hidden">Specialist rubric results, ordered by score improvement</caption>
+        <thead><tr><th scope="col">Specialist</th><th scope="col">Evaluation</th><th scope="col">Baseline</th><th scope="col">Compared result</th><th scope="col">Gain</th></tr></thead>
+        <tbody>{benchmarks.map(result => {
+          const gain = (result.compared - result.base) / result.total * 100;
+          return <tr key={result.name}>
+            <th scope="row">{result.name}</th>
+            <td><span className="landing-benchmark-method">{result.method}</span></td>
+            <td><strong>{(result.base / result.total * 100).toFixed(1)}%</strong><small>{result.base}/{result.total} checks</small></td>
+            <td><strong>{(result.compared / result.total * 100).toFixed(1)}%</strong><small>{result.compared}/{result.total} checks</small></td>
+            <td className={gain < 0 ? 'landing-benchmark-gain is-regression' : 'landing-benchmark-gain'}>{gain > 0 ? '+' : ''}{gain.toFixed(1)} pp</td>
+          </tr>;
+        })}</tbody>
+      </table>
+    </div>
+
+    <div className="landing-benchmark-methods" id="benchmark-methods">
+      <h3>What the scores measure.</h3>
+      <p>Each percentage measures rubric checks across 50 examples. Gains are in percentage points. The pooled score combines the three evaluation methods below.</p>
+      <dl>
+        <div><dt>Prompted model</dt><dd>Zero-shot gemma-4-31b-it compared with the same model with a task contract and few-shot examples. Checks assess output structure, grounding and specialist rules.</dd></div>
+        <div><dt>Preference pairs</dt><dd>Offline scoring of rejected and chosen dataset responses for security and code review.</dd></div>
+        <div><dt>Local retrieval</dt><dd>Basic vector retrieval compared with a local hybrid and graph pipeline. Top-five recall rose from 60% to 92%; caller and test inclusion reached 88%.</dd></div>
+      </dl>
+      <p className="landing-benchmark-alert">Diff syntax validity fell from 80% to 62% for test generation. Infrastructure as code declined by 0.5 percentage points.</p>
+      <p className="landing-benchmark-source">Source: team-supplied evaluation report, 15 November 2026. Independent reproduction is pending. Claude backend performance is evaluated separately.</p>
+    </div>
+  </>;
 }
 
 export function Landing() {
@@ -133,7 +169,7 @@ export function Landing() {
       <section className="landing-benchmarks landing-section" id="benchmarks" aria-labelledby="benchmarks-heading">
         <div className="landing-section-heading">
           <div><span className="landing-kicker">03 / THE NUMBERS</span><h2 id="benchmarks-heading">Show the work.</h2></div>
-          <p className="landing-example-note">Illustrative data, not measured results.</p>
+          <p className="landing-benchmark-note">Team-reported results · 50 examples per benchmark.</p>
         </div>
         <Benchmarks/>
       </section>

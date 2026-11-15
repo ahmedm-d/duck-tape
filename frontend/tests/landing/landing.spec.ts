@@ -22,12 +22,35 @@ test('keeps the hero minimal and presents the requested scroll sequence', async 
   await expect(page.locator('.landing-flow-sources')).toContainText('Tickets');
   await expect(page.frameLocator('iframe').locator('html')).toHaveClass(/landing-demo/);
   await expect(page.frameLocator('iframe').locator('body')).toHaveCSS('color', 'rgb(240, 240, 245)');
-  await expect(page.getByText('Illustrative data, not measured results.')).toBeVisible();
+  await expect(page.getByText('Team-reported results · 50 examples per benchmark.')).toBeVisible();
   await page.getByRole('navigation', {name: 'Main navigation'}).getByRole('link', {name: 'Workflow'}).click();
   await expect(page.locator('#workflow')).toBeInViewport();
   await page.getByRole('link', {name: /Start creating/}).click();
   await expect(page).toHaveURL(/\/dashboard$/);
   await expect(page.locator('html')).not.toHaveClass(/landing-demo/);
+});
+
+test('shows all twelve reported benchmarks in gain order with evaluation methods and regressions', async ({page}) => {
+  await page.goto('/#benchmarks');
+  const section = page.locator('#benchmarks');
+  await expect(section.getByText('93.3%', {exact: true})).toBeVisible();
+  await expect(section.getByText('2,210 / 2,368 rubric checks passed.')).toBeVisible();
+  const table = section.getByRole('table', {name: 'Specialist rubric results, ordered by score improvement'});
+  await expect(table.getByRole('rowheader')).toHaveText([
+    'Security review', 'Code review', 'Repository retrieval', 'Test generation',
+    'Code implementation', 'Frontend / UI generation', 'Task routing', 'Ticket parsing',
+    'Log classification', 'Database migrations', 'Commit / PR writing', 'Infrastructure as code',
+  ]);
+  const security = table.getByRole('row', {name: /Security review/});
+  await expect(security).toContainText('Preference pairs');
+  await expect(security).toContainText('3.5%');
+  await expect(security).toContainText('100.0%');
+  await expect(security).toContainText('+96.5 pp');
+  await expect(table.getByRole('row', {name: /Repository retrieval/})).toContainText('Local retrieval');
+  await expect(table.getByRole('row', {name: /Code implementation/})).toContainText('Prompted model');
+  await expect(table.getByRole('row', {name: /Infrastructure as code/})).toContainText('-0.5 pp');
+  await expect(section).toContainText('Diff syntax validity fell from 80% to 62% for test generation.');
+  await expect(section).toContainText('same model with a task contract and few-shot examples');
 });
 
 for (const {width, height} of [{width: 390, height: 900}, {width: 1440, height: 900}, {width: 768, height: 1024}, {width: 701, height: 900}, {width: 700, height: 700}, {width: 844, height: 390}, {width: 320, height: 568}]) {
@@ -55,5 +78,10 @@ for (const {width, height} of [{width: 390, height: 900}, {width: 1440, height: 
     const preview = await page.locator('.landing-preview-viewport').boundingBox();
     const frame = await page.locator('.landing-preview iframe').boundingBox();
     expect(frame!.width).toBeLessThanOrEqual(preview!.width + 1);
+    if (width <= 700) {
+      const security = page.locator('#benchmarks').getByRole('row', {name: /Security review/});
+      await security.scrollIntoViewIfNeeded();
+      await expect(security.getByText('100.0%', {exact: true})).toBeInViewport();
+    }
   });
 }

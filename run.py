@@ -19,8 +19,8 @@ def load_environment():
         if not line.strip() or line.lstrip().startswith('#'): continue
         key,separator,value=line.partition('=')
         key=key.strip()
-        if not separator or not (key.startswith('STEWARD_') or key in {'ADAPTION_API_KEY', 'HF_TOKEN'}) or not key.replace('_','').isalnum():
-            raise ValueError('Invalid .env entry; use STEWARD_NAME, ADAPTION_API_KEY or HF_TOKEN with literal values')
+        if not separator or not (key.startswith('STEWARD_') or key in {'ADAPTION_API_KEY', 'HF_TOKEN', 'ANTHROPIC_API_KEY'}) or not key.replace('_','').isalnum():
+            raise ValueError('Invalid .env entry; use STEWARD_NAME, ADAPTION_API_KEY, HF_TOKEN or ANTHROPIC_API_KEY with literal values')
         value=value.strip()
         if len(value)>=2 and value[0]==value[-1] and value[0] in {'"',"'"}: value=value[1:-1]
         os.environ.setdefault(key,value)

@@ -43,9 +43,14 @@ def configuration():
     # Switching protocols must not inherit another provider's endpoint or model.
     selected = stored if kind == stored.get('kind', kind) else {}
     local = local and kind == 'openai'
-    default_endpoint = SPONSOR_ENDPOINTS.get(kind, 'http://127.0.0.1:11435/v1' if local else 'http://127.0.0.1:11434')
+    if kind == 'anthropic':
+        from .anthropic_provider import DEFAULT_ENDPOINT, DEFAULT_MODEL
+        default_endpoint, default_model = DEFAULT_ENDPOINT, DEFAULT_MODEL
+    else:
+        default_endpoint = SPONSOR_ENDPOINTS.get(kind, 'http://127.0.0.1:11435/v1' if local else 'http://127.0.0.1:11434')
+        default_model = ('qwen-coder-1.5b' if stronger else 'qwen-coder-local') if local else ''
     endpoint = os.getenv('STEWARD_MODEL_ENDPOINT', selected.get('endpoint', default_endpoint)).rstrip('/')
-    model = os.getenv('STEWARD_MODEL', selected.get('model', ('qwen-coder-1.5b' if stronger else 'qwen-coder-local') if local else ''))
+    model = os.getenv('STEWARD_MODEL', selected.get('model', default_model)) or (default_model if kind == 'anthropic' else '')
     return {'endpoint':endpoint, 'kind':kind, 'small_model':(os.getenv('STEWARD_SMALL_MODEL',selected.get('small_model')) or model), 'model':model, 'context_limit':int(os.getenv('STEWARD_CONTEXT_LIMIT',str(selected.get('context_limit',8192 if local else 16000)))), 'embedding_model':os.getenv('STEWARD_EMBEDDING_MODEL',stored.get('embedding_model','')), 'embedding_endpoint':os.getenv('STEWARD_EMBEDDING_ENDPOINT',stored.get('embedding_endpoint','')).rstrip('/')}
 
 def installed_runtime(embedding=False):
@@ -229,7 +234,7 @@ def request(path, payload=None, timeout=30, cancel=None, *, embedding=False, tar
     headers = {'Content-Type':'application/json'}
     separate = embedding and bool(config.get('embedding_endpoint'))
     endpoint = config['embedding_endpoint'] if separate else config['endpoint']
-    if embedding and config['kind'] in SPONSOR_ENDPOINTS and (not separate or endpoint == config['endpoint']):
+    if embedding and (config['kind'] in SPONSOR_ENDPOINTS or config['kind'] == 'anthropic') and (not separate or endpoint == config['endpoint']):
         raise ProviderError('embedding_endpoint_required')
     secret = os.getenv('STEWARD_EMBEDDING_KEY' if separate else config.get('key_env', 'STEWARD_MODEL_KEY'))
     if not separate and config['kind'] in SPONSOR_ENDPOINTS:
@@ -287,8 +292,12 @@ def health():
     if config['model'] in ('qwen-coder-local','qwen-coder-1.5b'):
         result['quality_warning']='Small CPU model: live acceptance review rejected valid patches with incorrect findings. This model has not passed application qualification.'
     try:
-        data = request('/api/tags' if config['kind']=='ollama' else '/models', timeout=2)
-        models = [m.get('name',m.get('id')) for m in data.get('models',data.get('data',[]))]
+        if config['kind'] == 'anthropic':
+            from . import anthropic_provider
+            models = anthropic_provider.model_ids(config['endpoint'])
+        else:
+            data = request('/api/tags' if config['kind']=='ollama' else '/models', timeout=2)
+            models = [m.get('name',m.get('id')) for m in data.get('models',data.get('data',[]))]
         result['installed_models'] = models
         selected = config['model'] or (models[0] if models and config['kind'] not in SPONSOR_ENDPOINTS else '')
         catalog_model = selected.partition(':')[0] if config['kind'] == 'huggingface' else selected
@@ -491,7 +500,7 @@ def complete(task, payload=None, risk='low', *, cancel=None):
         raise ProviderError(code, telemetry)
     if _cancelled(cancel):
         fail('cancelled')
-    if config['kind'] not in ('openai', 'ollama', 'adaption', 'huggingface') or not capability['structured_output'] and not config['specialist']:
+    if config['kind'] not in ('openai', 'ollama', 'adaption', 'huggingface', 'anthropic') or not capability['structured_output'] and not config['specialist']:
         fail('structured_output_unsupported')
     schema = model_schemas.schema_for(task, legacy=not typed, payload=request_input.payload)
     from .agent_adapters import prompt_messages, parse_completion
@@ -540,6 +549,10 @@ def complete(task, payload=None, risk='low', *, cancel=None):
                 text = raw['message'] if agent_role == 'implementer' and raw['message'].get('tool_calls') else raw['message']['content']
                 if agent_role == 'implementer' and raw['message'].get('tool_calls'):
                     finish = 'tool_calls'
+            elif config['kind'] == 'anthropic':
+                from . import anthropic_provider
+                text, finish, entry['usage'] = anthropic_provider.complete(
+                    model, messages, None if agent_role else schema, output_limit, timeout, cancel, config['endpoint'])
             elif config['kind'] == 'adaption':
                 # shortcut: Adaption documents no JSON constraint parameter; prompt and validate until it does.
                 raw = request('/responses', {'model': model, 'instructions': messages[0]['content'], 'input': '\n'.join(item['content'] for item in messages[1:]),
@@ -576,7 +589,7 @@ def complete(task, payload=None, risk='low', *, cancel=None):
             code = _error_code(exc)
             entry.update(error=code, latency=time.monotonic()-attempt_start)
             telemetry['usage'] = entry['usage']
-            retryable = code in ('http_429', 'http_500', 'http_502', 'http_503', 'http_504', 'timeout', 'transport_error', 'invalid_schema')
+            retryable = code in ('http_429', 'http_500', 'http_502', 'http_503', 'http_504', 'http_529', 'timeout', 'transport_error', 'invalid_schema')
             if attempt+1 >= attempt_limit or not retryable:
                 fail(code)
             delay = min(5, max(0, float(os.getenv('STEWARD_MODEL_BACKOFF', '0.5'))))

@@ -9,7 +9,8 @@ Settings can persist non-secret provider endpoint, protocol, model IDs, context 
 | `STEWARD_DATA_DIR` | Persistent workspace; default `data/workspace/` |
 | `STEWARD_ATLAS_REQUIRED` | Defaults to `1`; `run.py` requires a TLS-verified private Atlas ping; use `0` only for isolated tests/demo controllers |
 | `STEWARD_ATLAS_ENABLED`, `STEWARD_ATLAS_URI`, `STEWARD_ATLAS_DIMENSIONS` | Required private Atlas enablement, secret connection URI and exact embedding dimensions; see the data-platform guide for roles/index setup |
-| `STEWARD_MODEL_PROVIDER` | `ollama`, `openai`, `adaption` or `huggingface` protocol |
+| `STEWARD_MODEL_PROVIDER` | `ollama`, `openai`, `adaption`, `huggingface` or `anthropic` protocol |
+| `ANTHROPIC_API_KEY`, `STEWARD_ANTHROPIC_EFFORT`, `STEWARD_ANTHROPIC_MAX_TOKENS` | Claude credential (read from `.env` by `run.py`), thinking effort (default `high`) and per-reply token cap (default 16000). This cap never increases the caller's output reservation; thinking shares that reservation. See the inference guide. |
 | `STEWARD_MODEL_ENDPOINT` | Base URL for the selected protocol; hosted defaults are documented in the inference guide |
 | `STEWARD_MODEL` | Default model ID |
 | `STEWARD_SMALL_MODEL` | Optional smaller triage/summary model |

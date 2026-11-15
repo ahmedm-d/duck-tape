@@ -159,15 +159,18 @@ app = FastAPI(title='Duck Tape', lifespan=lifespan)
 @app.middleware('http')
 async def require_account(request: Request, call_next):
     path = request.url.path
-    if request.method == 'OPTIONS' or not path.startswith('/api/') or path in auth.PUBLIC_PATHS or not auth.auth_required():
+    if request.method == 'OPTIONS' or not path.startswith('/api/') or path in auth.PUBLIC_PATHS or not auth.auth_enabled():
         return await call_next(request)
+    required, header = auth.auth_required(), request.headers.get('authorization')
+    if not header and not required:
+        return await call_next(request)  # optional mode: anonymous visitors use the shared workspace
     try:
-        token = auth.bearer_token(request.headers.get('authorization'))
+        token = auth.bearer_token(header)
         request.state.account = await asyncio.to_thread(auth.verify, token)
     except auth.AuthError as exc:
-        return JSONResponse({'detail': str(exc)}, 401, headers={'WWW-Authenticate': 'Bearer'})
+        if required: return JSONResponse({'detail': str(exc)}, 401, headers={'WWW-Authenticate': 'Bearer'})
     except (auth.AuthUnavailable, auth.AuthConfigError) as exc:
-        return JSONResponse({'detail': str(exc)}, 503)
+        if required: return JSONResponse({'detail': str(exc)}, 503)
     return await call_next(request)
 
 
@@ -230,7 +233,7 @@ def auth_config():
 @app.get('/api/auth/me')
 def auth_me(request: Request):
     account = getattr(request.state, 'account', None)
-    return {'enabled': auth.auth_required(), 'account': account}
+    return {'enabled': auth.auth_enabled(), 'required': auth.auth_required(), 'account': account}
 
 
 @app.get('/api/global-catalogue')

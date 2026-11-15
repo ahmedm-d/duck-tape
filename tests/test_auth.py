@@ -51,12 +51,46 @@ def required(monkeypatch):
     return supabase
 
 
-def test_disabled_by_default_outside_run_py(api, monkeypatch):
+@pytest.fixture
+def optional(monkeypatch):
+    """Supabase configured, sign-in not compulsory: the default once the project URL and key are set."""
     monkeypatch.delenv('STEWARD_AUTH_REQUIRED', raising=False)
-    assert not auth.auth_required()
+    monkeypatch.setenv('STEWARD_SUPABASE_URL', URL)
+    monkeypatch.setenv('STEWARD_SUPABASE_PUBLISHABLE_KEY', KEY)
+    supabase = Supabase()
+    monkeypatch.setattr(auth.httpx, 'get', supabase.get)
+    return supabase
+
+
+def test_off_without_supabase_configuration(api, monkeypatch):
+    monkeypatch.delenv('STEWARD_AUTH_REQUIRED', raising=False)
+    assert auth.mode() == 'off' and not auth.auth_enabled()
     assert api.get('/api/repositories').status_code == 200
     assert api.get('/api/auth/config').json() == {'enabled': False}
-    assert 'disabled' in api.get('/api/settings').json()['authentication']
+    assert 'off' in api.get('/api/settings').json()['authentication']
+
+
+def test_optional_mode_keeps_the_workspace_open_without_an_account(api, optional):
+    assert auth.mode() == 'optional'
+    assert api.get('/api/repositories').status_code == 200
+    assert api.get('/api/auth/me').json() == {'enabled': True, 'required': False, 'account': None}
+    assert api.get('/api/auth/config').json()['required'] is False
+    assert 'optional' in api.get('/api/settings').json()['authentication']
+    assert optional.calls == []  # anonymous requests never contact Supabase
+
+
+def test_optional_mode_attaches_a_valid_account(api, optional):
+    me = api.get('/api/auth/me', headers={'Authorization': 'Bearer ' + token()}).json()
+    assert me['account'] == {'id': 'user-1', 'email': 'dev@example.com'}
+    assert db.get('members', 'user-1')['provider'] == 'supabase'
+
+
+@pytest.mark.parametrize('status,error', [(401, None), (500, None), (200, httpx.ConnectError('down'))])
+def test_optional_mode_treats_bad_or_unverifiable_tokens_as_anonymous(api, optional, status, error):
+    optional.status, optional.error = status, error
+    response = api.get('/api/auth/me', headers={'Authorization': 'Bearer ' + token()})
+    assert response.status_code == 200 and response.json()['account'] is None
+    assert api.get('/api/jobs', headers={'Authorization': 'Basic nope'}).status_code == 200
 
 
 def test_required_mode_rejects_requests_without_a_session(api, required):
@@ -70,7 +104,7 @@ def test_public_paths_and_frontend_stay_reachable(api, required):
     assert api.get('/api/health').status_code == 200
     config = api.get('/api/auth/config').json()
     # The /rest/v1 suffix users copy from the dashboard is stripped; only the publishable key is exposed.
-    assert config == {'enabled': True, 'provider': 'supabase', 'url': URL, 'publishable_key': KEY}
+    assert config == {'enabled': True, 'required': True, 'provider': 'supabase', 'url': URL, 'publishable_key': KEY}
     assert api.get('/login').status_code == 200
     assert required.calls == []
 
@@ -79,7 +113,7 @@ def test_valid_session_passes_records_member_and_is_cached(api, required):
     headers = {'Authorization': 'Bearer ' + token()}
     assert api.get('/api/repositories', headers=headers).status_code == 200
     me = api.get('/api/auth/me', headers=headers).json()
-    assert me == {'enabled': True, 'account': {'id': 'user-1', 'email': 'dev@example.com'}}
+    assert me == {'enabled': True, 'required': True, 'account': {'id': 'user-1', 'email': 'dev@example.com'}}
     assert len(required.calls) == 1
     url, sent = required.calls[0]
     assert url == URL + '/auth/v1/user'
@@ -141,10 +175,12 @@ def test_startup_check(required, monkeypatch):
     with pytest.raises(auth.AuthConfigError, match='rejected'):
         auth.check_auth_ready()
     monkeypatch.setenv('STEWARD_AUTH_REQUIRED', '0')
-    required.error = AssertionError('must not be called when disabled')
+    monkeypatch.delenv('STEWARD_SUPABASE_URL')
+    required.error = AssertionError('must not be called when sign-in is off')
     auth.check_auth_ready()
 
 
-def test_run_py_requires_auth_by_default():
+def test_run_py_only_refuses_to_start_in_required_mode():
     text = (main.Path(main.__file__).resolve().parents[1] / 'run.py').read_text(encoding='utf-8')
-    assert "os.environ.setdefault('STEWARD_AUTH_REQUIRED','1')" in text and 'check_auth_ready()' in text
+    assert 'check_auth_ready()' in text and 'if auth.auth_required(): raise SystemExit' in text
+    assert "setdefault('STEWARD_AUTH_REQUIRED'" not in text

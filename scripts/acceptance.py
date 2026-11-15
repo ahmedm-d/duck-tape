@@ -31,7 +31,7 @@ def commands(tier,output,url=None):
     output=Path(output).resolve(); gates=[]
     # STEWARD_ATLAS_REQUIRED=0 / STEWARD_AUTH_REQUIRED=0 are the test/CI escape hatches: gates (including the
     # run.py restart gate) never contact Atlas or Supabase.
-    clean={**dict.fromkeys(SWITCHES,'0'),'STEWARD_ATLAS_REQUIRED':'0','STEWARD_AUTH_REQUIRED':'0','STEWARD_TEST_URL':None,'PYTEST_DISABLE_PLUGIN_AUTOLOAD':'1',
+    clean={**dict.fromkeys(SWITCHES,'0'),'STEWARD_ATLAS_REQUIRED':'0','STEWARD_AUTH_REQUIRED':'0','STEWARD_SUPABASE_URL':'','STEWARD_SUPABASE_PUBLISHABLE_KEY':'','STEWARD_TEST_URL':None,'PYTEST_DISABLE_PLUGIN_AUTOLOAD':'1',
            'PYTHONPATH':os.pathsep.join(filter(None,[str(ROOT),str(ROOT/'vendor-current'),os.environ.get('PYTHONPATH')]))}
     npm=shutil.which('npm.cmd' if os.name=='nt' else 'npm') or 'npm'
     def add(identity,group,argv,needs=(),env=None,cwd=ROOT,timeout=600,**artifacts):

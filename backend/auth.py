@@ -6,11 +6,18 @@ as `Authorization: Bearer <token>` on each `/api` request. The backend asks Supa
 (`GET /auth/v1/user`) whether the token is valid and caches a positive answer for at most CACHE_SECONDS
 (never past the token's own expiry), so a revoked session stops working within that window.
 
-`run.py` turns this on by default (`STEWARD_AUTH_REQUIRED=1`) and refuses to start without a working
-configuration. Importing `backend.main` alone (tests, in-process controllers) leaves it off unless the
-variable is set; `STEWARD_AUTH_REQUIRED=0` is the explicit escape hatch for tests, CI and the deterministic
-acceptance gates. Only account identifiers (Supabase user id and email) are stored locally; no repository
-content is ever sent to Supabase.
+Three modes:
+- **off**: Supabase not configured. No sign-in; every request is anonymous.
+- **optional** (default once `STEWARD_SUPABASE_URL` and `STEWARD_SUPABASE_PUBLISHABLE_KEY` are set): the whole
+  workspace works without an account; people sign up or sign in only when they choose to. A valid token
+  attaches the account to the request; a missing, expired or unverifiable token is treated as anonymous.
+- **required** (`STEWARD_AUTH_REQUIRED=1`, opt-in): every `/api` request except PUBLIC_PATHS needs a valid
+  session (401 otherwise, 503 when Supabase Auth cannot be asked) and run.py refuses to start without a
+  working configuration.
+
+Tests, CI and the deterministic acceptance gates set `STEWARD_AUTH_REQUIRED=0` and clear the Supabase
+variables. Only account identifiers (Supabase user id and email) are stored locally; no repository content
+is ever sent to Supabase.
 """
 import base64
 import hashlib
@@ -51,8 +58,21 @@ class AuthUnavailable(Exception):
 
 
 def auth_required() -> bool:
-    """True only when STEWARD_AUTH_REQUIRED is set to 1/true/yes/on (run.py sets it by default)."""
+    """Strict mode: True only when STEWARD_AUTH_REQUIRED is set to 1/true/yes/on."""
     return os.getenv(FLAG, '0').strip().lower() in {'1', 'true', 'yes', 'on'}
+
+
+def auth_configured() -> bool:
+    return bool(os.getenv(URL_ENV, '').strip() and os.getenv(KEY_ENV, '').strip())
+
+
+def auth_enabled() -> bool:
+    """Sign-in is offered (optional mode) or enforced (required mode)."""
+    return auth_required() or auth_configured()
+
+
+def mode() -> str:
+    return 'required' if auth_required() else 'optional' if auth_configured() else 'off'
 
 
 def config() -> tuple[str, str]:
@@ -77,19 +97,21 @@ def config() -> tuple[str, str]:
 
 def public_config() -> dict:
     """What the browser needs to sign in. The publishable key is designed to be public."""
-    if not auth_required(): return {'enabled': False}
+    if not auth_enabled(): return {'enabled': False}
     url, key = config()
-    return {'enabled': True, 'provider': 'supabase', 'url': url, 'publishable_key': key}
+    return {'enabled': True, 'required': auth_required(), 'provider': 'supabase', 'url': url, 'publishable_key': key}
 
 
 def describe() -> str:
-    if not auth_required(): return 'Sign-in disabled (STEWARD_AUTH_REQUIRED=0); local single workspace.'
+    current = mode()
+    if current == 'off': return 'Sign-in off (Supabase not configured); local single workspace.'
+    if current == 'optional': return 'Supabase accounts optional: sign in to attach your account; the shared team workspace stays open without one.'
     return 'Supabase accounts required: every API request needs a valid Supabase session; one shared team workspace.'
 
 
 def check_auth_ready() -> None:
-    """Startup gate for run.py: config is valid and Supabase Auth accepts the publishable key."""
-    if not auth_required(): return
+    """Startup check for run.py: config is valid and Supabase Auth accepts the publishable key."""
+    if not auth_enabled(): return
     url, key = config()
     use_system_trust_store()
     try:

@@ -9,8 +9,8 @@ Settings can persist non-secret provider endpoint, protocol, model IDs, context 
 | `STEWARD_DATA_DIR` | Persistent workspace; default `data/workspace/` |
 | `STEWARD_ATLAS_REQUIRED` | Defaults to `1`; `run.py` requires a TLS-verified private Atlas ping; use `0` only for isolated tests/demo controllers |
 | `STEWARD_ATLAS_ENABLED`, `STEWARD_ATLAS_URI`, `STEWARD_ATLAS_DIMENSIONS` | Required private Atlas enablement, secret connection URI and exact embedding dimensions; see the data-platform guide for roles/index setup |
-| `STEWARD_AUTH_REQUIRED` | `run.py` sets `1` unless given: every `/api` request except `/api/health` and `/api/auth/config` needs a valid Supabase session, and startup fails unless Supabase Auth accepts the key. Importing `backend.main` directly (tests, in-process controllers) leaves it off; `0` only for tests/CI |
-| `STEWARD_SUPABASE_URL`, `STEWARD_SUPABASE_PUBLISHABLE_KEY` | Supabase project URL (`https://<ref>.supabase.co`; a copied `/rest/v1` suffix is stripped) and **publishable** browser key. The secret key is refused. Tokens are checked with `GET /auth/v1/user` and cached for at most 60 s |
+| `STEWARD_SUPABASE_URL`, `STEWARD_SUPABASE_PUBLISHABLE_KEY` | Supabase project URL (`https://<ref>.supabase.co`; a copied `/rest/v1` suffix is stripped) and **publishable** browser key. Setting both offers optional accounts: the workspace stays open, `/login` and `/signup` appear only when chosen, and a valid token attaches the account (checked with `GET /auth/v1/user`, cached for at most 60 s). The secret key is refused |
+| `STEWARD_AUTH_REQUIRED` | Default `0`. `1` makes sign-in compulsory: every `/api` request except `/api/health` and `/api/auth/config` needs a valid session, and `run.py` refuses to start unless Supabase Auth accepts the key |
 | `STEWARD_MODEL_PROVIDER` | `ollama`, `openai`, `adaption` or `huggingface` protocol |
 | `STEWARD_MODEL_ENDPOINT` | Base URL for the selected protocol; hosted defaults are documented in the inference guide |
 | `STEWARD_MODEL` | Default model ID |

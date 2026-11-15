@@ -965,6 +965,8 @@ app.include_router(review_router)
 DIST=Path(__file__).resolve().parents[1]/'frontend'/'dist'
 if DIST.exists():
     app.mount('/assets',StaticFiles(directory=DIST/'assets'),name='assets')
+    if (DIST/'landing').is_dir():
+        app.mount('/landing',StaticFiles(directory=DIST/'landing'),name='landing')
 
 
 @app.get('/{path:path}')

@@ -7,12 +7,14 @@ test.beforeEach(async ({page}) => {
 
 test('keeps the hero minimal and presents the requested scroll sequence', async ({page}) => {
   await page.goto('/');
-  await expect(page.getByRole('heading', {level: 1})).toHaveText('Duck Tape is on Duck Tape');
+  await expect(page.getByRole('heading', {level: 1})).toHaveText('Duck Tape holds your codebase together.');
   await expect(page.locator('.landing-hero p')).toHaveCount(0);
   await expect(page.locator('.landing-hero h1')).toHaveCSS('color', 'rgb(255, 255, 255)');
   await expect(page.getByRole('link', {name: 'Log in', exact: true})).toHaveAttribute('href', '/dashboard');
   await expect(page.locator('.landing-header img')).toHaveAttribute('src', '/landing/logo.png');
-  await expect(page.locator('.landing-video video')).toHaveCSS('filter', 'none');
+  await expect(page.locator('.landing-hero-art')).toHaveAttribute('src', '/landing/hero-still.png');
+  await expect.poll(() => page.locator('.landing-hero-art').evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0);
+  await expect(page.locator('video')).toHaveCount(0);
   const sections = await page.locator('.landing main > section').evaluateAll(nodes => nodes.map(node => node.id));
   expect(sections).toEqual(['workspace', 'workflow', 'benchmarks']);
   await expect(page.locator('iframe')).toHaveAttribute('src', '/dashboard?preview=1');
@@ -29,56 +31,8 @@ test('keeps the hero minimal and presents the requested scroll sequence', async 
   await expect(page.locator('html')).not.toHaveClass(/landing-demo/);
 });
 
-test('plays the supplied video and supports pausing and resuming', async ({page}) => {
-  await page.goto('/');
-  const video = page.locator('.landing-video video');
-  await expect(video).toHaveAttribute('src', '/landing/hero.mp4');
-  await expect.poll(() => video.evaluate((node: HTMLVideoElement) => node.readyState)).toBeGreaterThanOrEqual(2);
-  expect(await video.evaluate((node: HTMLVideoElement) => node.videoWidth / node.videoHeight)).toBeCloseTo(1918 / 1080, 2);
-  await expect.poll(() => video.evaluate((node: HTMLVideoElement) => node.paused)).toBe(false);
-  await page.getByRole('button', {name: 'Pause video'}).click();
-  await expect.poll(() => video.evaluate((node: HTMLVideoElement) => node.paused)).toBe(true);
-  await page.getByRole('button', {name: 'Play video'}).press('Enter');
-  await expect.poll(() => video.evaluate((node: HTMLVideoElement) => node.paused)).toBe(false);
-});
-
-test('respects reduced motion and allows an explicit play choice', async ({page}) => {
-  await page.emulateMedia({reducedMotion: 'reduce'});
-  await page.goto('/');
-  const video = page.locator('.landing-video video');
-  await expect(video).toHaveAttribute('poster', '/landing/hero-poster.jpg');
-  await expect(page.getByRole('button', {name: 'Play video'})).toBeVisible();
-  expect(await video.evaluate((node: HTMLVideoElement) => node.paused)).toBe(true);
-  await page.getByRole('button', {name: 'Play video'}).click();
-  await expect(page.getByRole('button', {name: 'Pause video'})).toBeVisible();
-  await page.emulateMedia({reducedMotion: 'no-preference'});
-  await page.emulateMedia({reducedMotion: 'reduce'});
-  await expect(page.getByRole('button', {name: 'Play video'})).toBeVisible();
-});
-
-test('leaves a poster when the video is unavailable', async ({page}) => {
-  await page.route('**/landing/hero.mp4', route => route.abort());
-  await page.goto('/');
-  await expect(page.locator('.landing-video video')).toHaveAttribute('poster', '/landing/hero-poster.jpg');
-  await expect.poll(() => page.locator('.landing-video video').evaluate((node: HTMLVideoElement) => node.error?.code)).toBeTruthy();
-  await expect(page.getByRole('button', {name: /^(Play|Pause) video$/})).toHaveCount(0);
-});
-
-test('keeps the play control available when autoplay is blocked', async ({page}) => {
-  const errors: string[] = [];
-  page.on('pageerror', error => errors.push(error.message));
-  await page.addInitScript(() => {
-    HTMLMediaElement.prototype.play = () => Promise.reject(new DOMException('Autoplay blocked', 'NotAllowedError'));
-  });
-  await page.goto('/');
-  await expect(page.getByRole('button', {name: 'Play video'})).toBeVisible();
-  await page.getByRole('button', {name: 'Play video'}).click();
-  await expect(page.getByRole('button', {name: 'Play video'})).toBeVisible();
-  expect(errors).toEqual([]);
-});
-
-for (const {width, height} of [{width: 390, height: 900}, {width: 1440, height: 900}, {width: 844, height: 390}, {width: 320, height: 568}]) {
-  test(`fits a ${width}×${height} viewport with the video at the bottom of the first screen`, async ({page}) => {
+for (const {width, height} of [{width: 390, height: 900}, {width: 1440, height: 900}, {width: 768, height: 1024}, {width: 701, height: 900}, {width: 700, height: 700}, {width: 844, height: 390}, {width: 320, height: 568}]) {
+  test(`fits a ${width}×${height} viewport with readable hero copy and the supplied still`, async ({page}) => {
     await page.setViewportSize({width, height});
     await page.addInitScript(() => localStorage.setItem('steward-theme', 'light'));
     await page.goto('/');
@@ -86,10 +40,13 @@ for (const {width, height} of [{width: 390, height: 900}, {width: 1440, height: 
     const navigation = await page.locator('.landing-nav').boundingBox();
     expect(logo!.x + logo!.width).toBeLessThan(navigation!.x);
     const hero = await page.locator('.landing-opening').boundingBox();
-    const video = await page.locator('.landing-video').boundingBox();
-    expect(hero!.height).toBe(height);
-    expect(video!.y).toBeGreaterThan(100);
-    expect(video!.y + video!.height).toBeLessThanOrEqual(height);
+    const copy = await page.locator('.landing-hero-copy').boundingBox();
+    const art = await page.locator('.landing-hero-art').boundingBox();
+    expect(hero!.height).toBeGreaterThanOrEqual(height);
+    expect(copy!.x).toBeLessThan(width / 4);
+    if (width <= 700 || (width <= 900 && height >= 651)) expect(copy!.y + copy!.height).toBeLessThanOrEqual(art!.y + 10);
+    else expect(copy!.x + copy!.width).toBeLessThan(width * .6);
+    expect(copy!.y + copy!.height).toBeLessThan(hero!.height);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
     expect(await page.evaluate(() => localStorage.getItem('steward-theme'))).toBe('light');
     await expect(page.locator('.landing')).toHaveCSS('background-color', 'rgb(5, 6, 10)');

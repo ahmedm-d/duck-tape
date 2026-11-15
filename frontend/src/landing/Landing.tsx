@@ -1,7 +1,6 @@
-import {useEffect, useRef, useState} from 'react';
 import {
   ArrowDown, ArrowUpRight, BookOpen, Check, FileCheck2,
-  Pause, Play, ShieldCheck, Ticket, Timer, Zap,
+  ShieldCheck, Ticket, Timer, Zap,
 } from 'lucide-react';
 import {WorkspacePreview} from './WorkspacePreview';
 import './landing.css';
@@ -12,50 +11,6 @@ const stages = [
   {name: 'Check', detail: 'Run tests and an independent review. Revise when needed.'},
   {name: 'Review', detail: 'Review and approve the exact revision, then apply to a managed branch.'},
 ];
-
-function HeroVideo() {
-  const video = useRef<HTMLVideoElement>(null);
-  const [paused, setPaused] = useState(true);
-  const [unavailable, setUnavailable] = useState(false);
-
-  useEffect(() => {
-    const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const syncMotion = () => {
-      if (motion.matches) video.current?.pause();
-      else void video.current?.play().catch(() => setPaused(true));
-    };
-    syncMotion();
-    motion.addEventListener('change', syncMotion);
-    return () => motion.removeEventListener('change', syncMotion);
-  }, []);
-
-  function togglePlayback() {
-    if (!video.current) return;
-    if (video.current.paused) void video.current.play().catch(() => setPaused(true));
-    else video.current.pause();
-  }
-
-  return <div className="landing-video">
-    <div className="landing-media-window">
-    <video
-      ref={video}
-      src="/landing/hero.mp4"
-      poster="/landing/hero-poster.jpg"
-      muted loop playsInline preload="metadata"
-      aria-hidden="true"
-      onPlay={() => setPaused(false)}
-      onPause={() => setPaused(true)}
-      onError={() => setUnavailable(true)}
-    />
-    </div>
-    <a className="landing-scroll" href="#workspace" aria-label="Explore the workspace">
-      <ArrowDown size={19} aria-hidden="true"/>
-    </a>
-    {!unavailable && <button className="landing-video-control" onClick={togglePlayback} aria-label={paused ? 'Play video' : 'Pause video'}>
-      {paused ? <Play size={16} aria-hidden="true"/> : <Pause size={16} aria-hidden="true"/>}
-    </button>}
-  </div>;
-}
 
 function JobFlow() {
   return <div className="landing-flow-diagram">
@@ -141,12 +96,19 @@ export function Landing() {
         </nav>
       </header>
       <section className="landing-hero" aria-labelledby="landing-headline">
-        <h1 id="landing-headline">Duck Tape is on Duck Tape</h1>
-        <div className="landing-hero-actions">
-          <a className="landing-button" href="/dashboard">Log in</a>
-          <a className="landing-button landing-button-create" href="/dashboard">Start creating <ArrowUpRight size={16} aria-hidden="true"/></a>
+        <img className="landing-hero-art" src="/landing/hero-still.png" alt="" width="1672" height="941" fetchPriority="high"/>
+        <div className="landing-hero-content">
+          <div className="landing-hero-copy">
+            <h1 id="landing-headline"><span>Duck Tape</span> holds your codebase together.</h1>
+            <div className="landing-hero-actions">
+              <a className="landing-button" href="/dashboard">Log in</a>
+              <a className="landing-button landing-button-create" href="/dashboard">Start creating <ArrowUpRight size={16} aria-hidden="true"/></a>
+            </div>
+          </div>
         </div>
-        <HeroVideo/>
+        <a className="landing-scroll" href="#workspace" aria-label="Explore the workspace">
+          <ArrowDown size={19} aria-hidden="true"/>
+        </a>
       </section>
     </div>
 

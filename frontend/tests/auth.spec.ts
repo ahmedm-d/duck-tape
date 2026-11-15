@@ -87,7 +87,7 @@ test('required account can download the exact applied patch with its session',as
 test('sign-up explains email confirmation and the landing page stays public',async({page})=>{
  const {supabase}=await signInEnabled(page);
  await page.goto('/');
- await page.getByRole('link',{name:'Create account'}).click();
+ await page.getByRole('link',{name:'Start creating'}).click();
  await expect(page.getByRole('heading',{name:'Create your account'})).toBeVisible();
  await page.getByLabel('Email').fill('new@example.com');
  await page.getByLabel('Password',{exact:true}).fill('longenough1');await page.getByLabel('Confirm password').fill('different1');

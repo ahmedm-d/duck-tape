@@ -1,0 +1,13 @@
+{
+  "note": "Captured source fingerprints differ in integration files. Supplementary hashes below measured after completion; not historical load-time hashes.",
+  "matching_recorded_provider_paths": {
+    "backend/providers.py": "8d393324297135ad9c0153ab79a55ae9ca1878ba858b7cc0c48e5d06ebf6663c",
+    "backend/model_schemas.py": "13866ff5b32f37c4ff1918b0761e1f5b839825e12962b32cbf7856a6539f72ca",
+    "backend/agent_adapters.py": "1e953b4fcf61ab2167f07a7bb86af8c6c898598c7d91d7d95836dfb31eb83e85",
+    "scripts/evaluate_models.py": "064f9d6fb3bc593eb899c00ef2c94cea1fe3a07f06c67a9ca315f8e078901797"
+  },
+  "post_run_supplementary_hashes": {
+    "backend/anthropic_provider.py": "aa1b71f27954c230ed27411ff24d4c89b6f7df292474c9dde078089c78620fbc",
+    "scripts/compare_models.py": "268566bd5f7028900d5dcc06106d63ea9dc9795b58607dc2f89a0ecd2394b56f"
+  }
+}

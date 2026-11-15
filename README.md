@@ -14,6 +14,8 @@ The [app workspace guide](docs/APP_WORKSPACE.md) covers the landing page, cross-
 
 For parallel frontend work, use the [Workspace/Dashboard and Landing sections](docs/FRONTEND_PARALLEL.md), with separate branches, owned files, preview ports and kickoff prompts.
 
+The fresh [model benchmark](benchmark.md) compares Adaption-hosted Qwen and Anthropic Claude on identical static smoke tasks, with local Qwen reproduction instructions and explicit limits.
+
 ## Three-person hackathon workspace
 
 Start with the [A/B/C team plan](docs/hackathon/TEAM_PLAN.md), [three copy-paste kickoff prompts](docs/hackathon/START_HERE.md), [knowledge handoff contract](docs/hackathon/KNOWLEDGE_CONTRACT.md) and [repository rules](CONTRIBUTING.md).

@@ -11,8 +11,7 @@ test('keeps the hero minimal and presents the requested scroll sequence', async 
   await expect(page.locator('.landing-hero p')).toHaveCount(0);
   await expect(page.locator('.landing-hero h1')).toHaveCSS('color', 'rgb(255, 255, 255)');
   await expect(page.getByRole('link', {name: 'Log in', exact: true})).toHaveAttribute('href', '/login');
-  await expect(page.locator('.landing-header img')).toHaveAttribute('src', '/landing/logo.png');
-  await expect(page.locator('.landing-hero-art')).toHaveAttribute('src', '/landing/hero-still.png');
+  await expect.poll(() => page.locator('.landing-header img').evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0);
   await expect.poll(() => page.locator('.landing-hero-art').evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0);
   await expect(page.locator('video')).toHaveCount(0);
   const sections = await page.locator('.landing main > section').evaluateAll(nodes => nodes.map(node => node.id));

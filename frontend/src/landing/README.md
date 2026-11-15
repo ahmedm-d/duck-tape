@@ -26,7 +26,8 @@ Landing owns `frontend/src/landing/**`, `frontend/public/landing/**`, and
 - `WorkspacePreview.tsx`: the real `/dashboard?preview=1` iframe; applies a local
   presentation stylesheet inside that frame only. Saved theme and the actual
   workspace outside this preview are untouched.
-- `public/landing/`: supplied hero still, logo and gradient.
+- `assets/`: supplied hero still, logo and gradient. Vite bundles these into
+  `/assets` so the production API serves the same images as the development server.
 - `tests/landing/landing.spec.ts`: focused browser checks using the existing API
   fixture in Chrome.
 

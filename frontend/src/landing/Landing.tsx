@@ -5,6 +5,9 @@ import {
 import {WorkspacePreview} from './WorkspacePreview';
 import './landing.css';
 
+const logo = new URL('./assets/logo.png', import.meta.url).href;
+const heroStill = new URL('./assets/hero-still.png', import.meta.url).href;
+
 const stages = [
   {name: 'Understand', detail: 'Retrieve source evidence and approved repository knowledge.'},
   {name: 'Prepare', detail: 'Approve preparation, then plan and edit in isolation.'},
@@ -88,7 +91,7 @@ export function Landing() {
     <a className="landing-skip" href="#workspace">Skip to content</a>
     <div className="landing-opening">
       <header className="landing-header">
-        <a className="landing-logo" href="/" aria-label="Duck Tape home"><img src="/landing/logo.png" alt="Duck Tape" width="44" height="44"/></a>
+        <a className="landing-logo" href="/" aria-label="Duck Tape home"><img src={logo} alt="Duck Tape" width="44" height="44"/></a>
         <nav className="landing-nav" aria-label="Main navigation">
           <a href="#workspace">Workspace</a>
           <a href="#workflow">Workflow</a>
@@ -96,7 +99,7 @@ export function Landing() {
         </nav>
       </header>
       <section className="landing-hero" aria-labelledby="landing-headline">
-        <img className="landing-hero-art" src="/landing/hero-still.png" alt="" width="1672" height="941" fetchPriority="high"/>
+        <img className="landing-hero-art" src={heroStill} alt="" width="1672" height="941" fetchPriority="high"/>
         <div className="landing-hero-content">
           <div className="landing-hero-copy">
             <h1 id="landing-headline"><span>Duck Tape</span> holds your codebase together.</h1>
@@ -137,7 +140,7 @@ export function Landing() {
     </main>
 
     <footer className="landing-footer">
-      <a className="landing-brand" href="/"><img src="/landing/logo.png" alt="" width="25" height="25"/>Duck Tape</a>
+      <a className="landing-brand" href="/"><img src={logo} alt="" width="25" height="25"/>Duck Tape</a>
       <span>© {new Date().getFullYear()} Duck Tape</span>
       <nav aria-label="Footer navigation"><a href="/dashboard">Workspace <ArrowUpRight size={14} aria-hidden="true"/></a><a href="#top">Back to top ↑</a></nav>
     </footer>

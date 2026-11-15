@@ -35,6 +35,60 @@ test('a response bound to a different snapshot shows a stale warning',async({pag
  await expect(page.getByText('OUTDATED_ANSWER')).toHaveCount(0);
 });
 
+test('refresh removes retrieved evidence and answers from the previous snapshot',async({page})=>{
+ await fixture(page);let snapshot='snapshot-one';
+ await page.route('**/api/repositories/repo-one',route=>route.fulfill({json:{id:'repo-one',name:'Python project',snapshot,index:{files:[],edges:[],coverage:{indexed:0},gaps:[]}}}));
+ await page.route('**/api/repositories/repo-one/ask',route=>route.fulfill({json:{snapshot,answer:'OLD_SNAPSHOT_ANSWER',citations:[]}}));
+ await page.route('**/api/repositories/repo-one/search?*',route=>route.fulfill({json:{snapshot,mode:'fixture',items:[{path:'removed.py',start_line:1,end_line:1,content:'OLD_SOURCE',snapshot}],missing:[]}}));
+ await page.route('**/api/repositories/repo-one/refresh',route=>{snapshot='snapshot-new';return route.fulfill({json:{id:'repo-one'}})});
+ await page.goto('/local/repo-one/codebase');
+ await page.getByLabel('Project question').fill('Trace the quote');await page.getByRole('button',{name:'Ask',exact:true}).click();
+ await expect(page.getByText('OLD_SNAPSHOT_ANSWER',{exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Files',exact:true}).click();
+ await page.getByLabel('Search source').fill('removed');await page.getByRole('button',{name:'Retrieve context'}).click();
+ await expect(page.locator('.evidence')).toContainText('removed.py');
+ await page.getByRole('button',{name:'Refresh index'}).click();
+ await expect(page.locator('.snapshot')).toHaveText('snapshot-new');
+ await expect(page.locator('.evidence')).toHaveCount(0);
+ await page.getByRole('button',{name:'Overview',exact:true}).click();
+ await expect(page.getByText('OLD_SNAPSHOT_ANSWER',{exact:true})).toHaveCount(0);
+});
+
+test('switching projects discards a delayed source search response',async({page})=>{
+ await fixture(page);let release:()=>void=()=>{};const waiting=new Promise<void>(resolve=>release=resolve);
+ await page.route('**/api/repositories/repo-one/search?*',async route=>{await waiting;await route.fulfill({json:{mode:'fixture',items:[{path:'PRIVATE_OLD_PROJECT.py',start_line:1,end_line:1,content:'private',snapshot:'snapshot-one'}]}})});
+ await page.goto('/local/repo-one/codebase?tab=files');
+ await page.getByLabel('Search source').fill('private');
+ const pending=page.waitForRequest('**/api/repositories/repo-one/search?*');
+ await page.getByRole('button',{name:'Retrieve context'}).click();await pending;
+ await page.getByLabel('Switch project').selectOption('repo-two');
+ await page.getByRole('button',{name:'Project codebase',exact:true}).click();
+ await page.getByRole('button',{name:'Files',exact:true}).click();
+ const response=page.waitForResponse('**/api/repositories/repo-one/search?*');release();await response;
+ await expect(page.getByRole('button',{name:'Retrieve context'})).toBeEnabled();
+ await expect(page.locator('.evidence')).toHaveCount(0);
+});
+
+test('a delayed search cannot restore evidence after a source-only snapshot change',async({page})=>{
+ await fixture(page);let source='source-old',release:()=>void=()=>{};
+ const waiting=new Promise<void>(resolve=>release=resolve);
+ await page.route('**/api/repositories/repo-one',route=>route.fulfill({json:{id:'repo-one',name:'Python project',snapshot:'content-same',source_snapshot_id:source,index:{files:[],edges:[],coverage:{indexed:0},gaps:[]}}}));
+ await page.route('**/api/repositories/repo-one/search?*',async route=>{await waiting;await route.fulfill({json:{snapshot:'source-old',mode:'fixture',items:[{path:'OLD_COMMIT.py',start_line:1,end_line:1,content:'old',snapshot:'source-old'}]}})});
+ await page.goto('/local/repo-one/codebase?tab=files');
+ await page.getByLabel('Search source').fill('old');
+ const pending=page.waitForRequest('**/api/repositories/repo-one/search?*');
+ await page.getByRole('button',{name:'Retrieve context'}).click();await pending;
+ source='source-new';
+ await page.getByRole('button',{name:'Project jobs',exact:true}).click();
+ await page.getByRole('button',{name:/Fix quoted prices/}).click();
+ await expect(page.getByRole('heading',{name:'Fix quoted prices'})).toBeVisible();
+ await page.getByRole('button',{name:'Project codebase',exact:true}).click();
+ await page.getByRole('button',{name:'Files',exact:true}).click();
+ const response=page.waitForResponse('**/api/repositories/repo-one/search?*');release();await response;
+ await expect(page.getByRole('button',{name:'Retrieve context'})).toBeEnabled();
+ await expect(page.locator('.evidence')).toHaveCount(0);
+});
+
 test('syntax highlighting is present in unified and split views',async({page})=>{
  await fixture(page);await page.goto('/#/repositories/repo-one/jobs/job-one');
  await expect(page.locator('.hljs-keyword').first()).toBeVisible();

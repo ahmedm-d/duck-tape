@@ -3,10 +3,10 @@ import {fixture} from './fixtures';
 
 // Mocked transport only: Supabase Auth is a fake origin served by page.route; no live project is contacted.
 const SUPABASE='https://example-ref.supabase.co';
-async function signInEnabled(page:Page){
+async function signInEnabled(page:Page,required=false){
  const calls=await fixture(page),authorization:string[]=[];
  page.on('request',request=>{if(new URL(request.url()).pathname.startsWith('/api/')&&!request.url().includes('/api/auth/config'))authorization.push(request.headers()['authorization']||'')});
- await page.route('**/api/auth/config',route=>route.fulfill({json:{enabled:true,provider:'supabase',url:SUPABASE,publishable_key:'sb_publishable_fixture'}}));
+ await page.route('**/api/auth/config',route=>route.fulfill({json:{enabled:true,required,provider:'supabase',url:SUPABASE,publishable_key:'sb_publishable_fixture'}}));
  const now=Math.floor(Date.now()/1000),user={id:'user-1',aud:'authenticated',role:'authenticated',email:'dev@example.com',app_metadata:{},user_metadata:{},created_at:new Date().toISOString()};
  const session={access_token:'header.'+Buffer.from(JSON.stringify({sub:'user-1',exp:now+3600})).toString('base64url')+'.sig',token_type:'bearer',expires_in:3600,expires_at:now+3600,refresh_token:'refresh',user};
  const supabase:{path:string,body:any}[]=[];
@@ -19,20 +19,42 @@ async function signInEnabled(page:Page){
  return {calls,authorization,supabase};
 }
 
-test('workspace asks for a Supabase sign-in and sends the access token to the API',async({page})=>{
+test('workspace stays open and sign-in appears only from the Sign in button',async({page})=>{
  const {authorization,supabase}=await signInEnabled(page);
  await page.goto('/dashboard');
- await expect(page.getByRole('heading',{name:'Sign in'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Dashboard'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Sign in'})).toHaveCount(0);
+ await expect.poll(()=>authorization.length).toBeGreaterThan(0);
+ expect(authorization.every(value=>value==='')).toBeTruthy(); // anonymous requests carry no token
+ await page.getByRole('link',{name:'Sign in'}).click();
+ await expect(page).toHaveURL(/\/login$/);
  await page.getByLabel('Email').fill('dev@example.com');await page.getByLabel('Password').fill('wrong');
  await page.getByRole('button',{name:'Sign in'}).click();
  await expect(page.getByRole('alert')).toContainText('Invalid login credentials');
- await page.getByLabel('Password').fill('correct-horse');await page.getByRole('button',{name:'Sign in'}).click();
+ await page.getByLabel('Password').fill('correct-horse');
+ authorization.length=0;
+ await page.getByRole('button',{name:'Sign in'}).click();
+ await expect(page).toHaveURL(/\/dashboard$/);
  await expect(page.getByRole('heading',{name:'Dashboard'})).toBeVisible();
  await expect(page.getByText('dev@example.com')).toBeVisible();
  expect(supabase.filter(call=>call.path.startsWith('/auth/v1/token')).map(call=>call.body.email)).toEqual(['dev@example.com','dev@example.com']);
  await expect.poll(()=>authorization.length).toBeGreaterThan(0);
  expect(authorization.every(value=>value.startsWith('Bearer header.'))).toBeTruthy();
  await page.getByRole('button',{name:'Sign out'}).click();
+ await expect(page).toHaveURL(/\/dashboard$/);
+ await expect(page.getByRole('link',{name:'Sign in'})).toBeVisible();
+});
+
+test('sign-in page can be left without an account',async({page})=>{
+ await signInEnabled(page);
+ await page.goto('/login');
+ await page.getByRole('link',{name:'Continue without an account'}).click();
+ await expect(page.getByRole('heading',{name:'Dashboard'})).toBeVisible();
+});
+
+test('required mode sends signed-out visitors to sign in',async({page})=>{
+ await signInEnabled(page,true);
+ await page.goto('/dashboard');
  await expect(page).toHaveURL(/\/login$/);
  await expect(page.getByRole('heading',{name:'Sign in'})).toBeVisible();
 });

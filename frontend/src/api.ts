@@ -2,9 +2,12 @@ import {previewMode,demoResponse} from './demo';
 export type Row=Record<string,any>;
 // Set by AuthGate when Supabase sign-in is enabled; returns the current (auto-refreshed) access token.
 let sessionToken:(()=>Promise<string|undefined>)|null=null;
+// Resolves once the sign-in configuration is known, so early requests still carry a stored session's token.
+let authReady:Promise<unknown>=Promise.resolve();
 export function setSessionToken(getter:(()=>Promise<string|undefined>)|null){sessionToken=getter}
+export function setAuthReady(ready:Promise<unknown>){authReady=ready.catch(()=>undefined)}
 export const UNAUTHORIZED_EVENT='duck-tape:unauthorized';
-async function authorization():Promise<Record<string,string>>{const token=sessionToken?await sessionToken():undefined;return token?{Authorization:'Bearer '+token}:{}}
+async function authorization():Promise<Record<string,string>>{await authReady;const token=sessionToken?await sessionToken():undefined;return token?{Authorization:'Bearer '+token}:{}}
 function signedOut(res:Response){if(res.status===401&&sessionToken)dispatchEvent(new Event(UNAUTHORIZED_EVENT))}
 export async function api(path:string,method='GET',body?:unknown,signal?:AbortSignal){
  if(previewMode)return demoResponse(path,method);

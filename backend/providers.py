@@ -4,6 +4,7 @@ import asyncio
 import contextlib
 import json
 import math
+import re
 import os
 import shutil
 import socket
@@ -18,7 +19,7 @@ import httpx
 from . import model_schemas
 from .contracts import ProviderRequest, ProviderResult
 
-PROMPT_VERSION = 'steward-13'
+PROMPT_VERSION = 'steward-15-adaption-chat'
 _runner_error = None
 _embedding_runner_error = None
 RUNNER_BIND_TIMEOUT = 30
@@ -42,9 +43,14 @@ def configuration():
     # Switching protocols must not inherit another provider's endpoint or model.
     selected = stored if kind == stored.get('kind', kind) else {}
     local = local and kind == 'openai'
-    default_endpoint = SPONSOR_ENDPOINTS.get(kind, 'http://127.0.0.1:11435/v1' if local else 'http://127.0.0.1:11434')
+    if kind == 'anthropic':
+        from .anthropic_provider import DEFAULT_ENDPOINT, DEFAULT_MODEL
+        default_endpoint, default_model = DEFAULT_ENDPOINT, DEFAULT_MODEL
+    else:
+        default_endpoint = SPONSOR_ENDPOINTS.get(kind, 'http://127.0.0.1:11435/v1' if local else 'http://127.0.0.1:11434')
+        default_model = ('qwen-coder-1.5b' if stronger else 'qwen-coder-local') if local else ''
     endpoint = os.getenv('STEWARD_MODEL_ENDPOINT', selected.get('endpoint', default_endpoint)).rstrip('/')
-    model = os.getenv('STEWARD_MODEL', selected.get('model', ('qwen-coder-1.5b' if stronger else 'qwen-coder-local') if local else ''))
+    model = os.getenv('STEWARD_MODEL', selected.get('model', default_model)) or (default_model if kind == 'anthropic' else '')
     return {'endpoint':endpoint, 'kind':kind, 'small_model':(os.getenv('STEWARD_SMALL_MODEL',selected.get('small_model')) or model), 'model':model, 'context_limit':int(os.getenv('STEWARD_CONTEXT_LIMIT',str(selected.get('context_limit',8192 if local else 16000)))), 'embedding_model':os.getenv('STEWARD_EMBEDDING_MODEL',stored.get('embedding_model','')), 'embedding_endpoint':os.getenv('STEWARD_EMBEDDING_ENDPOINT',stored.get('embedding_endpoint','')).rstrip('/')}
 
 def installed_runtime(embedding=False):
@@ -223,14 +229,14 @@ class ProviderError(ValueError):
         self.telemetry = telemetry or {}
 
 
-def request(path, payload=None, timeout=30, cancel=None, *, embedding=False):
-    config = configuration()
+def request(path, payload=None, timeout=30, cancel=None, *, embedding=False, target=None):
+    config = target or configuration()
     headers = {'Content-Type':'application/json'}
-    separate = embedding and bool(config['embedding_endpoint'])
+    separate = embedding and bool(config.get('embedding_endpoint'))
     endpoint = config['embedding_endpoint'] if separate else config['endpoint']
-    if embedding and config['kind'] in SPONSOR_ENDPOINTS and (not separate or endpoint == config['endpoint']):
+    if embedding and (config['kind'] in SPONSOR_ENDPOINTS or config['kind'] == 'anthropic') and (not separate or endpoint == config['endpoint']):
         raise ProviderError('embedding_endpoint_required')
-    secret = os.getenv('STEWARD_EMBEDDING_KEY' if separate else 'STEWARD_MODEL_KEY')
+    secret = os.getenv('STEWARD_EMBEDDING_KEY' if separate else config.get('key_env', 'STEWARD_MODEL_KEY'))
     if not separate and config['kind'] in SPONSOR_ENDPOINTS:
         origin = urllib.parse.urlsplit(endpoint)
         official = urllib.parse.urlsplit(SPONSOR_ENDPOINTS[config['kind']])
@@ -240,6 +246,8 @@ def request(path, payload=None, timeout=30, cancel=None, *, embedding=False):
             raise ProviderError('missing_api_key')
     if secret:
         headers['Authorization'] = 'Bearer '+secret
+    if config.get('serving_endpoint'):
+        headers['Databricks-Model-Serving-Endpoint'] = config['serving_endpoint']
     async def fetch():
         async with httpx.AsyncClient(timeout=timeout, trust_env=False, follow_redirects=False) as client:
             async with client.stream('POST' if payload is not None else 'GET', endpoint+path,
@@ -284,8 +292,12 @@ def health():
     if config['model'] in ('qwen-coder-local','qwen-coder-1.5b'):
         result['quality_warning']='Small CPU model: live acceptance review rejected valid patches with incorrect findings. This model has not passed application qualification.'
     try:
-        data = request('/api/tags' if config['kind']=='ollama' else '/models', timeout=2)
-        models = [m.get('name',m.get('id')) for m in data.get('models',data.get('data',[]))]
+        if config['kind'] == 'anthropic':
+            from . import anthropic_provider
+            models = anthropic_provider.model_ids(config['endpoint'])
+        else:
+            data = request('/api/tags' if config['kind']=='ollama' else '/models', timeout=2)
+            models = [m.get('name',m.get('id')) for m in data.get('models',data.get('data',[]))]
         result['installed_models'] = models
         selected = config['model'] or (models[0] if models and config['kind'] not in SPONSOR_ENDPOINTS else '')
         catalog_model = selected.partition(':')[0] if config['kind'] == 'huggingface' else selected
@@ -294,6 +306,10 @@ def health():
     except Exception as exc:
         result['error'] = 'Provider unavailable: '+(exc.code if isinstance(exc, ProviderError) else type(exc).__name__)
     return result
+
+def _adaption_chat(config):
+    return config['kind'] == 'openai' and config['endpoint'] == SPONSOR_ENDPOINTS['adaption']
+
 
 def capabilities(role='implementation'):
     config = configuration()
@@ -304,10 +320,65 @@ def capabilities(role='implementation'):
         'context_limit': int(os.getenv(prefix+'CONTEXT_LIMIT', str(config['context_limit']))),
         'max_output_tokens': int(os.getenv(prefix+'MAX_OUTPUT_TOKENS', os.getenv('STEWARD_MAX_OUTPUT_TOKENS', '4096'))),
         'structured_output': os.getenv(prefix+'STRUCTURED_OUTPUT', os.getenv('STEWARD_MODEL_STRUCTURED_OUTPUT', 'true')).lower() == 'true',
-        'structured_output_mode': 'prompt_and_validate' if config['kind'] == 'adaption' else 'json_schema',
+        'structured_output_mode': 'prompt_and_validate' if config['kind'] == 'adaption' else 'json_object_and_validate' if _adaption_chat(config) else 'json_schema',
         'schema_version': model_schemas.SCHEMA_VERSION,
         'qualification': 'unqualified',
     }
+
+
+def resolve_target(task, agent_role=None):
+    """Resolve server-side deployment aliases; no trained model is assumed deployed."""
+    from .agent_adapters import ROLES
+    config = configuration()
+    target = {**config, 'model': capabilities(task)['model'], 'specialist': False,
+              'agent_role': None, 'key_env': 'STEWARD_MODEL_KEY', 'serving_endpoint': '',
+              'routing_reason': 'Structured controller fallback'}
+    role = agent_role or (task if task in ROLES else None)
+    if role is None:
+        return target
+    if role not in ROLES:
+        raise ProviderError('unknown_specialist_role')
+    flag = os.getenv('STEWARD_SPECIALIST_MODE', 'auto').lower()
+    if flag in ('0', 'false', 'off'):
+        return target
+    if flag not in ('1', 'true', 'on', 'auto'):
+        raise ProviderError('invalid_specialist_mode')
+    path = Path(os.getenv('STEWARD_MODEL_ROUTER_CONFIG', str(Path(__file__).resolve().parents[1] / 'steward_model_router_config.json')))
+    try:
+        if path.stat().st_size > 65536:
+            raise ValueError('Router configuration too large')
+        routing = json.loads(path.read_text(encoding='utf-8'))
+        if routing.get('specialist_mode', 'auto') is False and flag == 'auto':
+            return target
+        adapter = routing['adapters'][role]
+        pool = routing['pools'][adapter['pool']]
+        def env(field, default=''):
+            name = field
+            if not isinstance(name, str) or not re.fullmatch(r'[A-Z][A-Z0-9_]*', name):
+                raise ValueError('Expected environment variable name')
+            return os.getenv(name, default).strip()
+        model = env(adapter['model_env'])
+        endpoint = env(pool['endpoint_env'])
+        if not model or not endpoint:
+            return {**target, 'routing_reason': 'Specialist adapter not deployed; structured controller fallback'}
+        parsed = urllib.parse.urlsplit(endpoint)
+        if parsed.scheme not in ('https', 'http') or not parsed.hostname or parsed.username or parsed.password or parsed.query or parsed.fragment:
+            raise ValueError('Invalid pool endpoint')
+        key_env = pool['key_env']
+        if not re.fullmatch(r'[A-Z][A-Z0-9_]*', key_env):
+            raise ValueError('Invalid credential variable')
+        kind = env(pool['provider_env'], 'openai')
+        if kind not in ('openai', 'ollama', 'adaption', 'huggingface'):
+            raise ValueError('Unsupported pool provider')
+        context_limit = int(env(pool['context_limit_env'], str(config['context_limit'])))
+        if not 2048 <= context_limit <= 2_000_000:
+            raise ValueError('Invalid pool context limit')
+        return {**target, 'endpoint': endpoint.rstrip('/'), 'kind': kind, 'model': model,
+                'key_env': key_env, 'context_limit': context_limit, 'specialist': True,
+                'agent_role': role, 'serving_endpoint': env(pool['serving_endpoint_env']),
+                'routing_reason': 'Configured specialist ' + role + ' in ' + adapter['pool'] + ' pool'}
+    except (OSError, ValueError, KeyError, TypeError):
+        raise ProviderError('invalid_router_configuration') from None
 
 
 def route(task, risk='low', context_size=0, scope='', failure_count=0):
@@ -408,24 +479,34 @@ def complete(task, payload=None, risk='low', *, cancel=None):
     else:
         request_input = ProviderRequest(task=task, payload=payload or {}, risk=risk)
     task = request_input.task
-    config = configuration()
+    config = resolve_target(task, getattr(request_input, 'agent_role', None))
+    agent_role = config['agent_role']
     capability = capabilities(task)
+    if config['specialist']:
+        capability = {**capability, 'context_limit': config['context_limit'],
+                      'structured_output_mode': 'native_and_validate'}
     serialized = json.dumps(request_input.payload, sort_keys=True, ensure_ascii=False)
-    model, reason = route(task, request_input.risk, len(serialized.encode()), request_input.scope, request_input.failure_count)
+    if config['specialist']:
+        model, reason = config['model'], config['routing_reason']
+    else:
+        model, reason = route(task, request_input.risk, len(serialized.encode()), request_input.scope, request_input.failure_count)
     start = time.monotonic()
     telemetry = {'model': model, 'role': task, 'routing_reason': reason, 'latency': 0,
                  'usage': None, 'attempts': 0, 'attempt_log': [], 'cached': False, 'mode': 'live',
                  'structured_output_mode': capability['structured_output_mode']}
+    telemetry['agent_role'] = agent_role
     def fail(code):
         telemetry['latency'] = time.monotonic()-start
         raise ProviderError(code, telemetry)
     if _cancelled(cancel):
         fail('cancelled')
-    if config['kind'] not in ('openai', 'ollama', 'adaption', 'huggingface') or not capability['structured_output']:
+    if config['kind'] not in ('openai', 'ollama', 'adaption', 'huggingface', 'anthropic') or not capability['structured_output'] and not config['specialist']:
         fail('structured_output_unsupported')
     schema = model_schemas.schema_for(task, legacy=not typed, payload=request_input.payload)
-    messages = [{'role': 'system', 'content': _system(task)+' Schema: '+json.dumps(schema, separators=(',', ':'))},
-                {'role': 'user', 'content': serialized}]
+    from .agent_adapters import prompt_messages, parse_completion
+    messages = prompt_messages(agent_role, request_input.payload, system=None if agent_role else _system(task),
+                               schema=None if agent_role else schema)
+    transport_options = {'target': config} if config['specialist'] else {}
     output_limit = min(request_input.max_output_tokens, capability['max_output_tokens'])
     # shortcut: UTF-8 bytes conservatively bound tokens; use provider tokenization when available for tighter packing.
     input_estimate = sum(len(message['content'].encode())+16 for message in messages)
@@ -434,7 +515,8 @@ def complete(task, payload=None, risk='low', *, cancel=None):
     if input_estimate + output_limit > capability['context_limit']:
         fail('context_budget_exceeded')
     fingerprint = {'request': request_input.model_dump(), 'endpoint': config['endpoint'], 'kind': config['kind'],
-                   'model': model, 'prompt_version': PROMPT_VERSION, 'schema': schema, 'output_limit': output_limit}
+                   'model': model, 'prompt_version': PROMPT_VERSION, 'schema': schema, 'output_limit': output_limit,
+                   'agent_role': agent_role, 'serving_endpoint': config['serving_endpoint'], 'messages': messages}
     key = hashlib.sha256(json.dumps(fingerprint, sort_keys=True).encode()).hexdigest()
     telemetry['cache_key'] = key if request_input.cache else None
     if request_input.cache:
@@ -460,34 +542,42 @@ def complete(task, payload=None, risk='low', *, cancel=None):
             if _cancelled(cancel):
                 raise ProviderError('cancelled')
             if config['kind'] == 'ollama':
-                raw = request('/api/chat', {'model': model, 'stream': False, 'format': schema, 'messages': messages,
-                              'options': {'num_predict': output_limit, 'temperature': 0}}, timeout=timeout, cancel=cancel)
+                raw = request('/api/chat', {'model': model, 'stream': False, **({} if agent_role else {'format': schema}), 'messages': messages,
+                              'options': {'num_predict': output_limit, 'temperature': 0}}, timeout=timeout, cancel=cancel, **transport_options)
                 entry['usage'] = _usage(raw, 'ollama')
                 finish = raw.get('done_reason')
-                text = raw['message']['content']
+                text = raw['message'] if agent_role == 'implementer' and raw['message'].get('tool_calls') else raw['message']['content']
+                if agent_role == 'implementer' and raw['message'].get('tool_calls'):
+                    finish = 'tool_calls'
+            elif config['kind'] == 'anthropic':
+                from . import anthropic_provider
+                text, finish, entry['usage'] = anthropic_provider.complete(
+                    model, messages, None if agent_role else schema, output_limit, timeout, cancel, config['endpoint'])
             elif config['kind'] == 'adaption':
                 # shortcut: Adaption documents no JSON constraint parameter; prompt and validate until it does.
-                raw = request('/responses', {'model': model, 'instructions': messages[0]['content'], 'input': serialized,
+                raw = request('/responses', {'model': model, 'instructions': messages[0]['content'], 'input': '\n'.join(item['content'] for item in messages[1:]),
                               'max_output_tokens': output_limit, 'temperature': 0, 'stream': False,
                               'tools': [], 'tool_choice': 'none', 'agentic_memory': False, 'store': False},
-                              timeout=timeout, cancel=cancel)
+                              timeout=timeout, cancel=cancel, **transport_options)
                 entry['usage'] = _usage(raw, 'adaption')
                 text = _adaption_text(raw)
                 finish = 'stop'
             else:
+                # Adaption's schema mode loses code newlines; JSON mode retains them, with strict validation below.
                 raw = request('/chat/completions', {'model': model, 'messages': messages,
-                              'response_format': {'type': 'json_schema', 'json_schema': {'name': task, 'strict': True, 'schema': schema}},
-                              'max_tokens': output_limit, 'temperature': 0}, timeout=timeout, cancel=cancel)
+                              **({} if agent_role else {'response_format': {'type': 'json_object'} if _adaption_chat(config) else {'type': 'json_schema', 'json_schema': {'name': task, 'strict': True, 'schema': schema}}}),
+                              'max_tokens': output_limit, 'temperature': 0}, timeout=timeout, cancel=cancel, **transport_options)
                 entry['usage'] = _usage(raw, 'openai')
                 finish = raw['choices'][0].get('finish_reason')
-                text = raw['choices'][0]['message']['content']
+                message = raw['choices'][0]['message']
+                text = message if agent_role == 'implementer' and message.get('tool_calls') else message['content']
             if _cancelled(cancel):
                 raise ProviderError('cancelled')
             if finish in ('length', 'max_tokens'):
                 raise ProviderError('truncated')
-            if finish not in ('stop', 'eos'):
+            if finish not in (('stop', 'eos', 'tool_calls') if agent_role == 'implementer' else ('stop', 'eos')):
                 raise ProviderError('incomplete_finish')
-            result = json.loads(text)
+            result = parse_completion(agent_role, text) if agent_role else json.loads(text)
             model_schemas.validate(result, task, legacy=not typed, payload=request_input.payload)
             entry['latency'] = time.monotonic()-attempt_start
             telemetry.update(latency=time.monotonic()-start, usage=entry['usage'])
@@ -499,7 +589,7 @@ def complete(task, payload=None, risk='low', *, cancel=None):
             code = _error_code(exc)
             entry.update(error=code, latency=time.monotonic()-attempt_start)
             telemetry['usage'] = entry['usage']
-            retryable = code in ('http_429', 'http_500', 'http_502', 'http_503', 'http_504', 'timeout', 'transport_error', 'invalid_schema')
+            retryable = code in ('http_429', 'http_500', 'http_502', 'http_503', 'http_504', 'http_529', 'timeout', 'transport_error', 'invalid_schema')
             if attempt+1 >= attempt_limit or not retryable:
                 fail(code)
             delay = min(5, max(0, float(os.getenv('STEWARD_MODEL_BACKOFF', '0.5'))))

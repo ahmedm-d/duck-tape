@@ -1,0 +1,2298 @@
+{
+  "fixture": "reviewed Python Parcel sample plus fixed TS module chain; labels defined independently of retrieval",
+  "live": false,
+  "engine": "graphify",
+  "engine_version": "0.9.108",
+  "graph_stats": {
+    "nodes": 34,
+    "edges": 52,
+    "inferred_edges": 0
+  },
+  "graph_gaps": [
+    "1 external/library symbols are outside the snapshot and omitted",
+    "2 Graphify edges lacked validated endpoints or evidence and were omitted"
+  ],
+  "repo_id": "evaluation-graphify-graphify-e390b826-6c46-4c78-b5d8-3506a3d97e7e",
+  "source_snapshot_id": "a0faafaf33752c5104df5cc9c4199017badba22d23f45106d081520ac9eed666",
+  "results": [
+    {
+      "query": "quote",
+      "limit": 4,
+      "requested_mode": "builtin",
+      "mode": "keyword + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "app.py",
+          4,
+          5
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "tests/test_quote.py",
+          4,
+          8
+        ]
+      ],
+      "found_ranges": [
+        [
+          "tests/test_quote.py",
+          1,
+          8
+        ],
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "ts/api.ts",
+          2,
+          2
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ]
+      ],
+      "file_recall": 0.75,
+      "file_precision": 0.75,
+      "range_recall": 0.75,
+      "range_precision": 0.75,
+      "latency_ms": 10.319,
+      "graph_notes": []
+    },
+    {
+      "query": "quote",
+      "limit": 4,
+      "requested_mode": "graphify",
+      "mode": "keyword + graphify + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "app.py",
+          4,
+          5
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "tests/test_quote.py",
+          4,
+          8
+        ]
+      ],
+      "found_ranges": [
+        [
+          "tests/test_quote.py",
+          1,
+          8
+        ],
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "ts/api.ts",
+          2,
+          2
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ]
+      ],
+      "file_recall": 0.75,
+      "file_precision": 0.75,
+      "range_recall": 0.75,
+      "range_precision": 0.75,
+      "latency_ms": 11.334,
+      "graph_notes": [
+        "Graphify 0.9.108: 18 cross-file EXTRACTED edges added to graph expansion"
+      ]
+    },
+    {
+      "query": "unique_labels",
+      "limit": 4,
+      "requested_mode": "builtin",
+      "mode": "keyword + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "search.py",
+          1,
+          6
+        ],
+        [
+          "tests/test_search.py",
+          4,
+          6
+        ]
+      ],
+      "found_ranges": [
+        [
+          "search.py",
+          1,
+          6
+        ],
+        [
+          "tests/test_search.py",
+          1,
+          6
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.5,
+      "range_recall": 1.0,
+      "range_precision": 0.5,
+      "latency_ms": 5.205,
+      "graph_notes": []
+    },
+    {
+      "query": "unique_labels",
+      "limit": 4,
+      "requested_mode": "graphify",
+      "mode": "keyword + graphify + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "search.py",
+          1,
+          6
+        ],
+        [
+          "tests/test_search.py",
+          4,
+          6
+        ]
+      ],
+      "found_ranges": [
+        [
+          "search.py",
+          1,
+          6
+        ],
+        [
+          "tests/test_search.py",
+          1,
+          6
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.5,
+      "range_recall": 1.0,
+      "range_precision": 0.5,
+      "latency_ms": 7.355,
+      "graph_notes": [
+        "Graphify 0.9.108: 18 cross-file EXTRACTED edges added to graph expansion"
+      ]
+    },
+    {
+      "query": "MAX_ITEMS",
+      "limit": 4,
+      "requested_mode": "builtin",
+      "mode": "keyword + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "config.py",
+          2,
+          2
+        ],
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "tests/test_quote.py",
+          4,
+          8
+        ]
+      ],
+      "found_ranges": [
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "tests/test_quote.py",
+          1,
+          8
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.75,
+      "range_recall": 1.0,
+      "range_precision": 0.75,
+      "latency_ms": 6.994,
+      "graph_notes": []
+    },
+    {
+      "query": "MAX_ITEMS",
+      "limit": 4,
+      "requested_mode": "graphify",
+      "mode": "keyword + graphify + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "config.py",
+          2,
+          2
+        ],
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "tests/test_quote.py",
+          4,
+          8
+        ]
+      ],
+      "found_ranges": [
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "tests/test_quote.py",
+          1,
+          8
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.75,
+      "range_recall": 1.0,
+      "range_precision": 0.75,
+      "latency_ms": 29.285,
+      "graph_notes": [
+        "Graphify 0.9.108: 18 cross-file EXTRACTED edges added to graph expansion"
+      ]
+    },
+    {
+      "query": "quoteTS",
+      "limit": 4,
+      "requested_mode": "builtin",
+      "mode": "keyword + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "ts/api.ts",
+          1,
+          2
+        ],
+        [
+          "ts/helper.ts",
+          1,
+          2
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ],
+        [
+          "ts/api.test.ts",
+          1,
+          2
+        ]
+      ],
+      "found_ranges": [
+        [
+          "ts/api.ts",
+          1,
+          2
+        ],
+        [
+          "ts/api.test.ts",
+          1,
+          2
+        ],
+        [
+          "ts/helper.ts",
+          1,
+          2
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 1.0,
+      "range_recall": 1.0,
+      "range_precision": 1.0,
+      "latency_ms": 12.614,
+      "graph_notes": []
+    },
+    {
+      "query": "quoteTS",
+      "limit": 4,
+      "requested_mode": "graphify",
+      "mode": "keyword + graphify + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "ts/api.ts",
+          1,
+          2
+        ],
+        [
+          "ts/helper.ts",
+          1,
+          2
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ],
+        [
+          "ts/api.test.ts",
+          1,
+          2
+        ]
+      ],
+      "found_ranges": [
+        [
+          "ts/api.ts",
+          1,
+          2
+        ],
+        [
+          "ts/api.test.ts",
+          1,
+          2
+        ],
+        [
+          "ts/helper.ts",
+          1,
+          2
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 1.0,
+      "range_recall": 1.0,
+      "range_precision": 1.0,
+      "latency_ms": 13.734,
+      "graph_notes": [
+        "Graphify 0.9.108: 18 cross-file EXTRACTED edges added to graph expansion"
+      ]
+    },
+    {
+      "query": "quantity is ignored when calculating a quote",
+      "limit": 4,
+      "requested_mode": "builtin",
+      "mode": "keyword + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "app.py",
+          4,
+          5
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "tests/test_quote.py",
+          4,
+          8
+        ]
+      ],
+      "found_ranges": [
+        [
+          "tests/test_quote.py",
+          1,
+          8
+        ],
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "ts/api.ts",
+          2,
+          2
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ]
+      ],
+      "file_recall": 0.75,
+      "file_precision": 0.75,
+      "range_recall": 0.75,
+      "range_precision": 0.75,
+      "latency_ms": 8.31,
+      "graph_notes": []
+    },
+    {
+      "query": "quantity is ignored when calculating a quote",
+      "limit": 4,
+      "requested_mode": "graphify",
+      "mode": "keyword + graphify + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "app.py",
+          4,
+          5
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "tests/test_quote.py",
+          4,
+          8
+        ]
+      ],
+      "found_ranges": [
+        [
+          "tests/test_quote.py",
+          1,
+          8
+        ],
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "ts/api.ts",
+          2,
+          2
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ]
+      ],
+      "file_recall": 0.75,
+      "file_precision": 0.75,
+      "range_recall": 0.75,
+      "range_precision": 0.75,
+      "latency_ms": 10.215,
+      "graph_notes": [
+        "Graphify 0.9.108: 18 cross-file EXTRACTED edges added to graph expansion"
+      ]
+    },
+    {
+      "query": "reject orders with too many items",
+      "limit": 4,
+      "requested_mode": "builtin",
+      "mode": "keyword + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "config.py",
+          2,
+          2
+        ],
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "tests/test_quote.py",
+          4,
+          8
+        ]
+      ],
+      "found_ranges": [
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "tests/test_quote.py",
+          1,
+          8
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.75,
+      "range_recall": 1.0,
+      "range_precision": 0.75,
+      "latency_ms": 6.878,
+      "graph_notes": []
+    },
+    {
+      "query": "reject orders with too many items",
+      "limit": 4,
+      "requested_mode": "graphify",
+      "mode": "keyword + graphify + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "config.py",
+          2,
+          2
+        ],
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "tests/test_quote.py",
+          4,
+          8
+        ]
+      ],
+      "found_ranges": [
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "tests/test_quote.py",
+          1,
+          8
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.75,
+      "range_recall": 1.0,
+      "range_precision": 0.75,
+      "latency_ms": 9.203,
+      "graph_notes": [
+        "Graphify 0.9.108: 18 cross-file EXTRACTED edges added to graph expansion"
+      ]
+    },
+    {
+      "query": "quote",
+      "limit": 6,
+      "requested_mode": "builtin",
+      "mode": "keyword + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "app.py",
+          4,
+          5
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "tests/test_quote.py",
+          4,
+          8
+        ]
+      ],
+      "found_ranges": [
+        [
+          "tests/test_quote.py",
+          1,
+          8
+        ],
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "ts/api.ts",
+          2,
+          2
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "README.md",
+          1,
+          5
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.6666666666666666,
+      "range_recall": 1.0,
+      "range_precision": 0.6666666666666666,
+      "latency_ms": 6.183,
+      "graph_notes": []
+    },
+    {
+      "query": "quote",
+      "limit": 6,
+      "requested_mode": "graphify",
+      "mode": "keyword + graphify + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "app.py",
+          4,
+          5
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "tests/test_quote.py",
+          4,
+          8
+        ]
+      ],
+      "found_ranges": [
+        [
+          "tests/test_quote.py",
+          1,
+          8
+        ],
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "ts/api.ts",
+          2,
+          2
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "README.md",
+          1,
+          5
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.6666666666666666,
+      "range_recall": 1.0,
+      "range_precision": 0.6666666666666666,
+      "latency_ms": 8.75,
+      "graph_notes": [
+        "Graphify 0.9.108: 18 cross-file EXTRACTED edges added to graph expansion"
+      ]
+    },
+    {
+      "query": "unique_labels",
+      "limit": 6,
+      "requested_mode": "builtin",
+      "mode": "keyword + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "search.py",
+          1,
+          6
+        ],
+        [
+          "tests/test_search.py",
+          4,
+          6
+        ]
+      ],
+      "found_ranges": [
+        [
+          "search.py",
+          1,
+          6
+        ],
+        [
+          "tests/test_search.py",
+          1,
+          6
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "requirements.lock",
+          1,
+          2
+        ],
+        [
+          "README.md",
+          1,
+          5
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.3333333333333333,
+      "range_recall": 1.0,
+      "range_precision": 0.3333333333333333,
+      "latency_ms": 7.08,
+      "graph_notes": []
+    },
+    {
+      "query": "unique_labels",
+      "limit": 6,
+      "requested_mode": "graphify",
+      "mode": "keyword + graphify + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "search.py",
+          1,
+          6
+        ],
+        [
+          "tests/test_search.py",
+          4,
+          6
+        ]
+      ],
+      "found_ranges": [
+        [
+          "search.py",
+          1,
+          6
+        ],
+        [
+          "tests/test_search.py",
+          1,
+          6
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "requirements.lock",
+          1,
+          2
+        ],
+        [
+          "README.md",
+          1,
+          5
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.3333333333333333,
+      "range_recall": 1.0,
+      "range_precision": 0.3333333333333333,
+      "latency_ms": 10.281,
+      "graph_notes": [
+        "Graphify 0.9.108: 18 cross-file EXTRACTED edges added to graph expansion"
+      ]
+    },
+    {
+      "query": "MAX_ITEMS",
+      "limit": 6,
+      "requested_mode": "builtin",
+      "mode": "keyword + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "config.py",
+          2,
+          2
+        ],
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "tests/test_quote.py",
+          4,
+          8
+        ]
+      ],
+      "found_ranges": [
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "tests/test_quote.py",
+          1,
+          8
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ],
+        [
+          "requirements.lock",
+          1,
+          2
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.5,
+      "range_recall": 1.0,
+      "range_precision": 0.5,
+      "latency_ms": 6.953,
+      "graph_notes": []
+    },
+    {
+      "query": "MAX_ITEMS",
+      "limit": 6,
+      "requested_mode": "graphify",
+      "mode": "keyword + graphify + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "config.py",
+          2,
+          2
+        ],
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "tests/test_quote.py",
+          4,
+          8
+        ]
+      ],
+      "found_ranges": [
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "tests/test_quote.py",
+          1,
+          8
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ],
+        [
+          "requirements.lock",
+          1,
+          2
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.5,
+      "range_recall": 1.0,
+      "range_precision": 0.5,
+      "latency_ms": 22.4,
+      "graph_notes": [
+        "Graphify 0.9.108: 18 cross-file EXTRACTED edges added to graph expansion"
+      ]
+    },
+    {
+      "query": "quoteTS",
+      "limit": 6,
+      "requested_mode": "builtin",
+      "mode": "keyword + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "ts/api.ts",
+          1,
+          2
+        ],
+        [
+          "ts/helper.ts",
+          1,
+          2
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ],
+        [
+          "ts/api.test.ts",
+          1,
+          2
+        ]
+      ],
+      "found_ranges": [
+        [
+          "ts/api.ts",
+          1,
+          2
+        ],
+        [
+          "ts/api.test.ts",
+          1,
+          2
+        ],
+        [
+          "ts/helper.ts",
+          1,
+          2
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "requirements.lock",
+          1,
+          2
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.6666666666666666,
+      "range_recall": 1.0,
+      "range_precision": 0.6666666666666666,
+      "latency_ms": 6.291,
+      "graph_notes": []
+    },
+    {
+      "query": "quoteTS",
+      "limit": 6,
+      "requested_mode": "graphify",
+      "mode": "keyword + graphify + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "ts/api.ts",
+          1,
+          2
+        ],
+        [
+          "ts/helper.ts",
+          1,
+          2
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ],
+        [
+          "ts/api.test.ts",
+          1,
+          2
+        ]
+      ],
+      "found_ranges": [
+        [
+          "ts/api.ts",
+          1,
+          2
+        ],
+        [
+          "ts/api.test.ts",
+          1,
+          2
+        ],
+        [
+          "ts/helper.ts",
+          1,
+          2
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "requirements.lock",
+          1,
+          2
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.6666666666666666,
+      "range_recall": 1.0,
+      "range_precision": 0.6666666666666666,
+      "latency_ms": 7.477,
+      "graph_notes": [
+        "Graphify 0.9.108: 18 cross-file EXTRACTED edges added to graph expansion"
+      ]
+    },
+    {
+      "query": "quantity is ignored when calculating a quote",
+      "limit": 6,
+      "requested_mode": "builtin",
+      "mode": "keyword + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "app.py",
+          4,
+          5
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "tests/test_quote.py",
+          4,
+          8
+        ]
+      ],
+      "found_ranges": [
+        [
+          "tests/test_quote.py",
+          1,
+          8
+        ],
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "ts/api.ts",
+          2,
+          2
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "README.md",
+          1,
+          5
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.6666666666666666,
+      "range_recall": 1.0,
+      "range_precision": 0.6666666666666666,
+      "latency_ms": 5.97,
+      "graph_notes": []
+    },
+    {
+      "query": "quantity is ignored when calculating a quote",
+      "limit": 6,
+      "requested_mode": "graphify",
+      "mode": "keyword + graphify + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "app.py",
+          4,
+          5
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "tests/test_quote.py",
+          4,
+          8
+        ]
+      ],
+      "found_ranges": [
+        [
+          "tests/test_quote.py",
+          1,
+          8
+        ],
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "ts/api.ts",
+          2,
+          2
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "README.md",
+          1,
+          5
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.6666666666666666,
+      "range_recall": 1.0,
+      "range_precision": 0.6666666666666666,
+      "latency_ms": 7.462,
+      "graph_notes": [
+        "Graphify 0.9.108: 18 cross-file EXTRACTED edges added to graph expansion"
+      ]
+    },
+    {
+      "query": "reject orders with too many items",
+      "limit": 6,
+      "requested_mode": "builtin",
+      "mode": "keyword + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "config.py",
+          2,
+          2
+        ],
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "tests/test_quote.py",
+          4,
+          8
+        ]
+      ],
+      "found_ranges": [
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "tests/test_quote.py",
+          1,
+          8
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "README.md",
+          1,
+          5
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.5,
+      "range_recall": 1.0,
+      "range_precision": 0.5,
+      "latency_ms": 7.903,
+      "graph_notes": []
+    },
+    {
+      "query": "reject orders with too many items",
+      "limit": 6,
+      "requested_mode": "graphify",
+      "mode": "keyword + graphify + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "config.py",
+          2,
+          2
+        ],
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "tests/test_quote.py",
+          4,
+          8
+        ]
+      ],
+      "found_ranges": [
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "tests/test_quote.py",
+          1,
+          8
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "README.md",
+          1,
+          5
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.5,
+      "range_recall": 1.0,
+      "range_precision": 0.5,
+      "latency_ms": 13.535,
+      "graph_notes": [
+        "Graphify 0.9.108: 18 cross-file EXTRACTED edges added to graph expansion"
+      ]
+    },
+    {
+      "query": "quote",
+      "limit": 12,
+      "requested_mode": "builtin",
+      "mode": "keyword + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "app.py",
+          4,
+          5
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "tests/test_quote.py",
+          4,
+          8
+        ]
+      ],
+      "found_ranges": [
+        [
+          "tests/test_quote.py",
+          1,
+          8
+        ],
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "ts/api.ts",
+          2,
+          2
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "README.md",
+          1,
+          5
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ],
+        [
+          "requirements.lock",
+          1,
+          2
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.5,
+      "range_recall": 1.0,
+      "range_precision": 0.5,
+      "latency_ms": 5.727,
+      "graph_notes": []
+    },
+    {
+      "query": "quote",
+      "limit": 12,
+      "requested_mode": "graphify",
+      "mode": "keyword + graphify + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "app.py",
+          4,
+          5
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "tests/test_quote.py",
+          4,
+          8
+        ]
+      ],
+      "found_ranges": [
+        [
+          "tests/test_quote.py",
+          1,
+          8
+        ],
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "ts/api.ts",
+          2,
+          2
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "README.md",
+          1,
+          5
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ],
+        [
+          "requirements.lock",
+          1,
+          2
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.5,
+      "range_recall": 1.0,
+      "range_precision": 0.5,
+      "latency_ms": 6.881,
+      "graph_notes": [
+        "Graphify 0.9.108: 18 cross-file EXTRACTED edges added to graph expansion"
+      ]
+    },
+    {
+      "query": "unique_labels",
+      "limit": 12,
+      "requested_mode": "builtin",
+      "mode": "keyword + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "search.py",
+          1,
+          6
+        ],
+        [
+          "tests/test_search.py",
+          4,
+          6
+        ]
+      ],
+      "found_ranges": [
+        [
+          "search.py",
+          1,
+          6
+        ],
+        [
+          "tests/test_search.py",
+          1,
+          6
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "requirements.lock",
+          1,
+          2
+        ],
+        [
+          "README.md",
+          1,
+          5
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.3333333333333333,
+      "range_recall": 1.0,
+      "range_precision": 0.3333333333333333,
+      "latency_ms": 4.968,
+      "graph_notes": []
+    },
+    {
+      "query": "unique_labels",
+      "limit": 12,
+      "requested_mode": "graphify",
+      "mode": "keyword + graphify + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "search.py",
+          1,
+          6
+        ],
+        [
+          "tests/test_search.py",
+          4,
+          6
+        ]
+      ],
+      "found_ranges": [
+        [
+          "search.py",
+          1,
+          6
+        ],
+        [
+          "tests/test_search.py",
+          1,
+          6
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "requirements.lock",
+          1,
+          2
+        ],
+        [
+          "README.md",
+          1,
+          5
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.3333333333333333,
+      "range_recall": 1.0,
+      "range_precision": 0.3333333333333333,
+      "latency_ms": 7.457,
+      "graph_notes": [
+        "Graphify 0.9.108: 18 cross-file EXTRACTED edges added to graph expansion"
+      ]
+    },
+    {
+      "query": "MAX_ITEMS",
+      "limit": 12,
+      "requested_mode": "builtin",
+      "mode": "keyword + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "config.py",
+          2,
+          2
+        ],
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "tests/test_quote.py",
+          4,
+          8
+        ]
+      ],
+      "found_ranges": [
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "tests/test_quote.py",
+          1,
+          8
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ],
+        [
+          "requirements.lock",
+          1,
+          2
+        ],
+        [
+          "README.md",
+          1,
+          5
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.42857142857142855,
+      "range_recall": 1.0,
+      "range_precision": 0.42857142857142855,
+      "latency_ms": 5.292,
+      "graph_notes": []
+    },
+    {
+      "query": "MAX_ITEMS",
+      "limit": 12,
+      "requested_mode": "graphify",
+      "mode": "keyword + graphify + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "config.py",
+          2,
+          2
+        ],
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "tests/test_quote.py",
+          4,
+          8
+        ]
+      ],
+      "found_ranges": [
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "tests/test_quote.py",
+          1,
+          8
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ],
+        [
+          "requirements.lock",
+          1,
+          2
+        ],
+        [
+          "README.md",
+          1,
+          5
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.42857142857142855,
+      "range_recall": 1.0,
+      "range_precision": 0.42857142857142855,
+      "latency_ms": 15.919,
+      "graph_notes": [
+        "Graphify 0.9.108: 18 cross-file EXTRACTED edges added to graph expansion"
+      ]
+    },
+    {
+      "query": "quoteTS",
+      "limit": 12,
+      "requested_mode": "builtin",
+      "mode": "keyword + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "ts/api.ts",
+          1,
+          2
+        ],
+        [
+          "ts/helper.ts",
+          1,
+          2
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ],
+        [
+          "ts/api.test.ts",
+          1,
+          2
+        ]
+      ],
+      "found_ranges": [
+        [
+          "ts/api.ts",
+          1,
+          2
+        ],
+        [
+          "ts/api.test.ts",
+          1,
+          2
+        ],
+        [
+          "ts/helper.ts",
+          1,
+          2
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "requirements.lock",
+          1,
+          2
+        ],
+        [
+          "README.md",
+          1,
+          5
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.5714285714285714,
+      "range_recall": 1.0,
+      "range_precision": 0.5714285714285714,
+      "latency_ms": 5.187,
+      "graph_notes": []
+    },
+    {
+      "query": "quoteTS",
+      "limit": 12,
+      "requested_mode": "graphify",
+      "mode": "keyword + graphify + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "ts/api.ts",
+          1,
+          2
+        ],
+        [
+          "ts/helper.ts",
+          1,
+          2
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ],
+        [
+          "ts/api.test.ts",
+          1,
+          2
+        ]
+      ],
+      "found_ranges": [
+        [
+          "ts/api.ts",
+          1,
+          2
+        ],
+        [
+          "ts/api.test.ts",
+          1,
+          2
+        ],
+        [
+          "ts/helper.ts",
+          1,
+          2
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "requirements.lock",
+          1,
+          2
+        ],
+        [
+          "README.md",
+          1,
+          5
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.5714285714285714,
+      "range_recall": 1.0,
+      "range_precision": 0.5714285714285714,
+      "latency_ms": 6.764,
+      "graph_notes": [
+        "Graphify 0.9.108: 18 cross-file EXTRACTED edges added to graph expansion"
+      ]
+    },
+    {
+      "query": "quantity is ignored when calculating a quote",
+      "limit": 12,
+      "requested_mode": "builtin",
+      "mode": "keyword + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "app.py",
+          4,
+          5
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "tests/test_quote.py",
+          4,
+          8
+        ]
+      ],
+      "found_ranges": [
+        [
+          "tests/test_quote.py",
+          1,
+          8
+        ],
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "ts/api.ts",
+          2,
+          2
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "README.md",
+          1,
+          5
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ],
+        [
+          "requirements.lock",
+          1,
+          2
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.5,
+      "range_recall": 1.0,
+      "range_precision": 0.5,
+      "latency_ms": 7.749,
+      "graph_notes": []
+    },
+    {
+      "query": "quantity is ignored when calculating a quote",
+      "limit": 12,
+      "requested_mode": "graphify",
+      "mode": "keyword + graphify + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "app.py",
+          4,
+          5
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "tests/test_quote.py",
+          4,
+          8
+        ]
+      ],
+      "found_ranges": [
+        [
+          "tests/test_quote.py",
+          1,
+          8
+        ],
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "ts/api.ts",
+          2,
+          2
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "README.md",
+          1,
+          5
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ],
+        [
+          "requirements.lock",
+          1,
+          2
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.5,
+      "range_recall": 1.0,
+      "range_precision": 0.5,
+      "latency_ms": 9.973,
+      "graph_notes": [
+        "Graphify 0.9.108: 18 cross-file EXTRACTED edges added to graph expansion"
+      ]
+    },
+    {
+      "query": "reject orders with too many items",
+      "limit": 12,
+      "requested_mode": "builtin",
+      "mode": "keyword + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "config.py",
+          2,
+          2
+        ],
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "tests/test_quote.py",
+          4,
+          8
+        ]
+      ],
+      "found_ranges": [
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "tests/test_quote.py",
+          1,
+          8
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "README.md",
+          1,
+          5
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ],
+        [
+          "requirements.lock",
+          1,
+          2
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.42857142857142855,
+      "range_recall": 1.0,
+      "range_precision": 0.42857142857142855,
+      "latency_ms": 6.738,
+      "graph_notes": []
+    },
+    {
+      "query": "reject orders with too many items",
+      "limit": 12,
+      "requested_mode": "graphify",
+      "mode": "keyword + graphify + graph",
+      "status": "measured",
+      "expected_ranges": [
+        [
+          "config.py",
+          2,
+          2
+        ],
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "tests/test_quote.py",
+          4,
+          8
+        ]
+      ],
+      "found_ranges": [
+        [
+          "app.py",
+          1,
+          5
+        ],
+        [
+          "tests/test_quote.py",
+          1,
+          8
+        ],
+        [
+          "config.py",
+          1,
+          2
+        ],
+        [
+          "pricing.py",
+          1,
+          3
+        ],
+        [
+          "README.md",
+          1,
+          5
+        ],
+        [
+          "ts/config.ts",
+          1,
+          1
+        ],
+        [
+          "requirements.lock",
+          1,
+          2
+        ]
+      ],
+      "file_recall": 1.0,
+      "file_precision": 0.42857142857142855,
+      "range_recall": 1.0,
+      "range_precision": 0.42857142857142855,
+      "latency_ms": 7.103,
+      "graph_notes": [
+        "Graphify 0.9.108: 18 cross-file EXTRACTED edges added to graph expansion"
+      ]
+    }
+  ],
+  "warning": "Small fixed tasks on one fixture measure retrieval only; no quality or task-success improvement is claimed."
+}

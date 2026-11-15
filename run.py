@@ -19,8 +19,8 @@ def load_environment():
         if not line.strip() or line.lstrip().startswith('#'): continue
         key,separator,value=line.partition('=')
         key=key.strip()
-        if not separator or not (key.startswith('STEWARD_') or key in {'ADAPTION_API_KEY', 'HF_TOKEN'}) or not key.replace('_','').isalnum():
-            raise ValueError('Invalid .env entry; use STEWARD_NAME, ADAPTION_API_KEY or HF_TOKEN with literal values')
+        if not separator or not (key.startswith('STEWARD_') or key in {'ADAPTION_API_KEY', 'HF_TOKEN', 'ANTHROPIC_API_KEY'}) or not key.replace('_','').isalnum():
+            raise ValueError('Invalid .env entry; use STEWARD_NAME, ADAPTION_API_KEY, HF_TOKEN or ANTHROPIC_API_KEY with literal values')
         value=value.strip()
         if len(value)>=2 and value[0]==value[-1] and value[0] in {'"',"'"}: value=value[1:-1]
         os.environ.setdefault(key,value)
@@ -31,6 +31,16 @@ if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--port',type=int,default=8765)
     args=parser.parse_args()
+    # Option B: Atlas is a compulsory part of repository knowledge. Importing backend.main never runs this check.
+    from backend import atlas_startup
+    try: atlas_startup.check_atlas_ready()
+    except atlas_startup.AtlasStartupError as exc: raise SystemExit('Duck Tape cannot start: '+str(exc)) from None
+    # Supabase accounts are optional once configured; STEWARD_AUTH_REQUIRED=1 makes them compulsory.
+    from backend import auth
+    try: auth.check_auth_ready()
+    except auth.AuthConfigError as exc:
+        if auth.auth_required(): raise SystemExit('Duck Tape cannot start: '+str(exc)) from None
+        print('Duck Tape: Supabase sign-in unavailable ('+str(exc)+'); the workspace stays open without accounts.',flush=True)
     stop=threading.Event()
     children=[]
     instance_id=uuid.uuid4().hex

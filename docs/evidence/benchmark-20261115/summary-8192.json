@@ -1,0 +1,262 @@
+[
+  {
+    "label": "claude",
+    "model": "claude-opus-5-5",
+    "status": "passed",
+    "answer_limit": 8192,
+    "passed": 8,
+    "total": 8,
+    "wall_s": 36.2,
+    "input_tokens": 20718,
+    "output_tokens": 1466,
+    "est_cost_usd": 0.1122,
+    "cases": [
+      {
+        "case": "investigation",
+        "passed": true,
+        "actual_model": "claude-opus-5-5",
+        "latency_s": 2.5,
+        "attempts": 1,
+        "errors": []
+      },
+      {
+        "case": "planning",
+        "passed": true,
+        "actual_model": "claude-opus-5-5",
+        "latency_s": 2.9,
+        "attempts": 1,
+        "errors": []
+      },
+      {
+        "case": "implementation",
+        "passed": true,
+        "actual_model": "claude-opus-5-5",
+        "latency_s": 3.2,
+        "attempts": 1,
+        "errors": []
+      },
+      {
+        "case": "repair",
+        "passed": true,
+        "actual_model": "claude-opus-5-5",
+        "latency_s": 3.5,
+        "attempts": 1,
+        "errors": []
+      },
+      {
+        "case": "review (approve)",
+        "passed": true,
+        "actual_model": "claude-opus-5-5",
+        "latency_s": 1.6,
+        "attempts": 1,
+        "errors": []
+      },
+      {
+        "case": "review (reject)",
+        "passed": true,
+        "actual_model": "claude-opus-5-5",
+        "latency_s": 2.2,
+        "attempts": 1,
+        "errors": []
+      },
+      {
+        "case": "regression",
+        "passed": true,
+        "actual_model": "claude-opus-5-5",
+        "latency_s": 4.0,
+        "attempts": 1,
+        "errors": []
+      },
+      {
+        "case": "acceptance",
+        "passed": true,
+        "actual_model": "claude-opus-5-5",
+        "latency_s": 3.6,
+        "attempts": 1,
+        "errors": []
+      }
+    ]
+  },
+  {
+    "label": "local",
+    "model": "qwen3-coder:30b",
+    "status": "failed",
+    "answer_limit": 8192,
+    "passed": 0,
+    "total": 8,
+    "wall_s": 45.0,
+    "input_tokens": null,
+    "output_tokens": null,
+    "est_cost_usd": null,
+    "cases": [
+      {
+        "case": "investigation",
+        "passed": false,
+        "actual_model": "qwen3-coder:30b",
+        "latency_s": 5.5,
+        "attempts": 2,
+        "errors": [
+          "transport_error",
+          "transport_error"
+        ]
+      },
+      {
+        "case": "planning",
+        "passed": false,
+        "actual_model": "qwen3-coder:30b",
+        "latency_s": 5.3,
+        "attempts": 2,
+        "errors": [
+          "transport_error",
+          "transport_error"
+        ]
+      },
+      {
+        "case": "implementation",
+        "passed": false,
+        "actual_model": "qwen3-coder:30b",
+        "latency_s": 5.3,
+        "attempts": 2,
+        "errors": [
+          "transport_error",
+          "transport_error"
+        ]
+      },
+      {
+        "case": "repair",
+        "passed": false,
+        "actual_model": "qwen3-coder:30b",
+        "latency_s": 5.3,
+        "attempts": 2,
+        "errors": [
+          "transport_error",
+          "transport_error"
+        ]
+      },
+      {
+        "case": "review",
+        "passed": false,
+        "actual_model": "qwen3-coder:30b",
+        "latency_s": 5.6,
+        "attempts": 2,
+        "errors": [
+          "transport_error",
+          "transport_error"
+        ]
+      },
+      {
+        "case": "review",
+        "passed": false,
+        "actual_model": "qwen3-coder:30b",
+        "latency_s": 5.3,
+        "attempts": 2,
+        "errors": [
+          "transport_error",
+          "transport_error"
+        ]
+      },
+      {
+        "case": "regression",
+        "passed": false,
+        "actual_model": "qwen3-coder:30b",
+        "latency_s": 5.3,
+        "attempts": 2,
+        "errors": [
+          "transport_error",
+          "transport_error"
+        ]
+      },
+      {
+        "case": "acceptance",
+        "passed": false,
+        "actual_model": "qwen3-coder:30b",
+        "latency_s": 5.3,
+        "attempts": 2,
+        "errors": [
+          "transport_error",
+          "transport_error"
+        ]
+      }
+    ]
+  },
+  {
+    "label": "adaption",
+    "model": "qwen3.5-397b",
+    "status": "passed",
+    "answer_limit": 8192,
+    "passed": 8,
+    "total": 8,
+    "wall_s": 242.1,
+    "input_tokens": null,
+    "output_tokens": null,
+    "est_cost_usd": null,
+    "cases": [
+      {
+        "case": "investigation",
+        "passed": true,
+        "actual_model": "qwen3.5-397b",
+        "latency_s": 14.9,
+        "attempts": 1,
+        "errors": []
+      },
+      {
+        "case": "planning",
+        "passed": true,
+        "actual_model": "qwen3.5-397b",
+        "latency_s": 15.9,
+        "attempts": 1,
+        "errors": []
+      },
+      {
+        "case": "implementation",
+        "passed": true,
+        "actual_model": "qwen3.5-397b",
+        "latency_s": 5.7,
+        "attempts": 1,
+        "errors": []
+      },
+      {
+        "case": "repair",
+        "passed": true,
+        "actual_model": "qwen3.5-397b",
+        "latency_s": 5.3,
+        "attempts": 1,
+        "errors": []
+      },
+      {
+        "case": "review (approve)",
+        "passed": true,
+        "actual_model": "qwen3.5-397b",
+        "latency_s": 13.1,
+        "attempts": 1,
+        "errors": []
+      },
+      {
+        "case": "review (reject)",
+        "passed": true,
+        "actual_model": "qwen3.5-397b",
+        "latency_s": 10.5,
+        "attempts": 1,
+        "errors": []
+      },
+      {
+        "case": "regression",
+        "passed": true,
+        "actual_model": "qwen3.5-397b",
+        "latency_s": 113.4,
+        "attempts": 2,
+        "errors": [
+          "http_504"
+        ]
+      },
+      {
+        "case": "acceptance",
+        "passed": true,
+        "actual_model": "qwen3.5-397b",
+        "latency_s": 54.2,
+        "attempts": 1,
+        "errors": []
+      }
+    ]
+  }
+]

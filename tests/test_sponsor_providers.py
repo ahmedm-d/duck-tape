@@ -1,4 +1,4 @@
-﻿"""Sponsor HTTP contracts run against an in-memory transport, never a live API."""
+"""Sponsor HTTP contracts run against an in-memory transport, never a live API."""
 import asyncio
 import json
 
@@ -259,3 +259,37 @@ def test_sponsor_catalog_does_not_select_a_model_implicitly(monkeypatch, transpo
     result = providers.health()
     assert result['model'] == '' and result['available'] is False
     assert result['installed_models'] == ['some-hosted-model']
+
+@pytest.mark.parametrize('valid', [True, False])
+def test_adaption_chat_uses_json_object_with_strict_local_validation(monkeypatch, transport, valid):
+    monkeypatch.setenv('STEWARD_MODEL_PROVIDER', 'openai')
+    monkeypatch.setenv('STEWARD_MODEL_ENDPOINT', providers.SPONSOR_ENDPOINTS['adaption'])
+    monkeypatch.setenv('STEWARD_MODEL_KEY', 'test-key')
+    output = {'summary': 'Line one\nLine two', 'evidence': [], 'missing': []}
+    if not valid:
+        output['unexpected'] = True
+    def handle(request):
+        body = json.loads(request.content)
+        assert body['response_format'] == {'type': 'json_object'}
+        assert 'Schema:' in body['messages'][0]['content']
+        return httpx.Response(200, json={'choices': [{'message': {'content': json.dumps(output)}, 'finish_reason': 'stop'}]})
+    transport(handle)
+    request = ProviderRequest(task='investigation', payload={}, cache=False, attempt_budget=1)
+    if valid:
+        result = providers.complete(request)
+        assert result.output == output
+        assert result.telemetry['structured_output_mode'] == 'json_object_and_validate'
+    else:
+        with pytest.raises(providers.ProviderError, match='invalid_schema'):
+            providers.complete(request)
+
+
+def test_anthropic_provider_can_be_saved_without_credentials(monkeypatch):
+    from backend.main import configure_provider
+    monkeypatch.delenv('STEWARD_MODEL_PROVIDER')
+    monkeypatch.delenv('STEWARD_MODEL')
+    result = configure_provider({'kind': 'anthropic', 'endpoint': 'https://api.anthropic.com',
+                                 'model': 'claude-opus-5-5', 'small_model': '', 'context_limit': 32000})
+    assert result['saved']['kind'] == 'anthropic'
+    assert result['configuration']['model'] == 'claude-opus-5-5'
+    assert 'ANTHROPIC_API_KEY' not in result['saved']

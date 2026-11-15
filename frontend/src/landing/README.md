@@ -9,8 +9,8 @@ the headline. On phones and portrait tablets the artwork sits below the copy. Th
 the blue/orange glow behind the real workspace preview.
 
 The original PNG is preserved. Video assets, playback controls and media effects
-have been removed. Both hero buttons open the existing local `/dashboard`;
-authentication is not introduced.
+have been removed. Hero buttons use the existing `/login` and `/signup` routes;
+when accounts are disabled, these routes continue to `/dashboard`.
 
 Below the preview, Tickets / Security / Research feed glass Understand / Prepare /
 Check / Review pills with coloured ribbons. The three metric cards remain
@@ -43,17 +43,23 @@ From `frontend/`, use `STEWARD_TEST_URL=http://127.0.0.1:4178` and
 - Visual checks: 1440x900, 390x844, 320x568, and 844x390. Coverage includes image
   loading, left-side copy/logo, mobile copy/art separation, no video element,
   keyboard access, navigation, no overflow and preserved workspace theme.
-- Review found a portrait-tablet crop; fixed with a stacked hero at 701?900px
+- Review found a portrait-tablet crop; fixed with a stacked hero at 701-900px
   for tall screens. Added 768x1024, 701x900 and 700x700 coverage; checked the
-  final tablet screenshot. No shared workspace files changed.
+  final tablet screenshot.
 
-## Shared test handoff
+Safari/Firefox and live cloud authentication/inference were not exercised.
+Mocked transport checks do not qualify live provider behavior.
 
-The previously requested handoff of `frontend/tests/workspace.spec.ts:4` remains
-pending. Its old headline must become `Duck Tape holds your codebase together.`; its
-`Get started` link selector must now become `Start creating`. Leave the rest of
-that workspace-owned test unchanged. The prior broader run had 20 passing checks
-and this one stale-copy failure. No shared test was silently skipped or changed.
+## Integration handoff
 
-Safari/Firefox, actual authentication, live inference and backend acceptance were
-not exercised. This is a landing presentation change, not product qualification.
+For the explicitly requested merge to main, Landing claims only the landing-entry
+selectors in `frontend/tests/workspace.spec.ts` and `frontend/tests/auth.spec.ts`.
+Update the old headline/Get started/Create account selectors to the approved
+headline and Start creating CTA. Preserve the rest of both workspace-owned tests.
+Hero links use main's existing `/login` and `/signup` routes, which fall through
+to `/dashboard` when accounts are disabled. No shared implementation changes.
+These two test files are released after the reviewed integration commit.
+The earlier stale-copy failure is resolved by these selector updates.
+
+Integration validation: 14 landing/auth browser checks passed after merging
+current main. Full deterministic acceptance is recorded in the merge PR.

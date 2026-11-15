@@ -70,7 +70,8 @@ def _atlas_config():
             raise ValueError()
         values = {name: os.getenv('STEWARD_ATLAS_' + name.upper(), default) for name, default in (
             ('database', 'ducktape'), ('collection', 'evidence_vectors'), ('index', 'evidence_vectors'))}
-        if any(not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]{0,63}', value) for value in values.values()):
+        if (any(not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]{0,63}', value) for value in values.values())
+                or values['database'].casefold().endswith('_public')):
             raise ValueError()
         return {**values, 'uri': uri, 'dimensions': _dimensions()}
     except (KeyError, TypeError, ValueError):
@@ -127,7 +128,9 @@ def _atlas_collection(config):
     try:
         from pymongo import MongoClient
     except ImportError:
-        raise DataPlatformError('Atlas requires the optional requirements-cloud.txt dependencies') from None
+        raise DataPlatformError('Atlas requires the pinned requirements.lock dependencies') from None
+    from .atlas_startup import use_system_trust_store
+    use_system_trust_store()  # OS trust store when truststore is installed; verification stays on (antivirus re-signs HTTPS)
     try:
         with MongoClient(config['uri'], tls=True, tlsAllowInvalidCertificates=False,
                          tlsAllowInvalidHostnames=False, serverSelectionTimeoutMS=5000,

@@ -1,4 +1,60 @@
+import pytest
 from backend import verification
+
+
+@pytest.mark.parametrize('metadata_only', [False, True])
+def test_verification_preserves_executable_modes_in_each_phase(tmp_path, monkeypatch, metadata_only):
+    import io
+    import tarfile
+    from backend import sandbox
+
+    archives = []
+
+    def runtime(argv, **kwargs):
+        if argv[:2] == ['image', 'inspect']:
+            return 'sha256:' + 'a' * 64
+        if argv[:2] == ['container', 'create']:
+            return 'container-id'
+        if argv[:2] == ['exec', '-i']:
+            with tarfile.open(fileobj=io.BytesIO(kwargs['input'])) as archive:
+                members = {item.name: (item.mode, archive.extractfile(item).read()) for item in archive}
+                if members:
+                    archives.append(members)
+        return ''
+
+    engine = sandbox.DockerSandbox(tmp_path, runtime=runtime)
+    engine._healthy = {'available': True}
+    monkeypatch.setattr(sandbox, 'engine', lambda: engine)
+    monkeypatch.setattr(sandbox, 'cancel', lambda run_id: None)
+    base = {'id': 'base', 'files': [
+        {'path': 'run.sh', 'content': '#!/bin/sh\nold', 'mode': 0o100755},
+        {'path': 'move.sh', 'content': '#!/bin/sh\nmove', 'mode': 0o100755},
+        {'path': 'tests/test_old.py', 'content': 'def test_old(): pass', 'mode': 0o100755},
+    ]}
+    if metadata_only:
+        from backend import snapshots
+        contents = {item['path']: item.pop('content') for item in base['files']}
+        monkeypatch.setattr(snapshots, 'read_files', lambda snapshot_id: contents)
+    candidate = {'base_snapshot': 'base', 'patch_hash': 'patch', 'files': [
+        {'path': 'run.sh', 'after': '#!/bin/sh\nnew'},
+        {'path': 'move.sh', 'after': None, 'mode': None},
+        {'path': 'moved.sh', 'after': '#!/bin/sh\nmove', 'mode': 0o755},
+        {'path': 'new.py', 'after': 'value = 1'},
+        {'path': 'tests/test_old.py', 'after': 'def test_old(): assert True', 'mode': 0o755},
+        {'path': 'tests/test_new.py', 'after': 'def test_new(): pass', 'mode': 0o644},
+    ]}
+    verification.run('run', base, candidate, {'commands': []})
+
+    baseline, regression, changed = archives
+    assert baseline['run.sh'] == (0o755, b'#!/bin/sh\nold')
+    assert regression['run.sh'] == baseline['run.sh']
+    assert regression['move.sh'] == baseline['move.sh']
+    assert regression['tests/test_old.py'] == (0o755, b'def test_old(): assert True')
+    assert regression['tests/test_new.py'][0] == 0o644
+    assert changed['run.sh'] == (0o755, b'#!/bin/sh\nnew')
+    assert changed['moved.sh'] == (0o755, b'#!/bin/sh\nmove')
+    assert 'move.sh' not in changed
+    assert changed['new.py'][0] == 0o644
 
 def result(phase,status='passed',**kwargs):
     return {'phase':phase,'status':status,'check_id':'tests','required':True,'environment':'same','base_snapshot':'base','patch_hash':'patch',**kwargs}
@@ -131,3 +187,50 @@ def test_framework_counts_exclude_suite_summaries_and_preserve_other_reporters(m
         monkeypatch.setattr(sandbox,'run',lambda sid,command,phase,cancel:result(phase,stdout=stdout))
         checks=verification.run('counts',{'id':'base','files':{}},{'base_snapshot':'base','patch_hash':'patch','files':[]},{'commands':[{'id':'tests','argv':['runner'],'purpose':'test'}]})
         assert all(check['test_count']==count and check['skipped_count']==skipped for check in checks)
+
+
+def test_recovered_baseline_requires_unchanged_suite_evidence():
+    checks = [result('baseline', 'failed', kind='test', test_count=5),
+              result('regression_before', 'failed', kind='test'),
+              result('candidate', kind='test', test_count=6),
+              result('baseline_recheck', kind='test', test_count=5)]
+    evidence = verification.assess(checks, [])
+    assert evidence['passed'] and evidence['baseline_recovered']
+    assert not evidence['baseline_passed']
+    assert 'Baseline checks did not all pass' in evidence['limitations']
+    for field, value in [('status', 'failed'), ('environment', 'different'),
+                         ('patch_hash', 'different'), ('base_snapshot', 'different'),
+                         ('test_count', 4), ('skipped_count', 1)]:
+        altered = [*checks[:-1], {**checks[-1], field: value}]
+        assert not verification.assess(altered, [])['passed']
+    assert not verification.assess(checks[:-1], [])['passed']
+    assert not verification.assess([checks[0], *checks[2:]], [])['passed']
+    assert not verification.assess([{**checks[0], 'kind': 'build'}, *checks[1:]], [])['passed']
+    assert not verification.assess([*checks, result('baseline', 'failed', check_id='other', kind='test')], [])['passed']
+
+
+def test_baseline_recheck_uses_original_tests_and_candidate_implementation(monkeypatch):
+    from backend import dependencies, sandbox
+    trees = []
+    def prepare(run_id, source, plan, cancel):
+        trees.append({f['path']: f['content'] for f in source['files']})
+        return {'sandbox_id': 'sandbox', 'environment': 'image', 'cache_key': 'key'}
+    monkeypatch.setattr(dependencies, 'prepare', prepare)
+    monkeypatch.setattr(sandbox, 'cancel', lambda *args: None)
+    monkeypatch.setattr(sandbox, 'run', lambda sid, command, phase, cancel:
+                        result(phase, 'failed' if phase in ('baseline', 'regression_before') else 'passed',
+                               stdout='Ran 1 test in 0.001s\n'))
+    base = {'id': 'base', 'files': {'app.py': 'broken', 'tests/test_old.py': 'original assertions', 'conftest.py': 'original hooks', 'pytest.ini': 'original config', 'vitest.config.ts': 'original JS config'}}
+    candidate = {'base_snapshot': 'base', 'patch_hash': 'patch', 'files': [
+        {'path': 'app.py', 'after': 'fixed'},
+        {'path': 'conftest.py', 'after': 'disable assertions'},
+        {'path': 'pytest.ini', 'after': 'exclude tests'},
+        {'path': 'vitest.config.ts', 'after': 'disable JS checks'},
+        {'path': 'tests/conftest.py', 'after': 'new disabling hook'},
+        {'path': 'tests/test_old.py', 'after': 'changed assertions'},
+        {'path': 'tests/test_new.py', 'after': 'new assertions'}]}
+    checks = verification.run('run', base, candidate,
+                              {'commands': [{'id': 'tests', 'purpose': 'test', 'argv': ['python', '-m', 'unittest']}]})
+    assert trees[-1] == {'app.py': 'fixed', 'tests/test_old.py': 'original assertions', 'conftest.py': 'original hooks', 'pytest.ini': 'original config', 'vitest.config.ts': 'original JS config'}
+    assert checks[-1]['phase'] == 'baseline_recheck'
+    assert verification.assess(checks, [])['passed']

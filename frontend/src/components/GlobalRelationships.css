@@ -1,0 +1,21 @@
+.global-graph-scroll {
+  max-width: 100%;
+  overflow: auto;
+  max-height: 560px;
+  margin: 16px 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface2);
+}
+.global-graph-canvas { position: relative; width: 880px; }
+.global-graph-canvas svg { position: absolute; inset: 0; color: var(--muted); }
+.global-graph-canvas svg text { font-size: 10px; fill: var(--text); paint-order: stroke; stroke: var(--surface2); stroke-width: 4px; stroke-linejoin: round; }
+.global-graph-column { position: absolute; top: 20px; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+.global-graph-canvas .global-graph-node { position: absolute; width: 220px; height: 76px; display: flex; flex-direction: column; align-items: flex-start; gap: 7px; text-align: left; padding: 12px; background: var(--surface); }
+.global-graph-node span { color: var(--muted); font-size: 10px; }
+.global-graph-node strong { width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12px; }
+.global-graph-canvas .global-graph-node[aria-pressed=true] { border: 2px solid var(--accent); background: var(--accent-bg); }
+.global-graph-dim { opacity: .25; }
+.global-graph-detail { border-left: 3px solid var(--accent); padding: 1px 16px 12px; margin: 16px 0; overflow-wrap: anywhere; }
+.global-graph-detail h3 { margin-top: 12px; }
+.global-graph-detail a { color: var(--text); font-size: 12px; text-decoration: underline; }

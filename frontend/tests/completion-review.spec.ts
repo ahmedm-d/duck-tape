@@ -28,7 +28,7 @@ test('actual imported source, graph, themes, widths and unchanged provider setti
  await page.getByRole('button',{name:'Files',exact:true}).click();await page.getByRole('button',{name:'calc.py Python',exact:true}).click();
  await expect(page.locator('.source-code')).toContainText('def');
  await expect(page.locator('.edges')).toContainText(detail.index.edges[0].source);
- await page.getByRole('button',{name:'Understanding',exact:true}).click();await expect(page.getByRole('heading',{name:'Evidence-linked summaries'})).toBeVisible();
+ await page.getByRole('button',{name:'Overview',exact:true}).click();await expect(page.getByRole('heading',{name:'Evidence-linked summaries'})).toBeVisible();
  for(const theme of ['light','dark']){
   if(await page.locator('html').getAttribute('data-theme')!==theme)await page.getByRole('button',{name:'Toggle theme'}).click();
   for(const width of [1440,1100,390]){
@@ -56,7 +56,7 @@ test('fresh sample: real checks, exports, revision, note isolation, approval and
  const jobs=await (await page.request.get('/api/jobs?summary=true')).json();
  bug=jobs.find((job:any)=>job.repo_id===sample.id&&job.scenario==='bug');feature=jobs.find((job:any)=>job.repo_id===sample.id&&job.scenario==='feature');
  await page.goto('/#/repositories/'+sample.id+'/jobs');
- await page.getByLabel('Filter source').selectOption(bug.source);await page.getByLabel('Filter type').selectOption(bug.type);await page.getByLabel('Filter priority').selectOption(bug.priority);
+ await page.locator('.job-filter-options summary').click();await page.getByLabel('Filter source').selectOption(bug.source);await page.getByLabel('Filter type').selectOption(bug.type);await page.getByLabel('Filter priority').selectOption(bug.priority);
  await page.getByLabel('Search jobs').fill(bug.title);await expect(page.locator('.job-row')).toHaveCount(1);
  await page.locator('.job-row').click();await expect(page).toHaveURL(new RegExp(bug.id+'$'));await page.reload();
  await expect(page.getByRole('heading',{name:bug.title})).toBeVisible();
@@ -70,7 +70,7 @@ test('fresh sample: real checks, exports, revision, note isolation, approval and
   expect(download.suggestedFilename()).toContain(extension);if(extension==='.patch')expect(fs.readFileSync((await download.path())!,'utf8')).toContain('diff --git');
  }
  await page.getByRole('button',{name:'Split view'}).click();await expect(page.getByText('Before',{exact:true}).first()).toBeVisible();await page.getByRole('button',{name:'Unified view'}).click();
- await page.getByRole('button',{name:'Evidence',exact:true}).click();await expect(page.getByRole('heading',{name:'Regression before change'})).toBeVisible();
+ await page.getByRole('button',{name:'Checks',exact:true}).click();await expect(page.getByRole('heading',{name:'Regression before change'})).toBeVisible();
  await page.locator('.check').first().click();await expect(page.locator('.check').first().locator('pre')).toBeVisible();
  const evidence=page.locator('.evidence-list .evidence').first();await evidence.click();await expect(page.getByRole('dialog',{name:'Captured source evidence'})).toBeVisible();
  await page.keyboard.press('Tab');expect(await page.evaluate(()=>!!document.activeElement?.closest('[role=dialog]'))).toBeTruthy();await page.keyboard.press('Escape');await expect(evidence).toBeFocused();
@@ -102,8 +102,9 @@ test('fresh sample product decision and versioned knowledge approval',async({pag
  }
  await page.getByRole('button',{name:'Approve revision 1'}).waitFor({timeout:60000});
  await capture(page,'sample-decision-prepared');
- await page.getByRole('button',{name:'Codebase',exact:true}).click();await page.getByRole('button',{name:'Knowledge',exact:true}).click();await page.getByRole('button',{name:'New entry'}).click();
- await page.getByLabel('Title',{exact:true}).fill('Completion review rule');await page.getByLabel('Knowledge or decision').fill('Preserve quantity validation.');await page.getByLabel('Evidence / source').fill('tests/test_quote.py');await page.getByRole('button',{name:'Save knowledge'}).click();
+ // Seed an agent-supplied decision; the UI no longer creates blank knowledge entries.
+ const supplied=await page.request.post('/api/knowledge',{data:{repo_id:sample.id,title:'Completion review rule',content:'Preserve quantity validation.',scope:'repository',category:'decision',status:'observed',evidence:'tests/test_quote.py'}});expect(supplied.ok()).toBeTruthy();
+ await page.getByRole('button',{name:'Project knowledge',exact:true}).click();await page.getByRole('button',{name:'Decisions',exact:true}).click();
  const card=page.locator('.knowledge-card').filter({hasText:'Completion review rule'});await expect(card).toContainText('Version 1');
  await card.getByRole('button',{name:'Approve version 1'}).click();await expect(card).toContainText('team-approved');
  const knowledge=await (await page.request.get('/api/knowledge?repo_id='+sample.id)).json();const entry=knowledge.find((item:any)=>item.title==='Completion review rule');
@@ -129,7 +130,7 @@ test('approval label stays bound to the approved revision while viewing earlier 
 });
 
 test('invalid archive exposes whether import errors are visible inside the dialog',async({page})=>{
- await page.goto('/#/repositories/'+sample.id+'/repository');await page.getByRole('button',{name:'Import repository',exact:true}).click();
+ await page.goto('/#/repositories/'+sample.id+'/repository');await page.getByRole('button',{name:'Connect project',exact:true}).click();
  await page.getByLabel('ZIP archive').setInputFiles({name:'invalid-review.zip',mimeType:'application/zip',buffer:Buffer.from('not a ZIP archive')});
  await page.getByRole('button',{name:'Upload & index'}).click();
  await expect(page.locator('.operation-progress')).toContainText('failed',{timeout:20000});
@@ -140,14 +141,13 @@ test('invalid archive exposes whether import errors are visible inside the dialo
 });
 
 test('activity links preserve the job repository context',async({page})=>{
- const repositories=await (await page.request.get('/api/repositories?summary=true')).json();const imported=repositories.find((repo:any)=>repo.name==='browser-python');
- const events=await (await page.request.get('/api/activity')).json();const eventIndex=events.findIndex((event:any)=>event.job_id===bug.id);expect(eventIndex).toBeGreaterThanOrEqual(0);
- await page.goto('/#/repositories/'+imported.id+'/activity');
+ const events=await (await page.request.get('/api/activity')).json();const eventIndex=events.filter((event:any)=>event.repo_id===sample.id).findIndex((event:any)=>event.job_id===bug.id);expect(eventIndex).toBeGreaterThanOrEqual(0);
+ await page.goto('/'+sample.route_owner+'/'+sample.route_name+'/activity');
  const event=page.locator('.activity-timeline>div').nth(eventIndex);
  await event.getByRole('button',{name:'Open job'}).click();await expect(page.getByRole('heading',{name:bug.title})).toBeVisible();
  await capture(page,'activity-repository-context');
  await expect(page).toHaveURL(new RegExp('/'+sample.route_owner+'/'+sample.route_name+'/jobs/'+bug.id+'$'));
- await expect(page.locator('.sidebar button.selected')).toContainText(sample.route_owner+'/'+sample.route_name);
+ await expect(page.getByLabel('Switch project')).toHaveValue(sample.id);
 });
 
 test('fixture import rejection stays visible and accepted progress can be cancelled',async({page})=>{
@@ -156,8 +156,8 @@ test('fixture import rejection stays visible and accepted progress can be cancel
  await page.route('**/api/repositories/upload',route=>route.fulfill({status:202,json:operation}));
  await page.route('**/api/operations/review-operation',route=>route.fulfill({json:{...operation,status:cancelled?'cancelled':'queued'}}));
  await page.route('**/api/operations/review-operation/cancel',async route=>{cancelled=true;await route.fulfill({json:{...operation,status:'cancelled'}})});
- await page.goto('/#/repositories/repo-one/repository');await page.getByRole('button',{name:'Import repository',exact:true}).click();
- await page.getByLabel('Public HTTPS Git URL').fill('https://example.invalid/repository.git');await page.getByRole('button',{name:'Import Git repository'}).click();
+ await page.goto('/#/repositories/repo-one/repository');await page.getByRole('button',{name:'Connect project',exact:true}).click();
+ await page.getByLabel('Public HTTPS Git URL').fill('https://example.invalid/repository.git');await page.getByRole('button',{name:'Import Git project'}).click();
  await expect(page.getByRole('dialog').getByRole('alert')).toHaveText('Import validation failed');
  await page.getByLabel('ZIP archive').setInputFiles({name:'fixture.zip',mimeType:'application/zip',buffer:Buffer.from('fixture response; not actual archive')});
  await page.getByRole('button',{name:'Upload & index'}).click();await expect(page.getByRole('dialog')).toHaveCount(0);

@@ -101,8 +101,8 @@ export function Landing() {
           <div className="landing-hero-copy">
             <h1 id="landing-headline"><span>Duck Tape</span> holds your codebase together.</h1>
             <div className="landing-hero-actions">
-              <a className="landing-button" href="/dashboard">Log in</a>
-              <a className="landing-button landing-button-create" href="/dashboard">Start creating <ArrowUpRight size={16} aria-hidden="true"/></a>
+              <a className="landing-button" href="/login">Log in</a>
+              <a className="landing-button landing-button-create" href="/signup">Start creating <ArrowUpRight size={16} aria-hidden="true"/></a>
             </div>
           </div>
         </div>

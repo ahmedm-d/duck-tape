@@ -6,7 +6,7 @@ from urllib.parse import urlsplit
 
 from . import db
 
-RESERVED = {'api', 'assets', 'dashboard', 'settings', 'screens'}
+RESERVED = {'api', 'assets', 'dashboard', 'settings', 'screens', 'activity', 'global-catalogue'}
 
 
 def slug(value: object) -> str:

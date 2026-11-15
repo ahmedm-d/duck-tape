@@ -1,0 +1,93 @@
+{
+  "label": "Real public OSV record (as captured by C on its stated retrieval date) matched against a LABELLED LOCAL DEMO repository; the repository is synthetic and the result is affected-version applicability, not exploitability.",
+  "kind": "real_public_record_local_demo_repository",
+  "generated_at": "2026-11-14T19:10:13.315023+00:00",
+  "command": "python scripts/evaluate_applicability_real.py --live-public",
+  "record": {
+    "source": "tests/fixtures/catalogue/real_osv_cve_2024_35195.json (GlobalEntry from C's live-public fetch)",
+    "canonical_id": "CVE-2024-35195",
+    "aliases": [
+      "CVE-2024-35195",
+      "GHSA-9wx4-h78v-vm56",
+      "PYSEC-2026-1873"
+    ],
+    "source_url": "https://osv.dev/vulnerability/GHSA-9wx4-h78v-vm56",
+    "retrieved_at": "2026-11-14T19:07:05.169255Z",
+    "source_modified_at": "2026-09-10T03:50:13.740879Z",
+    "freshness_at_run": "fresh",
+    "source_quality": "unreviewed",
+    "tracked_by_c_in": "integrations/global/live-public-evidence.json (same source_content_hash)"
+  },
+  "entry_binding": {
+    "entry_id": "CVE-2024-35195",
+    "entry_revision": 1,
+    "entry_hash_prefix": "d7087a1eaa73a35a",
+    "catalogue_material_revision": 1,
+    "entry_status": "active"
+  },
+  "repository": {
+    "label": "labelled local demo repository",
+    "snapshot_id": "c71f33de5ed16ea3dd05b0778a67994cae5e46cbb66af73f375f4922784468b5",
+    "profile_hash_prefix": "5dbb5416d3657ed2",
+    "pinned_dependency": "requests==2.31.0",
+    "app_code": "app.py: import requests; requests.get(url, timeout=5)"
+  },
+  "match": {
+    "status": "matched",
+    "citation": {
+      "path": "requirements.txt",
+      "start_line": 2,
+      "end_line": 2,
+      "hash": "10e2a406ead6ad39",
+      "pin_line_text": "requests==2.31.0"
+    },
+    "known_fixed_versions": [
+      "2.32.0"
+    ],
+    "limitations": [
+      "A version match establishes affected-version applicability, not exploitability.",
+      "Source limitation: Version applicability does not establish exploitability."
+    ],
+    "coverage": "unknown",
+    "jobs_created_by_route": 0
+  },
+  "agent_context": {
+    "directly_imported": true,
+    "sink_reachable": null,
+    "import_evidence": [
+      {
+        "path": "app.py",
+        "line": 1,
+        "module": "requests"
+      }
+    ],
+    "call_evidence": [
+      {
+        "path": "app.py",
+        "line": 5,
+        "call": "requests.get"
+      }
+    ],
+    "basis": "static import of requests found; the entry names no affected symbols; reachability not assessed"
+  },
+  "negative_control": {
+    "pinned_dependency": "requests==2.32.3",
+    "status": "not_matched",
+    "citations": []
+  },
+  "live_public_fetch": {
+    "attempted": true,
+    "advisory": "GHSA-9wx4-h78v-vm56",
+    "tls_verification": "enabled (never disabled)",
+    "succeeded": true,
+    "retrieved_at": "2026-11-14T19:10:13.541369Z",
+    "canonical_id": "CVE-2024-35195",
+    "source_content_hash": "d7087a1eaa73a35a",
+    "content_equals_captured_record": true
+  },
+  "not_verified": [
+    "Exploitability and reachability of the vulnerable behaviour (sink_reachable stays null: the catalogue names no symbols)",
+    "Atlas retrieval (needs a configured cluster; covered separately with a mocked transport in tests)",
+    "A real project: the repository is synthetic"
+  ]
+}

@@ -28,6 +28,12 @@ test('hosted providers choose the right protocol without collecting secrets',asy
  await expect.poll(()=>saved?.kind).toBe('adaption');
  await page.getByLabel('Provider protocol').selectOption('huggingface');
  await expect(page.getByLabel('Provider endpoint')).toHaveValue('https://router.huggingface.co/v1');
+ await page.getByLabel('Provider protocol').selectOption('anthropic');
+ await expect(page.getByLabel('Provider endpoint')).toHaveValue('https://api.anthropic.com');
  await expect(page.getByLabel('Model name',{exact:true})).toHaveValue('');
+ await page.getByLabel('Model name',{exact:true}).fill('claude-opus-5-5');
+ await page.getByRole('button',{name:'Save provider configuration'}).click();
+ await expect.poll(()=>saved?.kind).toBe('anthropic');
+ await expect(page.getByLabel('Model name',{exact:true})).toHaveValue('claude-opus-5-5');
  await expect(page.locator('input[type="password"]')).toHaveCount(0);
 });

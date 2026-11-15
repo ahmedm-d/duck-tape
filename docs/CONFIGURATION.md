@@ -2,12 +2,17 @@
 
 Duck Tape retains the existing `STEWARD_*` configuration names and internal storage/runtime identifiers for compatibility. Historical evidence and existing managed branches keep their recorded identities. New patch/ZIP downloads use `duck-tape-*` names; export automation should use the response filename rather than the old prefix.
 
-Settings can persist non-secret provider endpoint, protocol, model IDs, context limit and embedding model. Explicit process environment overrides those settings. `run.py` also reads the **project's own** `.env` as literal `STEWARD_NAME=value` entries plus `ADAPTION_API_KEY` and `HF_TOKEN`. It does not evaluate shell expressions or read imported repository environment files.
+Settings can persist non-secret provider endpoint, protocol, model IDs, context limit and embedding model. Explicit process environment overrides those settings. `run.py` also reads the **project's own** `.env` as literal `STEWARD_NAME=value` entries plus `ADAPTION_API_KEY`, `HF_TOKEN` and `ANTHROPIC_API_KEY`. It does not evaluate shell expressions or read imported repository environment files.
 
 | Variable | Meaning |
 |---|---|
 | `STEWARD_DATA_DIR` | Persistent workspace; default `data/workspace/` |
-| `STEWARD_MODEL_PROVIDER` | `ollama`, `openai`, `adaption` or `huggingface` protocol |
+| `STEWARD_ATLAS_REQUIRED` | Defaults to `1`; `run.py` requires a TLS-verified private Atlas ping; use `0` only for isolated tests/demo controllers |
+| `STEWARD_ATLAS_ENABLED`, `STEWARD_ATLAS_URI`, `STEWARD_ATLAS_DIMENSIONS` | Required private Atlas enablement, secret connection URI and exact embedding dimensions; see the data-platform guide for roles/index setup |
+| `STEWARD_MODEL_PROVIDER` | `ollama`, `openai`, `adaption`, `huggingface` or `anthropic` protocol |
+| `ANTHROPIC_API_KEY`, `STEWARD_ANTHROPIC_EFFORT`, `STEWARD_ANTHROPIC_MAX_TOKENS` | Claude credential (read from `.env` by `run.py`), thinking effort (default `high`) and per-reply token cap (default 16000). This cap never increases the caller's output reservation; thinking shares that reservation. See the inference guide. |
+| `STEWARD_SUPABASE_URL`, `STEWARD_SUPABASE_PUBLISHABLE_KEY` | Supabase project URL (`https://<ref>.supabase.co`; a copied `/rest/v1` suffix is stripped) and **publishable** browser key. Setting both offers optional accounts: the workspace stays open, `/login` and `/signup` appear only when chosen, and a valid token attaches the account (checked with `GET /auth/v1/user`, cached for at most 60 s). The secret key is refused |
+| `STEWARD_AUTH_REQUIRED` | Default `0`. `1` makes sign-in compulsory: every `/api` request except `/api/health` and `/api/auth/config` needs a valid session, and `run.py` refuses to start unless Supabase Auth accepts the key |
 | `STEWARD_MODEL_ENDPOINT` | Base URL for the selected protocol; hosted defaults are documented in the inference guide |
 | `STEWARD_MODEL` | Default model ID |
 | `STEWARD_SMALL_MODEL` | Optional smaller triage/summary model |
@@ -73,4 +78,4 @@ Imports, refresh, scans and summary refresh return persistent operation records.
 
 ## Duck Tape internal services
 
-Hugging Face and Adaption run Duck Tape's models; MongoDB Atlas projects its evidence memory; Databricks evaluates its agent runs. These are operator/server settings, never additions to imported client repositories. See the [internal stack guide](integrations/README.md), [inference configuration](integrations/INFERENCE.md), and [Atlas/Databricks setup](integrations/DATA_PLATFORMS.md). The current cloud-memory and metrics paths use explicit operator commands, while inference is connected to the existing worker. Live cloud/model acceptance remains separate from configuration and offline tests.
+Hugging Face and Adaption run Duck Tape's models; MongoDB Atlas projects its evidence memory; Databricks curates public knowledge and evaluates agent runs. These are operator/server settings, never additions to imported client repositories. See the [internal stack guide](integrations/README.md), [inference configuration](integrations/INFERENCE.md), and [Atlas/Databricks setup](integrations/DATA_PLATFORMS.md). Required mode automatically projects private repository snapshots and approved knowledge; public catalogue reads use separate credentials. Metrics export remains explicit. Live cloud/model acceptance remains separate from configuration and offline tests.

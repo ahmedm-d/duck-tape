@@ -12,8 +12,14 @@ def test_deterministic_commands_exclude_opt_in_tests_and_inherited_live_configur
     for gate in gates:
         assert gate['env']['STEWARD_LIVE_TESTS']=='0'
         assert gate['env']['STEWARD_TEST_URL'] is None
+        assert gate['env']['STEWARD_ATLAS_REQUIRED']=='0'
+        assert gate['env']['STEWARD_AUTH_REQUIRED']=='0'
+        assert gate['env']['STEWARD_SUPABASE_URL']=='' and gate['env']['STEWARD_SUPABASE_PUBLISHABLE_KEY']==''
+        for name in ('STEWARD_ATLAS_ENABLED','STEWARD_ATLAS_GRAPH_MIRROR','STEWARD_ATLAS_RETRIEVAL'):
+            assert gate['env'][name]=='0'
     browser=next(gate for gate in gates if gate['id']=='browser-fixtures')
     assert 'tests/workspace.spec.ts' in browser['argv']
+    assert 'tests/global-navigation.spec.ts' in browser['argv']
     assert not any('live-ui' in arg or 'completion-review' in arg for arg in browser['argv'])
 
 

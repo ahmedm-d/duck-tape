@@ -57,6 +57,19 @@ def test_live_python_dependency_and_regression(live_engine,monkeypatch):
     evidence=verification.assess(results,[])
     assert evidence['passed'] and evidence['regression_reproduced'], (evidence,results)
 
+
+def test_live_verification_preserves_executable_helper(live_engine,monkeypatch):
+    from backend import verification
+    monkeypatch.setattr(sandbox,'engine',lambda:live_engine)
+    base={'id':'executable-base','files':[{'path':'run.sh','mode':0o755,'content':'#!/bin/sh\necho executable-ok\n'},
+                                        {'path':'tests/test_old.py','mode':0o644,'content':'# old fixture\n'}]}
+    candidate={'base_snapshot':base['id'],'patch_hash':'executable-patch',
+               'files':[{'path':'tests/test_new.py','after':'# regression-phase fixture\n'}]}
+    plan={'profile':'python-unittest','commands':[{'id':'executable-helper','argv':['./run.sh'],'purpose':'test'}]}
+    results=verification.run('live-executable',base,candidate,plan)
+    assert {item['phase'] for item in results}=={'baseline','regression_before','candidate'}
+    assert all(item['status']=='passed' and 'executable-ok' in item['stdout'] for item in results)
+
 def test_live_node_and_typescript_offline_install(live_engine,monkeypatch):
     import json
     from backend import dependencies, repository

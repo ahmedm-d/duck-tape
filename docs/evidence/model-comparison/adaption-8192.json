@@ -1,0 +1,546 @@
+{
+  "kind": "provider_schema_smoke",
+  "qualified": false,
+  "note": "Schema/edit/review smoke statically checks exact test assertions; it does not execute model code or replace the Docker application qualification gate.",
+  "attempts": [
+    {
+      "task": "investigation",
+      "expected_approval": null,
+      "passed": true,
+      "output": {
+        "summary": "The function `greet` defined in `greeting.py` returns the string literal \"Hello world\".",
+        "evidence": [
+          {
+            "path": "greeting.py",
+            "start_line": 1,
+            "end_line": 2
+          }
+        ],
+        "missing": []
+      },
+      "telemetry": {
+        "model": "qwen3.5-397b",
+        "role": "investigation",
+        "routing_reason": "investigation; risk=low; context=132 bytes; scope=unspecified; previous_failures=0",
+        "latency": 8.542818900023121,
+        "usage": {
+          "input_tokens": 268,
+          "output_tokens": 726
+        },
+        "attempts": 1,
+        "attempt_log": [
+          {
+            "attempt": 1,
+            "model": "qwen3.5-397b",
+            "usage": {
+              "input_tokens": 268,
+              "output_tokens": 726
+            },
+            "latency": 8.542610800010152,
+            "error": null
+          }
+        ],
+        "cached": false,
+        "mode": "live",
+        "structured_output_mode": "prompt_and_validate",
+        "agent_role": null,
+        "input_token_upper_bound": 1066,
+        "output_reservation": 8192,
+        "cache_key": null
+      }
+    },
+    {
+      "task": "planning",
+      "expected_approval": null,
+      "passed": true,
+      "output": {
+        "steps": [
+          {
+            "description": "Update the return statement in the greet() function within greeting.py to return 'Hello Duck Tape.'.",
+            "paths": [
+              "greeting.py"
+            ]
+          }
+        ],
+        "acceptance": [
+          "The greet() function returns the exact string 'Hello Duck Tape.'."
+        ]
+      },
+      "telemetry": {
+        "model": "qwen3.5-397b",
+        "role": "planning",
+        "routing_reason": "planning; risk=low; context=145 bytes; scope=unspecified; previous_failures=0",
+        "latency": 14.428716800000984,
+        "usage": {
+          "input_tokens": 506,
+          "output_tokens": 1287
+        },
+        "attempts": 1,
+        "attempt_log": [
+          {
+            "attempt": 1,
+            "model": "qwen3.5-397b",
+            "usage": {
+              "input_tokens": 506,
+              "output_tokens": 1287
+            },
+            "latency": 14.428471299994271,
+            "error": null
+          }
+        ],
+        "cached": false,
+        "mode": "live",
+        "structured_output_mode": "prompt_and_validate",
+        "agent_role": null,
+        "input_token_upper_bound": 2076,
+        "output_reservation": 8192,
+        "cache_key": null
+      }
+    },
+    {
+      "task": "implementation",
+      "expected_approval": null,
+      "passed": true,
+      "output": {
+        "edits": [
+          {
+            "op": "update",
+            "path": "greeting.py",
+            "expected_hash": "af035e85c51a2ed583e4e2c1e4e2bcedce14685f13212626e2aa2e7ef84de03e",
+            "destination": null,
+            "content": null,
+            "replacements": [
+              {
+                "old": "return \"Hello world\"",
+                "new": "return \"Hello Duck Tape\""
+              }
+            ],
+            "complete_file": false
+          }
+        ],
+        "explanation": "Updated the greet() function to return 'Hello Duck Tape' instead of 'Hello world' while preserving the function signature."
+      },
+      "telemetry": {
+        "model": "qwen3.5-397b",
+        "role": "implementation",
+        "routing_reason": "implementation; risk=low; context=263 bytes; scope=unspecified; previous_failures=0",
+        "latency": 5.142307200003415,
+        "usage": {
+          "input_tokens": 1389,
+          "output_tokens": 497
+        },
+        "attempts": 1,
+        "attempt_log": [
+          {
+            "attempt": 1,
+            "model": "qwen3.5-397b",
+            "usage": {
+              "input_tokens": 1389,
+              "output_tokens": 497
+            },
+            "latency": 5.141976499988232,
+            "error": null
+          }
+        ],
+        "cached": false,
+        "mode": "live",
+        "structured_output_mode": "prompt_and_validate",
+        "agent_role": null,
+        "input_token_upper_bound": 5352,
+        "output_reservation": 8192,
+        "cache_key": null
+      }
+    },
+    {
+      "task": "repair",
+      "expected_approval": null,
+      "passed": true,
+      "output": {
+        "edits": [
+          {
+            "op": "update",
+            "path": "greeting.py",
+            "expected_hash": "af035e85c51a2ed583e4e2c1e4e2bcedce14685f13212626e2aa2e7ef84de03e",
+            "destination": null,
+            "content": null,
+            "replacements": [
+              {
+                "old": "return \"Hello world\"",
+                "new": "return \"Hello Duck Tape\""
+              }
+            ],
+            "complete_file": false
+          }
+        ],
+        "explanation": "Updated the greet() function to return \"Hello Duck Tape\" instead of \"Hello world\" while preserving the function signature."
+      },
+      "telemetry": {
+        "model": "qwen3.5-397b",
+        "role": "repair",
+        "routing_reason": "repair; risk=low; context=382 bytes; scope=unspecified; previous_failures=0",
+        "latency": 4.801916700031143,
+        "usage": {
+          "input_tokens": 1414,
+          "output_tokens": 398
+        },
+        "attempts": 1,
+        "attempt_log": [
+          {
+            "attempt": 1,
+            "model": "qwen3.5-397b",
+            "usage": {
+              "input_tokens": 1414,
+              "output_tokens": 398
+            },
+            "latency": 4.801608600013424,
+            "error": null
+          }
+        ],
+        "cached": false,
+        "mode": "live",
+        "structured_output_mode": "prompt_and_validate",
+        "agent_role": null,
+        "input_token_upper_bound": 5471,
+        "output_reservation": 8192,
+        "cache_key": null
+      }
+    },
+    {
+      "task": "review",
+      "expected_approval": true,
+      "passed": true,
+      "output": {
+        "approved": true,
+        "findings": []
+      },
+      "telemetry": {
+        "model": "qwen3.5-397b",
+        "role": "review",
+        "routing_reason": "review; risk=low; context=230 bytes; scope=unspecified; previous_failures=0",
+        "latency": 6.918855700001586,
+        "usage": {
+          "input_tokens": 333,
+          "output_tokens": 566
+        },
+        "attempts": 1,
+        "attempt_log": [
+          {
+            "attempt": 1,
+            "model": "qwen3.5-397b",
+            "usage": {
+              "input_tokens": 333,
+              "output_tokens": 566
+            },
+            "latency": 6.918595600000117,
+            "error": null
+          }
+        ],
+        "cached": false,
+        "mode": "live",
+        "structured_output_mode": "prompt_and_validate",
+        "agent_role": null,
+        "input_token_upper_bound": 1493,
+        "output_reservation": 8192,
+        "cache_key": null
+      }
+    },
+    {
+      "task": "review",
+      "expected_approval": false,
+      "passed": true,
+      "output": {
+        "approved": false,
+        "findings": [
+          {
+            "message": "The function greet returns \"Goodbye\" instead of the required \"Hello Duck Tape\".",
+            "reference": {
+              "path": "greeting.py",
+              "start_line": 2,
+              "end_line": 2
+            }
+          }
+        ]
+      },
+      "telemetry": {
+        "model": "qwen3.5-397b",
+        "role": "review",
+        "routing_reason": "review; risk=low; context=188 bytes; scope=unspecified; previous_failures=0",
+        "latency": 11.251859300013166,
+        "usage": {
+          "input_tokens": 325,
+          "output_tokens": 985
+        },
+        "attempts": 1,
+        "attempt_log": [
+          {
+            "attempt": 1,
+            "model": "qwen3.5-397b",
+            "usage": {
+              "input_tokens": 325,
+              "output_tokens": 985
+            },
+            "latency": 11.251582900003996,
+            "error": null
+          }
+        ],
+        "cached": false,
+        "mode": "live",
+        "structured_output_mode": "prompt_and_validate",
+        "agent_role": null,
+        "input_token_upper_bound": 1451,
+        "output_reservation": 8192,
+        "cache_key": null
+      }
+    },
+    {
+      "task": "regression",
+      "expected_approval": null,
+      "passed": true,
+      "output": {
+        "edits": [
+          {
+            "op": "update",
+            "path": "test_greeting.py",
+            "expected_hash": "2a8cb087adc80bcbc88831c6e64ca77210da3f2e455b46bc6fb8241a6810ed87",
+            "destination": null,
+            "content": "from greeting import greet\n\ndef test_existing():\n    assert isinstance(greet(), str)\n\ndef test_requested_greeting():\n    assert greet() == \"Hello Duck Tape\"\n",
+            "replacements": [],
+            "complete_file": true
+          }
+        ],
+        "explanation": "Added test_requested_greeting function that asserts greet() returns 'Hello Duck Tape'. The existing test_existing function is preserved unchanged. This test will fail against the current source (which returns 'Hello world') and will pass once the implementation is updated to return 'Hello Duck Tape'."
+      },
+      "telemetry": {
+        "model": "qwen3.5-397b",
+        "role": "regression",
+        "routing_reason": "regression; risk=low; context=639 bytes; scope=unspecified; previous_failures=0",
+        "latency": 6.911516199994367,
+        "usage": {
+          "input_tokens": 1215,
+          "output_tokens": 684
+        },
+        "attempts": 1,
+        "attempt_log": [
+          {
+            "attempt": 1,
+            "model": "qwen3.5-397b",
+            "usage": {
+              "input_tokens": 1215,
+              "output_tokens": 684
+            },
+            "latency": 6.9111936000408605,
+            "error": null
+          }
+        ],
+        "cached": false,
+        "mode": "live",
+        "structured_output_mode": "prompt_and_validate",
+        "agent_role": null,
+        "input_token_upper_bound": 4480,
+        "output_reservation": 8192,
+        "cache_key": null
+      }
+    },
+    {
+      "task": "acceptance",
+      "expected_approval": null,
+      "passed": true,
+      "output": {
+        "edits": [
+          {
+            "op": "update",
+            "path": "test_greeting.py",
+            "expected_hash": "2a8cb087adc80bcbc88831c6e64ca77210da3f2e455b46bc6fb8241a6810ed87",
+            "destination": null,
+            "content": "from greeting import greet\n\ndef test_existing():\n    assert isinstance(greet(), str)\n\ndef test_requested_greeting():\n    assert greet() == \"Hello Duck Tape\"\n",
+            "replacements": [],
+            "complete_file": true
+          }
+        ],
+        "explanation": "Updated test_greeting.py to append test_requested_greeting which asserts greet() returns 'Hello Duck Tape', while preserving test_existing unchanged.",
+        "coverage": [
+          {
+            "criterion_id": "criterion-1",
+            "path": "test_greeting.py",
+            "test": "test_requested_greeting"
+          }
+        ]
+      },
+      "telemetry": {
+        "model": "qwen3.5-397b",
+        "role": "acceptance",
+        "routing_reason": "acceptance; risk=low; context=737 bytes; scope=unspecified; previous_failures=0",
+        "latency": 105.8641823999933,
+        "usage": {
+          "input_tokens": 1154,
+          "output_tokens": 3890
+        },
+        "attempts": 2,
+        "attempt_log": [
+          {
+            "attempt": 1,
+            "model": "qwen3.5-397b",
+            "usage": null,
+            "latency": 60.45770669996273,
+            "error": "http_504"
+          },
+          {
+            "attempt": 2,
+            "model": "qwen3.5-397b",
+            "usage": {
+              "input_tokens": 1154,
+              "output_tokens": 3890
+            },
+            "latency": 44.906040199974086,
+            "error": null
+          }
+        ],
+        "cached": false,
+        "mode": "live",
+        "structured_output_mode": "prompt_and_validate",
+        "agent_role": null,
+        "input_token_upper_bound": 4268,
+        "output_reservation": 8192,
+        "cache_key": null
+      }
+    }
+  ],
+  "recorded_at": "2026-11-15T04:23:46.915547+00:00",
+  "configuration": {
+    "investigation": {
+      "role": "investigation",
+      "model": "qwen3.5-397b",
+      "context_limit": 32000,
+      "max_output_tokens": 8192,
+      "structured_output": true,
+      "structured_output_mode": "prompt_and_validate",
+      "schema_version": "steward-schema-4",
+      "qualification": "unqualified"
+    },
+    "planning": {
+      "role": "planning",
+      "model": "qwen3.5-397b",
+      "context_limit": 32000,
+      "max_output_tokens": 8192,
+      "structured_output": true,
+      "structured_output_mode": "prompt_and_validate",
+      "schema_version": "steward-schema-4",
+      "qualification": "unqualified"
+    },
+    "regression": {
+      "role": "regression",
+      "model": "qwen3.5-397b",
+      "context_limit": 32000,
+      "max_output_tokens": 8192,
+      "structured_output": true,
+      "structured_output_mode": "prompt_and_validate",
+      "schema_version": "steward-schema-4",
+      "qualification": "unqualified"
+    },
+    "acceptance": {
+      "role": "acceptance",
+      "model": "qwen3.5-397b",
+      "context_limit": 32000,
+      "max_output_tokens": 8192,
+      "structured_output": true,
+      "structured_output_mode": "prompt_and_validate",
+      "schema_version": "steward-schema-4",
+      "qualification": "unqualified"
+    },
+    "implementation": {
+      "role": "implementation",
+      "model": "qwen3.5-397b",
+      "context_limit": 32000,
+      "max_output_tokens": 8192,
+      "structured_output": true,
+      "structured_output_mode": "prompt_and_validate",
+      "schema_version": "steward-schema-4",
+      "qualification": "unqualified"
+    },
+    "repair": {
+      "role": "repair",
+      "model": "qwen3.5-397b",
+      "context_limit": 32000,
+      "max_output_tokens": 8192,
+      "structured_output": true,
+      "structured_output_mode": "prompt_and_validate",
+      "schema_version": "steward-schema-4",
+      "qualification": "unqualified"
+    },
+    "review": {
+      "role": "review",
+      "model": "qwen3.5-397b",
+      "context_limit": 32000,
+      "max_output_tokens": 8192,
+      "structured_output": true,
+      "structured_output_mode": "prompt_and_validate",
+      "schema_version": "steward-schema-4",
+      "qualification": "unqualified"
+    }
+  },
+  "source_identity": {
+    "git_base": "14d12e46f741a36df67f1520da7dc31346cb7c0a",
+    "dirty": true,
+    "files": {
+      "backend/__init__.py": "134c51622d6d41d6d658897fe318ce8b292d2fba67ef0bd99f75e345e0e60ac1",
+      "backend/agent_adapters.py": "1e953b4fcf61ab2167f07a7bb86af8c6c898598c7d91d7d95836dfb31eb83e85",
+      "backend/agent_context.py": "67f0e3e6f8b7a41f90dca58b1f7e17f14e6517078e8608c485e4a4322d93e2b7",
+      "backend/agent_session.py": "5491ac92fe00e03b2d8da7675269b3196d4710387ba78e512be3e04a04fafaf8",
+      "backend/anthropic_provider.py": "8049981e88d8ec235edd2e7200e96824df91e674efb20cda834cf5dac68856c7",
+      "backend/applicability.py": "2761f8d25eeabeb003bbbe5e5bed949edad483f8b7c628ed3aed4d21fb7b32b4",
+      "backend/atlas_autosync.py": "612c416756cc1540832016246275c8e917719253a4323eeeda2721472889773c",
+      "backend/atlas_graph.py": "0a672cf831f8d21c0f37b9762ea6e9d9a5772ac75dc4b7269329bbc6342b75fd",
+      "backend/atlas_mode.py": "6f1d11de566d331a7c710f7dc1b1267cbcfec93c42bc4f278a39b6a70334e8a3",
+      "backend/atlas_startup.py": "c3a6aafb5f9966ec9ccd62e8342391a25b4d5f09b0413c93d929057d3630f4f8",
+      "backend/contracts.py": "525929d512c4cd0acadcb4eea0cc3daf0f9d011b8a00310d29e7d58b4ed24551",
+      "backend/data_platforms.py": "6a405af85dc316ed45078794a1a7753a47c80c973fc0f59ec4bc5a010e3ec83e",
+      "backend/db.py": "21a0d661642c10983ceb55355e33bfd3a1e603fe9898e4f80c8a0c2dc1209459",
+      "backend/dependencies.py": "c6d49026eea297c353b36988a385e64c48b1130c51497f7df5b8e6073b90e72c",
+      "backend/edits.py": "1dcdd34eacc87acfa55a964bbd21dc2aabcd966c13cda82bca0e981169ff6a0e",
+      "backend/execution_profiles.py": "0f0973ee68496f603ecf95a14f2fb978ddfcefc4030c50ac621c60b7b678b010",
+      "backend/git_transport.py": "abd636c05104738f3f732bde06c2812f853f726aa7650e51d4e1b5cffab2d4d5",
+      "backend/global_catalogue.py": "eaf80757ccf9221094a360c668b4c3b213162eb567aad4f7a50b51e089b96cd5",
+      "backend/global_pipeline.py": "0ea111be138f56223bda97f3bb2c876a0bf7a7eaf6e60499cf47a17b57047a2a",
+      "backend/graphify_graph.py": "ab50c42686217f73639edc8a5df5e3b76e7b61fa2772e3ab994eef42253ca74d",
+      "backend/integration.py": "49d15368846c34f86b0ea443dd0d01b098a4623ab16f678e93738a1e150ffe0e",
+      "backend/knowledge.py": "3a5fae3378acec86998816f85a054cedaba210d0bc872e442b3e1f22262d1f38",
+      "backend/main.py": "2faaa90f1a3c7ffdf80f0dfaf491749ff42428bfb3b4594b290f3d0bd39d1c46",
+      "backend/migrations.py": "735080f250606cbb10d0678338ccf21c06c2b9e9fa538e9021f06558afe24c87",
+      "backend/model_schemas.py": "13866ff5b32f37c4ff1918b0761e1f5b839825e12962b32cbf7856a6539f72ca",
+      "backend/monitoring.py": "f95f6edac502e4f018c198c9ff059f702e5c09cf5626bb2a0b7c5de080ad622c",
+      "backend/network.py": "2414a884fd8342285a9c83a401b0ce3209c6baabdc14fd33f45e00dd26c30c84",
+      "backend/operations.py": "4c37ca6450a0a1e12e3a4edb5322a19202acb325705f76e27824c48323d82d66",
+      "backend/providers.py": "c5896d536bec6dd1b63001fca9f21b6ccc03d8f9418e966ace169807cdb69672",
+      "backend/repository.py": "12bf0758a5b208827a96e35786e6e80cc5fd9dcdcdc0ead0727488b66b04b925",
+      "backend/retrieval.py": "451347708e269530771b704274060eeb6de70b36c02ac9715d0882e5dcd5e849",
+      "backend/routing.py": "b1837abb4c4ebcab4810135f9481f475f9ed65f03b40a7d2dd2765809cf4370e",
+      "backend/sample.py": "d3774cf00a330f6c5c6e089f751e5891df5de1dd3bab40f3489f88bc2fab6acb",
+      "backend/sandbox.py": "ccbbbc583b360a1c49a3782bbbb27af55c42286d756346a15c8cfdd4a640f3b5",
+      "backend/signals.py": "8c09d4d6de5bce3c7b5a494ed1a697981ab2dab200da4b3400459fdb54e3e709",
+      "backend/snapshots.py": "c859850414b792574489bfd76b044e06301b7d65a4fdc909ed339c0f602f7b1a",
+      "backend/summaries.py": "5199f19513e3935ecb2bb0c7d66ceac0d15a75248976d590f39830885924e3b1",
+      "backend/symbols.py": "3d65d7da8d7baae9aa0e26bd870415eddb12f16cadf1ff1d2f3d68ff0cf67f6e",
+      "backend/verification.py": "e59e075330932d248d23cfb86917a944ee196fb96f8cabbec96e5b301f029fb3",
+      "backend/worker.py": "c5e21cafa155dea942e168bc78087fe58996e788fc01423bae70fbc2dd1cd567",
+      "backend/worker_main.py": "11338bd70547b55c0d6c451d9ddc5dfd4c2584b80ff398a2eff1b8abb254448e",
+      "backend/workflow.py": "cd5034b19b7b4f1efa841a13e36e499e4f8b2fa5c02745f6371e9b43540d216e",
+      "run.py": "7caf0cbdb2e4ca57bf037171483c096451b1895299d9d7494970eb51cfcefb8d",
+      "sandbox/images/node.Dockerfile": "84ae2984ea9c7f185cb4b72cbd11c1c3ea21f302796697e0549946206f811a7c",
+      "sandbox/images/python.Dockerfile": "7ccabea4880fc51c281fbd7c2d0296fc60d5c0565e322d4aec2e6e3c32d48132",
+      "sandbox/probes/isolation.js": "a70e0b62999ff0d51a323b38279a53aaf97cf5a99be2fe6aca07749e11b099cd",
+      "sandbox/probes/isolation.py": "10d96c4dab36774f1623f4210a163785fb53722571d019c6803cec4fd10dccc4",
+      "scripts/evaluate_models.py": "064f9d6fb3bc593eb899c00ef2c94cea1fe3a07f06c67a9ca315f8e078901797",
+      "scripts/qualification_driver.py": "ab3198db2bf98d5c49d9dcdafbeaab3a1ee85a1dbd526b00acde2e849dd658ac",
+      "tests/fixtures/model_eval/manifest.json": "29e04a7f30c6837649315c6870df2f104b2d985678e6437c417b8bcbd47af309",
+      "tests/fixtures/model_eval/python/requirements.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tests/fixtures/model_eval/python/service.py": "4df95b41046348d9cd2680bc72d08b8510cd6b3b1cd93e0998761ccff2953da4",
+      "tests/fixtures/model_eval/python/tests/test_service.py": "9c470408d66c36df0c413aa14b8dc77e9a5d6f10d5cbc7029f57eb6e1d731d01",
+      "tests/fixtures/model_eval/typescript/package-lock.json": "0a4c7142dc9d7ad86c2dc1e0b4e43394f867cf24480be39abe126a06a465aa23",
+      "tests/fixtures/model_eval/typescript/package.json": "c1709fff7f8156e791ea0578c638f0c995eca1c474cf05bf0f5569d1e96a3aac",
+      "tests/fixtures/model_eval/typescript/service.test.ts": "f53c2cb87a18c3e0024468b811e0381789019020ed3527b88ac13cdf8bcc2d30",
+      "tests/fixtures/model_eval/typescript/service.ts": "90faf33efa781cb7fd9eeb439e035421aa811f95d0359b8c67fff94c32933e7a"
+    },
+    "aggregate_sha256": "921b8a3fd5fb74bfad33a3150534f0466b9e9c6ee29f453db1084a79f683f373"
+  },
+  "source_identity_stable": true
+}

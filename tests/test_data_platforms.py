@@ -155,6 +155,16 @@ def test_atlas_search_hydrates_only_local_matching_namespace(monkeypatch):
         key: record[key] for key in ('repo_id', 'snapshot_id', 'embedding_space')}
 
 
+@pytest.mark.parametrize('database', ['ducktape_public', 'DUCKTAPE_PUBLIC', 'another_public'])
+def test_private_vector_projection_refuses_public_database_before_connect(monkeypatch, database):
+    p, collection = atlas(monkeypatch)
+    repo, snapshot = source()
+    monkeypatch.setenv('STEWARD_ATLAS_DATABASE', database)
+    with pytest.raises(p.DataPlatformError):
+        p.atlas_sync(repo, snapshot)
+    assert not collection.documents
+
+
 @pytest.mark.parametrize('vector', [[1, 2], [1, 2, float('nan')], [0, 0, 0], [True, 0, 1]])
 def test_atlas_rejects_invalid_vectors_before_upload(monkeypatch, vector):
     p, collection = atlas(monkeypatch)

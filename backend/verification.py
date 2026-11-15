@@ -76,6 +76,7 @@ def run(run_id,base,candidate,plan,cancel=None):
             for original in sorted(plan.get('commands',[]),key=lambda value:sandbox.data(value).get('purpose',sandbox.data(value).get('kind'))!='benchmark'):
                 command={**sandbox.data(original),'patch_hash':patch}
                 if command.get('candidate_only') and phase!='candidate': continue
+                if phase=='baseline_recheck' and command['id'] not in failed_test_ids: continue
                 if command.get('purpose',command.get('kind'))=='benchmark' and (phase=='regression_before' or command['id'] in invalid_harness): continue
                 result=sandbox.run(sid,command,phase,cancel)
                 result.update(base_snapshot=base_id,patch_hash=patch,environment={'image':prepared['environment'],'dependencies':prepared['cache_key']},kind=command.get('purpose',command.get('kind','test')))
@@ -100,6 +101,16 @@ def run(run_id,base,candidate,plan,cancel=None):
                     result['benchmark_harness']=harnesses[command['id']]
                 results.append(result)
             sandbox.cancel(phase_id)
+            if phase=='baseline':
+                failed_test_ids={r['check_id'] for r in results if r.get('phase')=='baseline' and r.get('kind')=='test' and r.get('status')=='failed' and r.get('required',True)}
+                if failed_test_ids:
+                    # Keep original assertions independent of model-written regression tests.
+                    runner_paths={arg.removeprefix('./') for command in plan.get('commands',[]) for arg in sandbox.data(command).get('argv',[]) if arg.removeprefix('./') in files}
+                    preserve=lambda name: tests(name) or name.rsplit('/',1)[-1]=='conftest.py' or '.config.' in name.rsplit('/',1)[-1] or name.endswith(('.json','.toml','.yaml','.yml','.ini','.cfg','.lock')) or name in runner_paths
+                    original_tests={name:content for name,content in files.items() if preserve(name)}
+                    recheck={name:content for name,content in changed.items() if not preserve(name)}
+                    recheck.update(original_tests)
+                    phases.append(('baseline_recheck',recheck,{**changed_modes,**{name:modes.get(name,0o644) for name in original_tests}}))
     finally:
         for phase_id in environments: sandbox.cancel(phase_id)
     return results
@@ -145,5 +156,16 @@ def assess(results,acceptance):
         after=next((r for r in candidate if r.get('check_id')==before.get('check_id')),None)
         if after and (after.get('test_count',0)<before.get('test_count',0) or after.get('skipped_count',0)>before.get('skipped_count',0)):
             integrity=False; limitations.append('Candidate collected fewer tests or skipped more tests than the baseline')
-    passed=baseline_passed and candidate_passed and integrity and all(a['status']=='validated' or not a['required'] for a in advisories) and all(b['valid'] for b in benchmarks)
-    return {'passed':passed,'baseline_passed':baseline_passed,'candidate_passed':candidate_passed,'regression_reproduced':reproduced,'advisories':advisories,'benchmarks':benchmarks,'limitations':limitations}
+    failed_baseline=[r for r in baseline if r.get('required',True) and r.get('status')!='passed']
+    rechecks=[r for r in results if r.get('phase')=='baseline_recheck']
+    baseline_recovered=bool(failed_baseline) and reproduced is True and all(
+        before.get('kind')=='test' and before.get('status')=='failed' and any(
+            after.get('status')=='passed' and after.get('kind')=='test'
+            and all(before.get(key) is not None and before.get(key)==after.get(key)
+                    for key in ('check_id','environment','base_snapshot','patch_hash'))
+            and before.get('test_count',0)>0 and after.get('test_count',0)>=before['test_count']
+            and after.get('skipped_count',0)<=before.get('skipped_count',0)
+            for after in rechecks) for before in failed_baseline)
+    if baseline_recovered: limitations.append('Original baseline test failures pass against the patched implementation with unchanged original tests')
+    passed=(baseline_passed or baseline_recovered) and candidate_passed and integrity and all(a['status']=='validated' or not a['required'] for a in advisories) and all(b['valid'] for b in benchmarks)
+    return {'passed':passed,'baseline_passed':baseline_passed,'baseline_recovered':baseline_recovered,'candidate_passed':candidate_passed,'regression_reproduced':reproduced,'advisories':advisories,'benchmarks':benchmarks,'limitations':limitations}

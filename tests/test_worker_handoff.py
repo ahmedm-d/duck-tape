@@ -403,3 +403,20 @@ def test_retrieval_and_graph_use_jobs_source_identity(short_store, monkeypatch):
         block = req.payload['graph_context']
         graph = json.loads(block[len('<graph_context>\n'):-len('\n</graph_context>')])
         assert graph['scope']['snapshot_id'] == job['source_snapshot_id']
+
+def test_worker_honors_configured_output_budget(short_store, monkeypatch):
+    monkeypatch.setenv('STEWARD_MAX_OUTPUT_TOKENS', '8192')
+    repo = sample.seed_sample()
+    db.mutate('repositories', repo['id'], lambda r: {**r, 'is_sample': False})
+    job = db.put('jobs', {'repo_id': repo['id'], 'base_snapshot': repo['snapshot'],
+        'source_snapshot_id': repo['source_snapshot_id'], 'type': 'fix',
+        'title': 'Fix quantity', 'description': 'Fix item quantity in pricing.py.',
+        'status': 'Queued', 'risk': 'low', 'preparation_approved': True})
+    captured = []
+    def stop_after_request(request, cancel=None):
+        captured.append(request)
+        raise providers.ProviderError('test_stop')
+    monkeypatch.setattr(providers, 'complete', stop_after_request)
+    worker.process_job(job['id'])
+    assert captured
+    assert captured[0].max_output_tokens == 8192

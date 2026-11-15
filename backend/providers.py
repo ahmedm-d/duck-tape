@@ -19,7 +19,7 @@ import httpx
 from . import model_schemas
 from .contracts import ProviderRequest, ProviderResult
 
-PROMPT_VERSION = 'steward-14-specialists'
+PROMPT_VERSION = 'steward-15-adaption-chat'
 _runner_error = None
 _embedding_runner_error = None
 RUNNER_BIND_TIMEOUT = 30
@@ -298,6 +298,10 @@ def health():
         result['error'] = 'Provider unavailable: '+(exc.code if isinstance(exc, ProviderError) else type(exc).__name__)
     return result
 
+def _adaption_chat(config):
+    return config['kind'] == 'openai' and config['endpoint'] == SPONSOR_ENDPOINTS['adaption']
+
+
 def capabilities(role='implementation'):
     config = configuration()
     prefix = 'STEWARD_' + role.upper() + '_'
@@ -307,7 +311,7 @@ def capabilities(role='implementation'):
         'context_limit': int(os.getenv(prefix+'CONTEXT_LIMIT', str(config['context_limit']))),
         'max_output_tokens': int(os.getenv(prefix+'MAX_OUTPUT_TOKENS', os.getenv('STEWARD_MAX_OUTPUT_TOKENS', '4096'))),
         'structured_output': os.getenv(prefix+'STRUCTURED_OUTPUT', os.getenv('STEWARD_MODEL_STRUCTURED_OUTPUT', 'true')).lower() == 'true',
-        'structured_output_mode': 'prompt_and_validate' if config['kind'] == 'adaption' else 'json_schema',
+        'structured_output_mode': 'prompt_and_validate' if config['kind'] == 'adaption' else 'json_object_and_validate' if _adaption_chat(config) else 'json_schema',
         'schema_version': model_schemas.SCHEMA_VERSION,
         'qualification': 'unqualified',
     }
@@ -546,8 +550,9 @@ def complete(task, payload=None, risk='low', *, cancel=None):
                 text = _adaption_text(raw)
                 finish = 'stop'
             else:
+                # Adaption's schema mode loses code newlines; JSON mode retains them, with strict validation below.
                 raw = request('/chat/completions', {'model': model, 'messages': messages,
-                              **({} if agent_role else {'response_format': {'type': 'json_schema', 'json_schema': {'name': task, 'strict': True, 'schema': schema}}}),
+                              **({} if agent_role else {'response_format': {'type': 'json_object'} if _adaption_chat(config) else {'type': 'json_schema', 'json_schema': {'name': task, 'strict': True, 'schema': schema}}}),
                               'max_tokens': output_limit, 'temperature': 0}, timeout=timeout, cancel=cancel, **transport_options)
                 entry['usage'] = _usage(raw, 'openai')
                 finish = raw['choices'][0].get('finish_reason')

@@ -187,3 +187,50 @@ def test_framework_counts_exclude_suite_summaries_and_preserve_other_reporters(m
         monkeypatch.setattr(sandbox,'run',lambda sid,command,phase,cancel:result(phase,stdout=stdout))
         checks=verification.run('counts',{'id':'base','files':{}},{'base_snapshot':'base','patch_hash':'patch','files':[]},{'commands':[{'id':'tests','argv':['runner'],'purpose':'test'}]})
         assert all(check['test_count']==count and check['skipped_count']==skipped for check in checks)
+
+
+def test_recovered_baseline_requires_unchanged_suite_evidence():
+    checks = [result('baseline', 'failed', kind='test', test_count=5),
+              result('regression_before', 'failed', kind='test'),
+              result('candidate', kind='test', test_count=6),
+              result('baseline_recheck', kind='test', test_count=5)]
+    evidence = verification.assess(checks, [])
+    assert evidence['passed'] and evidence['baseline_recovered']
+    assert not evidence['baseline_passed']
+    assert 'Baseline checks did not all pass' in evidence['limitations']
+    for field, value in [('status', 'failed'), ('environment', 'different'),
+                         ('patch_hash', 'different'), ('base_snapshot', 'different'),
+                         ('test_count', 4), ('skipped_count', 1)]:
+        altered = [*checks[:-1], {**checks[-1], field: value}]
+        assert not verification.assess(altered, [])['passed']
+    assert not verification.assess(checks[:-1], [])['passed']
+    assert not verification.assess([checks[0], *checks[2:]], [])['passed']
+    assert not verification.assess([{**checks[0], 'kind': 'build'}, *checks[1:]], [])['passed']
+    assert not verification.assess([*checks, result('baseline', 'failed', check_id='other', kind='test')], [])['passed']
+
+
+def test_baseline_recheck_uses_original_tests_and_candidate_implementation(monkeypatch):
+    from backend import dependencies, sandbox
+    trees = []
+    def prepare(run_id, source, plan, cancel):
+        trees.append({f['path']: f['content'] for f in source['files']})
+        return {'sandbox_id': 'sandbox', 'environment': 'image', 'cache_key': 'key'}
+    monkeypatch.setattr(dependencies, 'prepare', prepare)
+    monkeypatch.setattr(sandbox, 'cancel', lambda *args: None)
+    monkeypatch.setattr(sandbox, 'run', lambda sid, command, phase, cancel:
+                        result(phase, 'failed' if phase in ('baseline', 'regression_before') else 'passed',
+                               stdout='Ran 1 test in 0.001s\n'))
+    base = {'id': 'base', 'files': {'app.py': 'broken', 'tests/test_old.py': 'original assertions', 'conftest.py': 'original hooks', 'pytest.ini': 'original config', 'vitest.config.ts': 'original JS config'}}
+    candidate = {'base_snapshot': 'base', 'patch_hash': 'patch', 'files': [
+        {'path': 'app.py', 'after': 'fixed'},
+        {'path': 'conftest.py', 'after': 'disable assertions'},
+        {'path': 'pytest.ini', 'after': 'exclude tests'},
+        {'path': 'vitest.config.ts', 'after': 'disable JS checks'},
+        {'path': 'tests/conftest.py', 'after': 'new disabling hook'},
+        {'path': 'tests/test_old.py', 'after': 'changed assertions'},
+        {'path': 'tests/test_new.py', 'after': 'new assertions'}]}
+    checks = verification.run('run', base, candidate,
+                              {'commands': [{'id': 'tests', 'purpose': 'test', 'argv': ['python', '-m', 'unittest']}]})
+    assert trees[-1] == {'app.py': 'fixed', 'tests/test_old.py': 'original assertions', 'conftest.py': 'original hooks', 'pytest.ini': 'original config', 'vitest.config.ts': 'original JS config'}
+    assert checks[-1]['phase'] == 'baseline_recheck'
+    assert verification.assess(checks, [])['passed']

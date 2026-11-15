@@ -443,7 +443,7 @@ def process_job(job_id):
         def call(task, payload, label, *, agent_role=None):
             guard(job_id, token)
             request = ProviderRequest(task=task, payload=payload, repo_id=repo['id'], snapshot_id=source_id, risk=job.get('risk','medium'),
-                                      max_output_tokens=min(2048, providers.capabilities(task)['max_output_tokens']), failure_count=len(payload.get('feedback', [])), cache=False)
+                                      max_output_tokens=min(8192, providers.capabilities(task)['max_output_tokens']), failure_count=len(payload.get('feedback', [])), cache=False)
             if agent_role:
                 # Compatible with B's pending optional ProviderRequest.agent_role field.
                 request = request.model_copy(update={'agent_role': agent_role})

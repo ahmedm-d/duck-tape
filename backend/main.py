@@ -17,7 +17,7 @@ from fastapi import FastAPI, HTTPException, UploadFile, File, Request, Query
 from fastapi.responses import FileResponse, Response, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
-from . import db
+from . import auth, db
 
 SOURCES = ('ticket','request','security','analysis','research')
 TERMINAL = {'Cancelled','Rejected','Completed'}
@@ -155,6 +155,22 @@ async def lifespan(app):
 app = FastAPI(title='Duck Tape', lifespan=lifespan)
 
 
+# Registered before local_origin, so it runs inside it: the loopback/origin checks still come first.
+@app.middleware('http')
+async def require_account(request: Request, call_next):
+    path = request.url.path
+    if request.method == 'OPTIONS' or not path.startswith('/api/') or path in auth.PUBLIC_PATHS or not auth.auth_required():
+        return await call_next(request)
+    try:
+        token = auth.bearer_token(request.headers.get('authorization'))
+        request.state.account = await asyncio.to_thread(auth.verify, token)
+    except auth.AuthError as exc:
+        return JSONResponse({'detail': str(exc)}, 401, headers={'WWW-Authenticate': 'Bearer'})
+    except (auth.AuthUnavailable, auth.AuthConfigError) as exc:
+        return JSONResponse({'detail': str(exc)}, 503)
+    return await call_next(request)
+
+
 @app.middleware('http')
 async def local_origin(request: Request, call_next):
     host = request.url.hostname
@@ -203,6 +219,18 @@ def health():
     worker=db.get('services','worker') or {}
     active=worker.get('status')=='running' and worker.get('heartbeat','')>(datetime.now(timezone.utc)-timedelta(seconds=15)).isoformat()
     return {'status':'ok','workspace':'local','worker':'running' if active else 'stopped','monitoring':'running' if active and not poll_stop.is_set() else 'stopped'}
+
+
+@app.get('/api/auth/config')
+def auth_config():
+    try: return auth.public_config()
+    except auth.AuthConfigError as exc: raise HTTPException(503, str(exc)) from None
+
+
+@app.get('/api/auth/me')
+def auth_me(request: Request):
+    account = getattr(request.state, 'account', None)
+    return {'enabled': auth.auth_required(), 'account': account}
 
 
 @app.get('/api/global-catalogue')
@@ -606,7 +634,7 @@ def integration_status():
 def settings():
     from .providers import health as provider_health
     from . import sandbox
-    return {'providers':provider_health(),'sandbox':sandbox.health(),'authentication':'Local single workspace; demo members are labels, not authentication.','monitoring':health()['monitoring'],'services':db.list_records('services')}
+    return {'providers':provider_health(),'sandbox':sandbox.health(),'authentication':auth.describe(),'monitoring':health()['monitoring'],'services':db.list_records('services')}
 
 
 @app.patch('/api/settings/provider')

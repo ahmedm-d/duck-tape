@@ -35,6 +35,12 @@ if __name__=='__main__':
     from backend import atlas_startup
     try: atlas_startup.check_atlas_ready()
     except atlas_startup.AtlasStartupError as exc: raise SystemExit('Duck Tape cannot start: '+str(exc)) from None
+    # Supabase accounts are required for the served workspace unless explicitly disabled (tests/CI escape hatch).
+    os.environ.setdefault('STEWARD_AUTH_REQUIRED','1')
+    from backend import auth
+    try: auth.check_auth_ready()
+    except auth.AuthConfigError as exc:
+        raise SystemExit('Duck Tape cannot start: '+str(exc)+' (STEWARD_AUTH_REQUIRED=0 is only an escape hatch for tests and CI.)') from None
     stop=threading.Event()
     children=[]
     instance_id=uuid.uuid4().hex

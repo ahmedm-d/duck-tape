@@ -29,8 +29,9 @@ def local_url(value):
 
 def commands(tier,output,url=None):
     output=Path(output).resolve(); gates=[]
-    # STEWARD_ATLAS_REQUIRED=0 is the test/CI escape hatch: gates (including the run.py restart gate) never contact Atlas.
-    clean={**dict.fromkeys(SWITCHES,'0'),'STEWARD_ATLAS_REQUIRED':'0','STEWARD_TEST_URL':None,'PYTEST_DISABLE_PLUGIN_AUTOLOAD':'1',
+    # STEWARD_ATLAS_REQUIRED=0 / STEWARD_AUTH_REQUIRED=0 are the test/CI escape hatches: gates (including the
+    # run.py restart gate) never contact Atlas or Supabase.
+    clean={**dict.fromkeys(SWITCHES,'0'),'STEWARD_ATLAS_REQUIRED':'0','STEWARD_AUTH_REQUIRED':'0','STEWARD_TEST_URL':None,'PYTEST_DISABLE_PLUGIN_AUTOLOAD':'1',
            'PYTHONPATH':os.pathsep.join(filter(None,[str(ROOT),str(ROOT/'vendor-current'),os.environ.get('PYTHONPATH')]))}
     npm=shutil.which('npm.cmd' if os.name=='nt' else 'npm') or 'npm'
     def add(identity,group,argv,needs=(),env=None,cwd=ROOT,timeout=600,**artifacts):
@@ -47,7 +48,7 @@ def commands(tier,output,url=None):
         pytest('backend','deterministic',['tests'],('git',),extra=('--ignore=tests/live','-m','not live'))
         add('restart','deterministic',[sys.executable,'scripts/check_restart.py'],('git',),timeout=240)
         add('frontend-build','deterministic',[npm,'run','build'],('frontend',),cwd=ROOT/'frontend',timeout=180)
-        browser('browser-fixtures','deterministic',['tests/navigation.spec.ts','tests/imported-workflows.spec.ts','tests/evidence.spec.ts','tests/summaries.spec.ts','tests/settings.spec.ts','tests/workspace.spec.ts','tests/global-navigation.spec.ts','tests/global-catalogue.spec.ts'],('frontend',),{})
+        browser('browser-fixtures','deterministic',['tests/navigation.spec.ts','tests/imported-workflows.spec.ts','tests/evidence.spec.ts','tests/summaries.spec.ts','tests/settings.spec.ts','tests/workspace.spec.ts','tests/global-navigation.spec.ts','tests/global-catalogue.spec.ts','tests/auth.spec.ts'],('frontend',),{})
     if tier in {'sandbox','all'}:
         pytest('sandbox','sandbox',['tests/live/test_sandbox_live.py','tests/live/test_feature_acceptance_execution.py','tests/live/test_feature_frameworks.py'],('docker',),{'STEWARD_LIVE_SANDBOX':'1'},timeout=2400)
     if tier in {'live','all'}:

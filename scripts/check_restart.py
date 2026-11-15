@@ -28,7 +28,7 @@ def main():
         probe.bind(('127.0.0.1',PORT))
     directory=ROOT/'data'/'restart-check'/uuid.uuid4().hex
     directory.mkdir(parents=True)
-    env={**os.environ,'STEWARD_ATLAS_REQUIRED':'0','STEWARD_DATA_DIR':str(directory),'STEWARD_MODEL_ENDPOINT':'http://127.0.0.1:1',
+    env={**os.environ,'STEWARD_ATLAS_REQUIRED':'0','STEWARD_AUTH_REQUIRED':'0','STEWARD_DATA_DIR':str(directory),'STEWARD_MODEL_ENDPOINT':'http://127.0.0.1:1',
         'STEWARD_ATLAS_ENABLED':'0','STEWARD_ATLAS_GRAPH_MIRROR':'0','STEWARD_ATLAS_RETRIEVAL':'0',
         'STEWARD_MODEL':'restart-check-no-model','PYTHONUNBUFFERED':'1',
         'PYTHONPATH':os.pathsep.join(filter(None,[str(ROOT),str(ROOT/'vendor-current'),os.environ.get('PYTHONPATH')]))}

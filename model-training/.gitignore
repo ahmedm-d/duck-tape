@@ -6,6 +6,7 @@ data/raw/
 data/processed/*.jsonl
 data/eval/*.jsonl
 models/checkpoints/
+export_bundle/*/weights/
 *.tgz
 *.safetensors
 *.bin

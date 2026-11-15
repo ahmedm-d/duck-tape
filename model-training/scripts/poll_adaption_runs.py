@@ -35,10 +35,10 @@ def utc_now_iso() -> str:
 
 
 def load_account_clients() -> dict[int, Adaption]:
-    """Load ADAPTION_API_KEY_1..4 and return Adaption clients per account index."""
+    """Load ADAPTION_API_KEY_1..5 and return Adaption clients per account index."""
     load_training_env()
     clients: dict[int, Adaption] = {}
-    for idx in range(1, 5):
+    for idx in range(1, 6):
         key = (os.environ.get(f"ADAPTION_API_KEY_{idx}") or "").strip()
         if key:
             clients[idx] = Adaption(api_key=key, timeout=60.0, max_retries=3)
@@ -74,8 +74,12 @@ def _format_win_rate(value: Any) -> str:
     return "-"
 
 
-def poll_once() -> tuple[dict[str, Any], bool]:
-    """Poll all runs in manifest once, save manifest + TRAINING_STATE.md, return (manifest, all_terminal)."""
+def poll_once(write: bool = True) -> tuple[dict[str, Any], bool]:
+    """Poll all runs in manifest once, print a status table, return (manifest, all_terminal).
+
+    If write is True, also save the manifest and TRAINING_STATE.md. If False, nothing is
+    written locally (read-only status check).
+    """
     clients = load_account_clients()
     manifest = load_manifest()
     runs: list[dict[str, Any]] = manifest.get("runs", [])
@@ -84,8 +88,13 @@ def poll_once() -> tuple[dict[str, Any], bool]:
         acct_idx = int(entry.get("account_index", 0))
         run_id = entry.get("run_id")
         client = clients.get(acct_idx)
-        if not client or not run_id:
+        if not run_id:
             return entry
+        if not client:
+            updated = dict(entry)
+            updated["last_poll_error"] = f"no ADAPTION_API_KEY_{acct_idx} loaded"
+            updated["last_checked_at"] = utc_now_iso()
+            return updated
         try:
             live = client.autoscientist.get(run_id)
             best_hp = getattr(live, "best_hyperparams", None)
@@ -112,6 +121,8 @@ def poll_once() -> tuple[dict[str, Any], bool]:
                     "last_checked_at": utc_now_iso(),
                 }
             )
+            # Clear any stale poll error from a previous failed poll.
+            updated.pop("last_poll_error", None)
             return updated
         except Exception as exc:
             updated = dict(entry)
@@ -120,7 +131,7 @@ def poll_once() -> tuple[dict[str, Any], bool]:
             return updated
 
     if runs:
-        with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as pool:
             polled_runs = list(pool.map(_poll_run, runs))
         manifest["runs"] = polled_runs
         runs = polled_runs
@@ -149,28 +160,42 @@ def poll_once() -> tuple[dict[str, Any], bool]:
             except Exception:
                 pass
 
-    save_manifest(manifest)
-    update_training_state_md(manifest)
+    if write:
+        save_manifest(manifest)
+        update_training_state_md(manifest)
 
+    status_time = manifest.get("updated_at") if write else utc_now_iso()
     sorted_runs = sorted(runs, key=lambda r: (int(r.get("account_index", 0)), str(r.get("agent", ""))))
-    print(f"\n=== Adaption AutoScientist Live Status ({manifest.get('updated_at')}) ===")
+    print(f"\n=== Adaption AutoScientist Live Status ({status_time}) ===")
     print(
-        f"{'Account':<7} | {'Agent':<21} | {'Run ID':<36} | {'Status':<11} | {'Iteration':<9} | {'Best Win Rate':<13}"
+        f"{'Account':<7} | {'Agent':<21} | {'Run ID':<36} | {'Status':<9} | "
+        f"{'Iter':<5} | {'Best':<6} | {'Target':<6} | Note"
     )
-    print("-" * 111)
+    print("-" * 125)
     for r in sorted_runs:
         acct = f"Acct {r.get('account_index', '?')}"
         agent = str(r.get("agent", "?"))
         run_id = str(r.get("run_id") or "-")
         status = str(r.get("status") or "unknown")
         iteration = _format_iteration(r)
-        win_rate = _format_win_rate(r.get("best_win_rate"))
-        print(f"{acct:<7} | {agent:<21} | {run_id:<36} | {status:<11} | {iteration:<9} | {win_rate:<13}")
+        best = _format_win_rate(r.get("best_win_rate"))
+        target = _format_win_rate(r.get("target_win_rate"))
+        note = ""
+        if r.get("last_poll_error"):
+            note = "POLL ERR: " + str(r["last_poll_error"])[:60]
+        elif r.get("error"):
+            note = "RUN ERR: " + str(r["error"])[:60]
+        print(
+            f"{acct:<7} | {agent:<21} | {run_id:<36} | {status:<9} | "
+            f"{iteration:<5} | {best:<6} | {target:<6} | {note}"
+        )
 
     all_terminal = bool(runs) and all(str(r.get("status", "")).lower() in TERMINAL_STATUSES for r in runs)
     active_count = sum(1 for r in runs if str(r.get("status", "")).lower() not in TERMINAL_STATUSES)
     done_count = len(runs) - active_count
     print(f"\nSummary: {len(runs)} total runs | {active_count} active | {done_count} terminal")
+    if not write:
+        print("(--no-write: manifest and TRAINING_STATE.md left untouched)")
     return manifest, all_terminal
 
 
@@ -268,7 +293,7 @@ def update_training_state_md(manifest: dict[str, Any]) -> None:
             re.escape(RUNS_START_MARKER) + r".*?" + re.escape(RUNS_END_MARKER),
             re.DOTALL,
         )
-        new_text = pattern.sub(block, text)
+        new_text = pattern.sub(lambda _m: block, text)
     elif "## Next Step (Part 4 of 5)" in text:
         idx = text.index("## Next Step (Part 4 of 5)")
         new_text = text[:idx].rstrip() + "\n\n" + block + "\n"
@@ -281,11 +306,11 @@ def update_training_state_md(manifest: dict[str, Any]) -> None:
 
 
 def main() -> int:
-    """CLI entry point for live polling across Accounts 1-4."""
+    """CLI entry point for live polling across Accounts 1-5."""
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
 
-    parser = argparse.ArgumentParser(description="Poll Adaption AutoScientist runs across Accounts 1-4.")
+    parser = argparse.ArgumentParser(description="Poll Adaption AutoScientist runs across Accounts 1-5.")
     parser.add_argument(
         "--watch",
         action="store_true",
@@ -297,14 +322,20 @@ def main() -> int:
         default=60.0,
         help="Polling interval in seconds when --watch is enabled (default: 60).",
     )
+    parser.add_argument(
+        "--no-write",
+        action="store_true",
+        help="Print status only; do not touch the manifest or TRAINING_STATE.md.",
+    )
     args = parser.parse_args()
+    write = not args.no_write
 
     if not args.watch:
-        poll_once()
+        poll_once(write=write)
         return 0
 
     while True:
-        _, all_terminal = poll_once()
+        _, all_terminal = poll_once(write=write)
         if all_terminal:
             print("All runs reached terminal state.")
             return 0

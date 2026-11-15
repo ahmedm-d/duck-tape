@@ -1,0 +1,4 @@
+source,path,metric,step,value
+run_metadata,$.best_hyperparams.min_lr_ratio,min_lr_ratio,,0.1
+run_metadata,$.best_hyperparams.learning_rate,learning_rate,,2e-05
+run_metadata,$.best_hyperparams.max_grad_norm,max_grad_norm,,1

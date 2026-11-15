@@ -42,27 +42,29 @@
 <!-- ADAPTION_RUNS_START -->
 ## Multi-Account Adaption AutoScientist Runs (Part 4 of 5)
 
-- **Last Polled (UTC):** `2026-11-14T19:58:02+00:00`
-- **Run Summary:** `11` total | `11` active | `0` succeeded | `0` failed/cancelled
+- **Last Polled (UTC):** `2026-11-15T02:08:11+00:00`
+- **Run Summary:** `12` total | `5` active | `7` succeeded | `0` failed/cancelled
 - **Orchestrator Scripts:** `model-training/scripts/launch_adaption_parallel.py`, `model-training/scripts/poll_adaption_runs.py`
 - **Run Manifest:** `model-training/data/adaption_runs_manifest.json`
 
 | Account | Agent | Model | Method | Eff. Rows | Run ID | Status | Iteration | Best Win Rate |
 | --- | --- | --- | --- | ---: | --- | --- | --- | --- |
-| Acct 1 | `router` | `google/gemma-4-31B-it` | `instruction` | 10,000 | `a7c2975d-0eeb-4ad0-ae89-c7c634e540e7` | `running` | `0/3` | `-` |
-| Acct 1 | `ticket_parser` | `google/gemma-4-31B-it` | `instruction` | 10,000 | `aa06d9dd-7c82-4919-b46d-3c279a46c212` | `running` | `0/3` | `-` |
-| Acct 2 | `implementer` | `Qwen/Qwen3.6-35B-A3B` | `instruction` | 10,000 | `91d8228e-7244-400e-911f-deb4aa5e89a1` | `running` | `0/3` | `-` |
-| Acct 2 | `test_writer` | `Qwen/Qwen3.6-35B-A3B` | `instruction` | 10,000 | `eca61d3c-52df-4d6a-8565-e3aa0672c4a1` | `running` | `0/3` | `-` |
-| Acct 3 | `reviewer_dpo` | `Qwen/Qwen3.6-35B-A3B` | `alignment` | 12,000 | `f0619f20-3fdb-4c14-a895-ff0fb5045e5e` | `running` | `0/2` | `-` |
-| Acct 3 | `security_reviewer_dpo` | `Qwen/Qwen3.6-35B-A3B` | `alignment` | 12,000 | `35cf6a08-2405-4d0a-8fa1-5261e71d1cfe` | `running` | `0/2` | `-` |
-| Acct 4 | `commit_pr_writer` | `google/gemma-4-31B-it` | `instruction` | 10,000 | `50961b49-fd45-49f8-964a-06ea37361e2f` | `running` | `0/3` | `-` |
-| Acct 4 | `db_migration` | `Qwen/Qwen3.6-35B-A3B` | `instruction` | 10,000 | `2cb1904b-5e23-4c56-87e0-7aafeedfac07` | `running` | `0/3` | `-` |
-| Acct 4 | `frontend_ui` | `google/gemma-4-31B-it-VLM` | `instruction` | 2,500 | `2f6c1852-ce21-49c9-abb2-43a1e44e3854` | `running` | `0/3` | `-` |
-| Acct 4 | `iac` | `Qwen/Qwen3.6-35B-A3B` | `instruction` | 10,000 | `8d833e2a-45b8-4807-821c-a45d2142df6d` | `running` | `0/3` | `-` |
-| Acct 4 | `log_classifier` | `google/gemma-4-31B-it` | `instruction` | 10,000 | `74d2812d-b1ee-465d-b628-aca9d3a09093` | `running` | `0/3` | `-` |
-- **Account 1 Web UI Router Discovery:** `Multi-Agent_Job_Router` (`612ad034-bdb6-43ff-92a7-e5b3994b1e32`, status=`running`)
-- **Trajectory Extension (`implementer`):** status=`running`, run_id=`dataset-173bcadd-b10d-4385-a246-dfd6e2ae6ba5-1794686167184`, dataset_id=`173bcadd-b10d-4385-a246-dfd6e2ae6ba5`
+| Acct 1 | `router` | `google/gemma-4-31B-it` | `instruction` | 10,000 | `a7c2975d-0eeb-4ad0-ae89-c7c634e540e7` | `running` | `2/3` | `0.620` |
+| Acct 1 | `ticket_parser` | `google/gemma-4-31B-it` | `instruction` | 10,000 | `aa06d9dd-7c82-4919-b46d-3c279a46c212` | `succeeded` | `3/3` | `0.574` |
+| Acct 2 | `implementer` | `Qwen/Qwen3.6-35B-A3B` | `instruction` | 10,000 | `91d8228e-7244-400e-911f-deb4aa5e89a1` | `running` | `2/3` | `0.585` |
+| Acct 2 | `test_writer` | `Qwen/Qwen3.6-35B-A3B` | `instruction` | 10,000 | `eca61d3c-52df-4d6a-8565-e3aa0672c4a1` | `succeeded` | `3/3` | `0.449` |
+| Acct 3 | `reviewer_dpo` | `Qwen/Qwen3.6-35B-A3B` | `alignment` | 12,000 | `f0619f20-3fdb-4c14-a895-ff0fb5045e5e` | `running` | `1/2` | `0.474` |
+| Acct 3 | `security_reviewer_dpo` | `Qwen/Qwen3.6-35B-A3B` | `alignment` | 12,000 | `35cf6a08-2405-4d0a-8fa1-5261e71d1cfe` | `running` | `1/2` | `0.476` |
+| Acct 4 | `commit_pr_writer` | `google/gemma-4-31B-it` | `instruction` | 10,000 | `50961b49-fd45-49f8-964a-06ea37361e2f` | `succeeded` | `3/3` | `0.693` |
+| Acct 4 | `db_migration` | `Qwen/Qwen3.6-35B-A3B` | `instruction` | 10,000 | `2cb1904b-5e23-4c56-87e0-7aafeedfac07` | `succeeded` | `3/3` | `0.444` |
+| Acct 4 | `frontend_ui` | `google/gemma-4-31B-it-VLM` | `instruction` | 2,500 | `2f6c1852-ce21-49c9-abb2-43a1e44e3854` | `succeeded` | `3/3` | `0.496` |
+| Acct 4 | `iac` | `Qwen/Qwen3.6-35B-A3B` | `instruction` | 10,000 | `8d833e2a-45b8-4807-821c-a45d2142df6d` | `succeeded` | `3/3` | `0.485` |
+| Acct 4 | `log_classifier` | `google/gemma-4-31B-it` | `instruction` | 10,000 | `74d2812d-b1ee-465d-b628-aca9d3a09093` | `succeeded` | `3/3` | `0.664` |
+| Acct 5 | `hero_security_triage` | `Qwen/Qwen3.5-9B` | `instruction` | 1,100 | `824116fb-bf18-4ad1-911f-42cdc540c375` | `running` | `1/3` | `0.459` |
+- **Account 1 Web UI Router Discovery:** `Multi-Agent_Job_Router` (`612ad034-bdb6-43ff-92a7-e5b3994b1e32`, status=`succeeded`)
+- **Trajectory Extension (`implementer`):** status=`succeeded`, run_id=`dataset-173bcadd-b10d-4385-a246-dfd6e2ae6ba5-1794686167184`, dataset_id=`173bcadd-b10d-4385-a246-dfd6e2ae6ba5`
 - **Custom Eval (`security_reviewer_dpo`):** status=`running`, custom_eval_id=`0f51efe2-6512-4d3b-81b1-a834fd39daee`
+- **Custom Eval (`hero_security_triage`):** status=`running`, custom_eval_id=`6bbb2332-3529-454f-916b-536058f0c539`
 
 ## Next Step (Part 5 of 5)
 - Poll `python model-training/scripts/poll_adaption_runs.py` until runs reach terminal states (`succeeded`/`completed`), then download best checkpoints (`client.autoscientist.download()`), benchmark base vs. adapted held-out eval sets, and wire the Databricks/vLLM endpoints + `backend/worker.py` patch.

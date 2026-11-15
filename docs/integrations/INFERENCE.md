@@ -31,6 +31,14 @@ The adapter reuses the existing `/chat/completions` request and strict `response
 
 The router model catalog includes provider metadata and schema-support flags. A successful catalog response shows advertised availability, not successful inference, permission to use every provider, sufficient credits, or application qualification. [HF catalog](https://huggingface.co/docs/inference-providers/hub-api)
 
+## Anthropic (Claude) contract
+
+`STEWARD_MODEL_PROVIDER=anthropic` calls the Messages API through the official `anthropic` Python SDK (`backend/anthropic_provider.py`). The credential is `ANTHROPIC_API_KEY` (or any other credential source the SDK resolves); `run.py` reads it from `.env`. The default model is `claude-opus-5-5` and the default endpoint `https://api.anthropic.com`; `STEWARD_MODEL` and `STEWARD_MODEL_ENDPOINT` override them.
+
+Structured requests use native structured outputs (`output_config.format` with the role's JSON schema), so `structured_output_mode` is `json_schema`. Claude's constrained decoding does not accept numeric bounds, string-length bounds or array-length bounds, so only those keywords are removed from the copy sent to the API; every reply is still validated against the full local schema. Requests stream and collect the final message, so long outputs are not cut off by HTTP timeouts. The SDK's own retries are off; Duck Tape's retry loop retries 429, 5xx and 529 (overloaded) once. `stop_reason` `max_tokens` is reported as `truncated` and `refusal` as `refusal`; neither is retried.
+
+Claude Opus 5.5 always thinks. `STEWARD_ANTHROPIC_EFFORT` (`low`, `medium`, `high`, `xhigh`, `max`; default `high`) sets the depth, and `STEWARD_ANTHROPIC_MAX_TOKENS` (default 16000) is reserved for each reply because thinking counts toward `max_tokens`. Anthropic has no embeddings API, so semantic retrieval needs a separate `STEWARD_EMBEDDING_ENDPOINT` (for example a local Ollama `/v1`). [Messages API](https://platform.claude.com/docs/en/api/messages), [structured outputs](https://platform.claude.com/docs/en/build-with-claude/structured-outputs)
+
 ## Embeddings and fallback
 
 Leave `STEWARD_EMBEDDING_MODEL` unset for the existing lexical retrieval path. Neither sponsor adapter assumes that its chat endpoint supports the application's embedding API. For semantic retrieval, configure a separate OpenAI-compatible `STEWARD_EMBEDDING_ENDPOINT` and `STEWARD_EMBEDDING_MODEL`; only `STEWARD_EMBEDDING_KEY` is sent there, never the model credential. A local endpoint may require no embedding key. The existing verified local embedding runner remains supported.

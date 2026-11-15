@@ -1,5 +1,5 @@
 import {useEffect,useState} from 'react';
-import {api,type Row} from '../api';
+import {api,downloadLink,type Row} from '../api';
 import DiffViewer from './DiffViewer';
 
 export default function AppliedChanges({projectId,jobs,onOpen}:{projectId:string;jobs:Row[];onOpen:(job:Row)=>void}) {
@@ -33,7 +33,7 @@ export default function AppliedChanges({projectId,jobs,onOpen}:{projectId:string
         {!revision?<p role="alert">The approved revision is unavailable. Open the job to inspect its evidence.</p>:<>
           <div className="toolbar"><span className="tag">Applied revision {revision.number}</span><code>{current.managed_target_branch||'steward/integration'}</code>
             <button onClick={()=>setSplit(value=>!value)}>{split?'Unified view':'Split view'}</button>
-            <a className="button" href={`/api/jobs/${encodeURIComponent(current.id)}/patch?revision_id=${encodeURIComponent(revision.id)}`}>Export applied patch</a>
+            <a className="button" onClick={downloadLink} href={`/api/jobs/${encodeURIComponent(current.id)}/patch?revision_id=${encodeURIComponent(revision.id)}`}>Export applied patch</a>
           </div>
           <p>{typeof revision.explanation==='string'?revision.explanation:'See the job for its recorded explanation.'}</p>
           <DiffViewer key={revision.id} files={revision.files||[]} diff={revision.diff||''} split={split}/>
@@ -42,4 +42,3 @@ export default function AppliedChanges({projectId,jobs,onOpen}:{projectId:string
     </>}
   </section>;
 }
-

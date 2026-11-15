@@ -35,6 +35,12 @@ if __name__=='__main__':
     from backend import atlas_startup
     try: atlas_startup.check_atlas_ready()
     except atlas_startup.AtlasStartupError as exc: raise SystemExit('Duck Tape cannot start: '+str(exc)) from None
+    # Supabase accounts are optional once configured; STEWARD_AUTH_REQUIRED=1 makes them compulsory.
+    from backend import auth
+    try: auth.check_auth_ready()
+    except auth.AuthConfigError as exc:
+        if auth.auth_required(): raise SystemExit('Duck Tape cannot start: '+str(exc)) from None
+        print('Duck Tape: Supabase sign-in unavailable ('+str(exc)+'); the workspace stays open without accounts.',flush=True)
     stop=threading.Event()
     children=[]
     instance_id=uuid.uuid4().hex

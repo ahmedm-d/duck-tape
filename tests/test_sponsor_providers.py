@@ -1,4 +1,4 @@
-﻿"""Sponsor HTTP contracts run against an in-memory transport, never a live API."""
+"""Sponsor HTTP contracts run against an in-memory transport, never a live API."""
 import asyncio
 import json
 
@@ -282,3 +282,14 @@ def test_adaption_chat_uses_json_object_with_strict_local_validation(monkeypatch
     else:
         with pytest.raises(providers.ProviderError, match='invalid_schema'):
             providers.complete(request)
+
+
+def test_anthropic_provider_can_be_saved_without_credentials(monkeypatch):
+    from backend.main import configure_provider
+    monkeypatch.delenv('STEWARD_MODEL_PROVIDER')
+    monkeypatch.delenv('STEWARD_MODEL')
+    result = configure_provider({'kind': 'anthropic', 'endpoint': 'https://api.anthropic.com',
+                                 'model': 'claude-opus-5-5', 'small_model': '', 'context_limit': 32000})
+    assert result['saved']['kind'] == 'anthropic'
+    assert result['configuration']['model'] == 'claude-opus-5-5'
+    assert 'ANTHROPIC_API_KEY' not in result['saved']

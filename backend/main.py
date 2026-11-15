@@ -17,7 +17,7 @@ from fastapi import FastAPI, HTTPException, UploadFile, File, Request, Query
 from fastapi.responses import FileResponse, Response, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, field_validator
-from . import db
+from . import auth, db
 
 SOURCES = ('ticket','request','security','analysis','research')
 TERMINAL = {'Cancelled','Rejected','Completed'}
@@ -155,6 +155,25 @@ async def lifespan(app):
 app = FastAPI(title='Duck Tape', lifespan=lifespan)
 
 
+# Registered before local_origin, so it runs inside it: the loopback/origin checks still come first.
+@app.middleware('http')
+async def require_account(request: Request, call_next):
+    path = request.url.path
+    if request.method == 'OPTIONS' or not path.startswith('/api/') or path in auth.PUBLIC_PATHS or not auth.auth_enabled():
+        return await call_next(request)
+    required, header = auth.auth_required(), request.headers.get('authorization')
+    if not header and not required:
+        return await call_next(request)  # optional mode: anonymous visitors use the shared workspace
+    try:
+        token = auth.bearer_token(header)
+        request.state.account = await asyncio.to_thread(auth.verify, token)
+    except auth.AuthError as exc:
+        if required: return JSONResponse({'detail': str(exc)}, 401, headers={'WWW-Authenticate': 'Bearer'})
+    except (auth.AuthUnavailable, auth.AuthConfigError) as exc:
+        if required: return JSONResponse({'detail': str(exc)}, 503)
+    return await call_next(request)
+
+
 @app.middleware('http')
 async def local_origin(request: Request, call_next):
     host = request.url.hostname
@@ -203,6 +222,18 @@ def health():
     worker=db.get('services','worker') or {}
     active=worker.get('status')=='running' and worker.get('heartbeat','')>(datetime.now(timezone.utc)-timedelta(seconds=15)).isoformat()
     return {'status':'ok','workspace':'local','worker':'running' if active else 'stopped','monitoring':'running' if active and not poll_stop.is_set() else 'stopped'}
+
+
+@app.get('/api/auth/config')
+def auth_config():
+    try: return auth.public_config()
+    except auth.AuthConfigError as exc: raise HTTPException(503, str(exc)) from None
+
+
+@app.get('/api/auth/me')
+def auth_me(request: Request):
+    account = getattr(request.state, 'account', None)
+    return {'enabled': auth.auth_enabled(), 'required': auth.auth_required(), 'account': account}
 
 
 @app.get('/api/global-catalogue')
@@ -606,7 +637,7 @@ def integration_status():
 def settings():
     from .providers import health as provider_health
     from . import sandbox
-    return {'providers':provider_health(),'sandbox':sandbox.health(),'authentication':'Local single workspace; demo members are labels, not authentication.','monitoring':health()['monitoring'],'services':db.list_records('services')}
+    return {'providers':provider_health(),'sandbox':sandbox.health(),'authentication':auth.describe(),'monitoring':health()['monitoring'],'services':db.list_records('services')}
 
 
 @app.patch('/api/settings/provider')
@@ -629,7 +660,7 @@ def configure_provider(body:dict):
             raise HTTPException(422,'Provider endpoint needs a HTTP(S) URL without credentials or query parameters')
         if parsed.scheme=='http' and parsed.hostname not in {'localhost','127.0.0.1','::1'}:
             raise HTTPException(422,'Remote providers require HTTPS')
-    if config.get('kind') not in {'ollama','openai','adaption','huggingface'}: raise HTTPException(422,'Choose Ollama, OpenAI-compatible, Adaption or Hugging Face inference')
+    if config.get('kind') not in {'ollama','openai','adaption','huggingface','anthropic'}: raise HTTPException(422,'Choose Ollama, OpenAI-compatible, Adaption, Hugging Face or Anthropic inference')
     for name in ('model','small_model','embedding_model'):
         if not isinstance(config.get(name,''),str) or len(config.get(name,''))>200: raise HTTPException(422,'Model identifiers must be bounded strings')
     if type(config.get('context_limit')) is not int or not 1024<=config['context_limit']<=131072: raise HTTPException(422,'Context limit must be 1024–131072')

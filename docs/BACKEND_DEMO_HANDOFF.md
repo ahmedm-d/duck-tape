@@ -13,7 +13,7 @@ python -m venv .venv
 .venv/Scripts/python run.py --port 8781
 ```
 
-The API and supervised durable worker share the same local data directory. API documentation: http://127.0.0.1:8781/docs. For frontend development, point the teammate's Vite proxy to this API; the default production startup serves a built `frontend/dist` when present. No authentication is implied: this is a loopback single-workspace app.
+The API and supervised durable worker share the same local data directory. API documentation: http://127.0.0.1:8781/docs. For frontend development, point the teammate's Vite proxy to this API; the default production startup serves a built `frontend/dist` when present. Supabase accounts are optional when configured (`STEWARD_AUTH_REQUIRED=1` makes them compulsory; see docs/CONFIGURATION.md); it is still a loopback, single shared team workspace, and accounts do not isolate projects from each other.
 
 The build-session instance uses `STEWARD_DATA_DIR=data/demo-workspace` and `STEWARD_GLOBAL_CATALOGUE_PATH=data/global-public.sqlite3` (absolute paths in its process environment). Preserve those settings to reopen the same demo. Other checkouts' databases are separate.
 

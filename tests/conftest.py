@@ -16,3 +16,6 @@ def _atlas_not_required(monkeypatch):
     """Tests never contact Atlas: run in the explicit non-required mode unless a test opts in."""
     monkeypatch.setenv('STEWARD_ATLAS_REQUIRED', '0')
     monkeypatch.setenv('STEWARD_ATLAS_GRAPH_MIRROR', '0')
+    monkeypatch.setenv('STEWARD_AUTH_REQUIRED', '0')
+    monkeypatch.delenv('STEWARD_SUPABASE_URL', raising=False)
+    monkeypatch.delenv('STEWARD_SUPABASE_PUBLISHABLE_KEY', raising=False)

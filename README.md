@@ -1,139 +1,45 @@
 # Duck Tape
 
-Atlas-required integration: [review fixes, release gates and model handoff](docs/ATLAS_INTEGRATION.md).
+**Problem.** Keeping a codebase healthy means a lot of slow, repetitive work: triaging tickets, chasing dependency advisories, fixing small bugs and writing tests. A developer has to rebuild the context around the whole repository before every small change. Most AI tools see one file at a time and forget the decisions the team has already made.
 
-Backend integration: [repeatable backend demo](docs/BACKEND_DEMO_RUNBOOK.md) | [completion plan](docs/BACKEND_COMPLETION.md) · [frontend API, demo and MongoDB/Databricks/model setup](docs/BACKEND_DEMO_HANDOFF.md). B/C knowledge graphs and catalogue-backed durable scans are connected; currently training Adaption artifacts still require serving and live qualification.
-
-Duck Tape is a local, AI-assisted code-maintenance workspace. It understands a repository, turns maintenance signals into persistent jobs, prepares isolated Git patches, and gives developers a diff with evidence to review.
-
-The goal is to reduce the work between noticing a problem and having a checked patch ready for review. Tickets, explicit requests, dependency advisories, repository findings and research can all become maintenance proposals. Repository-wide context and approved team decisions should inform each change, rather than treating an individual file as the whole project.
-
-**Duck Tape** is the product name throughout the UI, API and new exports. Existing `STEWARD_*` environment keys, internal storage/runtime identifiers and historical evidence remain compatible; see [configuration](docs/CONFIGURATION.md).
-
-The [app workspace guide](docs/APP_WORKSPACE.md) covers the landing page, cross-repository dashboard, stable repository/job URLs, screen gallery and local launch for the navigation redesign.
-
-For parallel frontend work, use the [Workspace/Dashboard and Landing sections](docs/FRONTEND_PARALLEL.md), with separate branches, owned files, preview ports and kickoff prompts.
-
-The fresh [model benchmark](benchmark.md) compares Adaption-hosted Qwen and Anthropic Claude on identical static smoke tasks, with local Qwen reproduction instructions and explicit limits.
-
-Claude now supports the specialist workflow and cited security/PR reviews. See [Claude coverage and live verification](docs/CLAUDE_COVERAGE.md) for configuration, demo steps and limits. These are prompted Claude roles, not trained Adaption checkpoints.
-
-## Three-person hackathon workspace
-
-Start with the [A/B/C team plan](docs/hackathon/TEAM_PLAN.md), [three copy-paste kickoff prompts](docs/hackathon/START_HERE.md), [knowledge handoff contract](docs/hackathon/KNOWLEDGE_CONTRACT.md) and [repository rules](CONTRIBUTING.md).
-
-| Owner | Main task | Frontend responsibility |
-| --- | --- | --- |
-| A | Models and agent execution using Hugging Face + Adaption | Coordinate model evidence with B/C. |
-| B | Repository understanding, retrieval and local applicability matching | Repository explorer, coverage, citations and approved knowledge. |
-| C | Global vulnerabilities/improvements catalogue and Databricks/Atlas pipeline | Catalogue, sources, freshness and proposal explanations. |
-
-**B and C both work frontend and backend**, handing shared files back and forth with one editor per shared file. B starts as integration captain; the role can be handed to C. Exact ownership and commit rules are in [AGENTS.md](AGENTS.md) and [CONTRIBUTING.md](CONTRIBUTING.md). Fetch current `origin/main` into separate branches/worktrees; preserve shared history.
-
-The [internal stack](docs/integrations/README.md) uses **Hugging Face and Adaption for agent inference**, **MongoDB Atlas** for the required private repository knowledge projection and a separate public catalogue, and **Databricks** for public catalogue curation and explicit terminal-run metrics export. SQLite remains the transactional workflow authority. These services power Duck Tape, never dependencies installed into imported repositories.
-
-**Implemented:** B/C repository profiles, local applicability matching, catalogue-backed scheduled scans, atomic evidence binding, snapshot-scoped graph/context APIs, automatic private Atlas projection and validated Atlas graph traversal, public Delta-to-Atlas publication and typed model/worker execution. **External qualification pending:** currently training Adaption artifacts and fresh cloud-account execution on the integrated version. B's Atlas branch does not implement a Databricks private-graph producer. Existing cloud evidence is historical; direct Databricks-to-Atlas publication/scheduling is not claimed working. See [release plan](docs/BACKEND_RELEASE_PLAN.md), [B's graph boundary](docs/REPO_GRAPH_HANDOFF.md) and [operator setup](docs/BACKEND_DEMO_HANDOFF.md).
-
-
-**Submission provenance:** the supplied event rules require code written during the hackathon and a public repository. This project contains existing implementation, and its history was consolidated before this work. The new Git history is not proof of when the code was written. Confirm eligibility and disclose existing work before submitting; see the [submission checklist](docs/hackathon/SUBMISSION.md). This foundation does not change repository visibility.
+**What we built.** Duck Tape is an autonomous code-maintenance agent. It indexes a repository into a code graph and stores the rules the team approves. It watches public vulnerability feeds for issues that affect the repository. It turns tickets, requests and advisories into maintenance jobs. For each job it prepares an isolated, checked Git patch with evidence that a developer can review, approve or send back. Nothing merges or pushes automatically.
 
 ## How it works
 
-1. Import a public HTTPS Git repository or ZIP, or open the bundled Parcel sample.
-2. Inspect its immutable snapshot, source inventory, symbols, dependencies, tests and evidence-linked context. Python and JavaScript/TypeScript have parser-backed relationships; other languages have labelled text-search support.
-3. Create a request or scan for maintenance signals. Each repository and source type can require preparation approval or start preparation automatically.
-4. A separate persistent worker retrieves context, plans the change, asks for meaningful product decisions, applies structured edits in isolation and records verification results.
-5. Review the versioned diff, checks, uncertainty and discussion. Team notes stay outside model prompts; revision requests produce a new patch and invalidate old approval.
-6. Approve that exact revision, export it, or apply it to a managed local integration branch. Nothing automatically merges into an imported repository's main branch or pushes to a remote.
+1. **Import:** you add a Git repo or ZIP. Duck Tape takes a fixed snapshot of it and builds a graph of symbols, dependencies and tests. That graph, the code embeddings and the team-approved rules are copied to MongoDB Atlas.
+2. **Signals:** a Databricks job pulls public OSV advisories and cleans them into a Delta table with revision history. They're published to a public MongoDB catalogue. A local matcher checks them against the repository's dependencies and opens security jobs.
+3. **Agent run:** a persistent worker gathers context using Atlas Vector Search and a graph query that finds which code a change affects. It plans the change, asks the developer about product decisions, applies structured edits in isolation and runs the checks.
+4. **Review:** the developer sees the versioned diff, the check results, the agent's stated uncertainty and the evidence it used. They approve, export or request a revision. Agent runs are logged to Databricks for evaluation.
+5. **Models:** Adaption AutoScientist fine-tuned specialist agents from base models, scored by win rate against the base model. Live inference runs on Adaption-hosted models, with Claude and a local Ollama model as benchmarks.
 
-Repository text and external material are evidence, not permission to run commands or reveal secrets. Arbitrary imported or model-generated code requires a constrained sandbox. A Git worktree by itself is not a sandbox.
+## APIs and services
 
-## Current status
+- **Adaption:** the Responses API for live agent inference, and AutoScientist for fine-tuning.
+- **MongoDB Atlas:** private repository knowledge (Vector Search, code graph, `$graphLookup`, approved knowledge) and the public catalogue.
+- **Databricks:** jobs, Delta tables and a SQL warehouse, for curating the OSV catalogue and evaluating agent runs.
+- **Anthropic Claude API** (`claude-opus-5-5`): a benchmark provider.
+- **Ollama:** local inference.
+- **Hugging Face:** Inference Providers (an OpenAI-compatible router) and the training datasets.
+- **OSV.dev API:** public vulnerability advisories.
 
-This is a functioning **local prototype**, with a real backend, worker, persistence, Git operations and verification. It is not a production multi-user service or a claim that a small model can safely maintain arbitrary repositories unattended.
+## Models
 
-| Area | What is available |
-| --- | --- |
-| Sample workflow | Four explicitly labelled fixture scenarios: cross-module bug, feature decision, dependency advisory and measurable performance proposal. Edits, diffs, checks, revisions and managed application are real. |
-| Repository understanding | Snapshot-isolated indexing, Python/JS/TS parsing, full-text and graph retrieval, source explorer, scoped knowledge, optional embeddings and evidence-linked Q&A. Missing synthesis and coverage gaps are shown. |
-| Live inference | Adaption Responses, Hugging Face Inference Providers, OpenAI-compatible and Ollama adapters; typed responses, routing, budgets, telemetry and a separate review pass. No proprietary inference account is required. |
-| Live model reliability | The recorded 3B baseline passed two cases, failed eight model-quality cases and left two cases incomplete after runtime interruption. It is **not qualified**. Later schema/startup fixes have deterministic tests; a fresh live qualification is still required. |
-| Verification | Backend, browser, restart and actual Docker evidence are retained. Fixture inference, live inference and externally incomplete runs are distinguished. The new paired retrieval-to-task harness still needs its live run. |
+- **Adaption-hosted, live:** `qwen3.5-397b`.
+- **Fine-tune base models:**
+  - `gemma-4-31B-it`: router, ticket parser, log classifier, commit/PR writer, frontend UI.
+  - `Qwen3.6-35B-A3B`: implementer, test writer, security reviewer, database migration, infrastructure-as-code.
+  - `Qwen3.5-9B`: security triage.
+- **Benchmarks:** Claude Opus 5.5, and `qwen3-coder:30b` (Q4_K_M) running locally in Ollama.
 
-See [verification and limitations](docs/VERIFICATION.md), the [14-journey acceptance mapping](docs/evidence/acceptance-traceability.md), and the [recorded model baseline](docs/evidence/model-qualification-baseline/README.md). Passing a health check or generating a valid response does not establish coding quality.
+## Datasets (Hugging Face)
 
-## Architecture
+- **Agent trajectories:** SWE-bench/SWE-smith, SWE-bench/SWE-smith-trajectories, princeton-nlp/SWE-bench_Verified, SWE-Gym/SWE-Gym, nebius/SWE-rebench-openhands-trajectories, R2E-Gym/R2EGym-SFT-Trajectories.
+- **Code review and commits:** fasterinnerlooper/codereviewer, Dahoas/code-review-instruct-critique-revision-python, Maxscha/commitbench.
+- **Tests:** kjain14/testgeneval.
+- **Security:** MickyMike/cvefixes_bigvul, colin/PrimeVul, bstee615/diversevul.
+- **Tickets:** kristmh/clean_Jira_balanced, cjsanjay/jira_train_17012024.
+- **SQL and code search:** xlangai/spider, gonglinyuan/CoSQA, code-search-net/code_search_net.
+- **Infrastructure:** autoiac-project/iac-eval, loubnabnl/dockerfile_checks, LeeSek/dockerfiles-linted, HelloBoieeee/kubernetes_config.
+- **Frontend:** HuggingFaceM4/WebSight, SALT-NLP/Design2Code.
 
-| Component | Implementation |
-| --- | --- |
-| Frontend | React, TypeScript and Vite; light/dark themes, source explorer and patch review |
-| API | FastAPI/Python with validated inputs and guarded workflow transitions |
-| Persistence | SQLite for repositories, snapshots, graph/index records, knowledge, jobs, revisions, checks and audit events |
-| Execution | Separate supervised worker, durable work items, leases, checkpoints and cancellation |
-| Agent inference | Hugging Face open-weight inference and Adaption Responses; server-side routing, validation and a separate review pass |
-| Repository memory | Required private Atlas graph, approved knowledge and vector projection; repository/snapshot filters, validated local evidence and labelled retrieval fallback |
-| Agent evaluation | Databricks SQL export of measured terminal-run outcomes, verification and usage; unknown values remain unknown |
-| Knowledge map | Graphify 0.9.108 (Apache-2.0) code-only AST graph per immutable snapshot, revalidated against indexed files and cached in SQLite; built-in parser graph as labelled fallback |
-| Global knowledge | Local applicability and catalogue scans implemented; Databricks public curation and explicit Atlas publication adapters; [B/C contract](docs/hackathon/KNOWLEDGE_CONTRACT.md) |
-| Verification sandbox | Constrained Linux Docker containers, bounded resources, network disabled during checks and controlled dependency preparation |
-
-Source lives in `backend/`, `frontend/`, `scripts/`, `sandbox/` and `tests/`. Runtime data, credentials, installed dependencies and model weights are excluded from Git. The architecture and configuration guides below describe the boundaries in more detail.
-
-## Start
-
-Prerequisites: Python 3.13+, Node 22.12+, Git and the private Atlas configuration in [operator setup](docs/BACKEND_DEMO_HANDOFF.md). Copy `.env.example` to an ignored `.env` and configure Atlas before starting. From this directory:
-
-```powershell
-python scripts/setup.py
-.venv/Scripts/python run.py --port 8783
-```
-
-Open **http://localhost:8783/** for the integrated landing page and backend. On macOS/Linux use `.venv/bin/python`. One startup command supervises the API and a separate persistent worker. The initial sample is seeded once; existing data is preserved. Persistent data defaults to `data/workspace/`. Model weights and machine-specific runtime manifests are not included in a clone.
-
-Set `STEWARD_SEED_SAMPLE=0` in `.env` to start without automatically loading the sample project, including after restarts. The sample remains available through the workspace's sample action.
-
-For sandbox execution, install a working Linux Docker runtime and build the pinned images with `python scripts/setup.py --sandbox`. The optional setup command performs no privileged installation. If Docker is unavailable, repository analysis and patch export still work; only the reviewed sample fixtures can execute through the restricted host fallback.
-
-Configure an open-weight Ollama or OpenAI-compatible endpoint in Settings or the project's `.env` (see [.env.example](.env.example)). Credentials belong only in the server environment. No proprietary inference model is required. Atlas is required by default: startup performs a TLS-verified ping; complete vector sync also needs a configured embedding model and matching search index. `STEWARD_ATLAS_REQUIRED=0` is the explicit isolated test/demo escape hatch, not proof of Atlas operation. Run `.venv/Scripts/python scripts/doctor.py` to inspect actual local capabilities.
-
-## Demo walkthrough
-
-1. Open the preloaded **Parcel · sample**. Repository shows snapshot identity, inventory, parsed relationships and source citations. Search for quote behavior to trace the endpoint, pricing helper, configuration and tests.
-2. Open **Quantity is ignored when calculating a quote**. Approve preparation. The fixture provider produces a real patch and executes baseline, failing-before regression and passing-after tests.
-3. Inspect the diff, explanation and checks. Add a **Team note**; it never enters model context. **Ask AI to revise** with “add zero/default quantity regression coverage” exercises the documented sample revision. Old diffs remain and old patch approval is invalidated.
-4. Approve the current revision. Export its patch or changed files. **Apply to managed branch** creates a real local integration commit and records Completed. The source checkout stays unchanged.
-5. Prepare the oversized-order feature and answer its decision card. Run the performance proposal for actual comparable benchmark measurements.
-6. Scan twice: the labelled sample dependency advisory creates one sourced job. Source policies and monitoring controls determine whether later signals wait for preparation approval.
-7. Edit and approve scoped Knowledge, then prepare another job to inspect the included policy version. Import a ZIP or public HTTPS Git repository to use the generic analysis and provider pipeline.
-
-**Create fresh sample** makes another isolated workspace. Sample outputs apply only to the four documented fixture scenarios, not arbitrary requests. Live model requests use the generic provider adapter. Unsupported environments and failed verification remain visible blockers.
-
-## Documentation
-
-- [Architecture and trust boundaries](docs/ARCHITECTURE.md)
-- [Configuration, supported environments and intake API](docs/CONFIGURATION.md)
-- [Verification evidence and capability status](docs/VERIFICATION.md)
-- [Acceptance matrix and reproducible release tiers](docs/ACCEPTANCE_MATRIX.md)
-- [Offline backup, restore and artifact cleanup](docs/MAINTENANCE.md)
-- [Repository understanding and retrieval measurements](docs/RETRIEVAL.md)
-- [Implementation checklist and decisions](docs/PLAN.md)
-
-The UI uses clearly labelled demo members. It is a single-user loopback prototype, not production authentication. Secret exclusion is conservative and heuristic. Model availability and valid citations do not guarantee correct code; inspect the patch and evidence.
-
-## Checks
-
-```powershell
-.venv/Scripts/python -m pytest -m "not live" -q
-cd frontend
-npm run build
-npx playwright install chromium
-npm run test:browser
-cd ..
-.venv/Scripts/python scripts/check_restart.py
-```
-
-Live Docker/provider tests are opt-in under `tests/live/`; their environment switches and recorded outcomes are documented in the verification report. Browser fixture contracts and actual backend journeys are recorded separately. The developer workspace also supports an existing `vendor-current/` dependency directory; it is excluded from source control.
-
-For one machine-readable release check, run `.venv/Scripts/python scripts/acceptance.py --tier deterministic`. The separate `sandbox` and `live` tiers require their actual services and report unavailable prerequisites as blockers. Browser checks need `npx playwright install chromium` or `STEWARD_BROWSER_EXECUTABLE` pointing to an installed Chrome/Chromium executable.
-
-This repository begins with a consolidated initial commit. Earlier build and evaluation notes are preserved for context; any older commit IDs in those artifacts refer to the development history before this reset, not commits available in this repository.
+## Public data

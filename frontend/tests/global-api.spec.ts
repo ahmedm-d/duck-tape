@@ -1,0 +1,37 @@
+import {expect, test} from '@playwright/test';
+
+test('real local API serves the mounted public catalogue and relationship graph', async ({page}, testInfo) => {
+  test.skip(process.env.STEWARD_GLOBAL_UI !== '1', 'Requires an isolated backend seeded with labelled public catalogue fixtures.');
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  const response = await page.request.get('/api/global-catalogue?ecosystem=PyPI&package=duck-tape-fixture&limit=25');
+  expect(response.ok()).toBe(true);
+  const catalogue = await response.json();
+  expect(catalogue.entries.length).toBeGreaterThan(0);
+  expect(catalogue.entries.every((entry: {source_quality: string}) => entry.source_quality === 'fixture')).toBe(true);
+  await page.goto('/');
+  await page.getByRole('button', {name: 'Global catalogue', exact: true}).click();
+  await expect(page).toHaveURL(/#\/global-catalogue$/);
+  await page.getByLabel('Ecosystem', {exact: true}).fill('PyPI');
+  await page.getByLabel('Package', {exact: true}).fill('duck-tape-fixture');
+  await page.getByRole('button', {name: 'Search catalogue'}).click();
+  await expect(page.getByRole('heading', {name: catalogue.entries[0].title, exact: true})).toBeVisible();
+  await expect(page.getByText('Coverage unknown', {exact: true})).toBeVisible();
+  await page.getByRole('button', {name: 'View relationships'}).click();
+  const graph = page.getByRole('region', {name: 'Public relationship graph'});
+  await expect(graph.getByRole('status')).toContainText('relationships');
+  await expect(graph.getByText('supported by', {exact: true}).first()).toBeVisible();
+  await expect(graph.getByText('PyPI / duck-tape-fixture', {exact: true}).first()).toBeVisible();
+  await page.screenshot({path: testInfo.outputPath('global-catalogue-desktop.png'), fullPage: true});
+  await page.setViewportSize({width: 390, height: 844});
+  await page.getByRole('button', {name: 'Toggle theme'}).click();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({path: testInfo.outputPath('global-catalogue-narrow-dark.png'), fullPage: true});
+  await page.getByLabel('Package', {exact: true}).fill('duck-tape-unlisted-package');
+  await page.getByRole('button', {name: 'Search catalogue'}).click();
+  await expect(page.getByText('No catalogue entries found. This is not a clean scan.')).toBeVisible();
+  await page.getByLabel('Catalogue store').selectOption('atlas');
+  await page.getByRole('button', {name: 'Search catalogue'}).click();
+  await expect(page.locator('.global-catalogue').getByRole('alert')).toBeVisible();
+  expect(errors).toEqual([]);
+});

@@ -26,3 +26,13 @@ Implemented all eight UI areas above. Overview counts successfully indexed files
 - `git diff --check`: passed. Generated tracked navigation screenshots restored; prior source changes preserved. No commit/push/deployment performed.
 
 Limitations: timeline shows current status for jobs received in a selected period, not historical status transitions. Missing priority/risk reasons remain explicitly absent; this UI does not generate retrospective assessments. Demo reasons are labelled fictional. Native popup styling falls back to styled closed controls on browsers without base-select support. Opt-in live mutation/provider workflows and other browsers were not rerun. Backend contracts are unchanged. Shared-file claim released for review/handoff; uncommitted changes remain in this checkout.
+
+
+## Main integration, 15 November 2026
+
+User explicitly requested commit and push to main. UI work committed as cd2ac4a, then merged origin/main f36a7fd in this worktree, preserving its backend/catalogue changes. Resolved main.tsx by retaining global catalogue and global Activity navigation, codebase Files query persistence, and compatibility with legacy codebase?tab=knowledge links alongside the new project routes. Adapted routing assertions to the current sidebar. Review caught a demo catalogue response-shape issue: demo searches now report unavailable data explicitly, with a regression test ensuring no live requests or page crash.
+
+Verification on the combined tree:
+- Existing project Python environment, `C:/Users/ahmed/Projects/ducktape/steward/.venv/Scripts/python.exe scripts/acceptance.py --tier deterministic`, with installed Chrome: PASSED. Backend 807 passed / 1 skipped; supervised worker/API restart passed; production frontend build passed; browser fixtures 37 passed, no failures or flaky results. Report: ignored data/acceptance/20261115T003438Z-b4bd4f85/report.json. Initial system-Python attempt lacked tree-sitter and was stopped; the project environment supplied the required dependencies.
+- Full browser run before the two route-assertion updates: 66 passed, 12 opt-in live tests skipped, 2 stale navigation assertions failed. After updating those assertions and adding the demo regression, `npm --prefix frontend run test:browser -- tests/workspace.spec.ts tests/knowledge-map.spec.ts tests/global-navigation.spec.ts --workers=1`: 17 passed. The final acceptance fixture run also includes the updated workspace and global navigation tests.
+- Frontend diff against origin/main passes whitespace checks. Generated restart evidence and navigation screenshots were restored to their indexed versions. No backend implementation was edited during integration. Live cloud/provider qualification was not rerun.

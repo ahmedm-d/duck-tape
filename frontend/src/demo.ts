@@ -28,6 +28,7 @@ const jobs=[
 export function demoResponse(path:string,method:string):unknown {
   if(method!=='GET')throw new Error('Preview is read-only. Exit preview to change a real project.');
   const route=path.split('?')[0];
+  if(route.startsWith('/global-catalogue'))throw new Error('Global catalogue is unavailable in demo mode. Exit preview to search public sources.');
   if(route==='/repositories')return [repository];
   if(route==='/repositories/'+repository.id)return repository;
   if(route==='/jobs')return jobs;

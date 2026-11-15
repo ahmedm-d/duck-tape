@@ -1,5 +1,22 @@
 import {test,expect} from '@playwright/test';
 import {fixture} from './fixtures';
+
+test('codebase tabs and activity remain reachable through reload and back', async ({page}) => {
+ await fixture(page); await page.goto('/local/repo-one/codebase');
+ await page.getByRole('button',{name:'Project knowledge',exact:true}).click();
+ await expect(page).toHaveURL(/\/knowledge$/); await page.reload();
+ await expect(page.getByRole('heading',{name:'Knowledge',exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Project codebase',exact:true}).click();
+ await page.getByRole('button',{name:'Files',exact:true}).click();
+ await expect(page).toHaveURL(/tab=files$/); await page.reload();
+ await expect(page.getByRole('button',{name:'Files',exact:true})).toHaveClass('active');
+ await page.goBack();await page.goBack();
+ await expect(page.getByRole('heading',{name:'Knowledge',exact:true})).toBeVisible();
+ await page.goto('/local/repo-one/codebase?tab=knowledge');await expect(page.getByRole('heading',{name:'Knowledge',exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Activity',exact:true}).click();
+ await expect(page).toHaveURL(/\/activity$/); await page.reload();
+ await expect(page.getByRole('heading',{name:'Activity',exact:true})).toBeVisible();
+});
 test('landing leads to cross-repository dashboard without selecting a repository',async({page})=>{
  await fixture(page);await page.goto('/');await expect(page.getByRole('heading',{name:'Your codebase. Understood and maintained.'})).toBeVisible();await expect(page.locator('.sidebar')).toHaveCount(0);await page.getByRole('link',{name:'Get started'}).click();await expect(page).toHaveURL(/\/dashboard$/);await expect(page.locator('.repository-card')).toHaveCount(2);await expect(page.getByRole('button',{name:'New request',exact:true})).toHaveCount(0);await page.locator('.repository-card').first().click();await page.getByRole('button',{name:'New request',exact:true}).click();await expect(page.locator('select[name=repo_id]')).toHaveValue('repo-one');
 });

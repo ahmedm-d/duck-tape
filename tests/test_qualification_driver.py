@@ -51,6 +51,25 @@ def test_unavailable_provider_blocks_without_inventing_attempts(monkeypatch):
     assert result['status']=='blocked' and not result['passed'] and result['attempts']==[]
     assert result['evidence'][0]['available'] is False
 
+
+def test_qualification_disables_background_atlas_for_temporary_store(monkeypatch, tmp_path):
+    import os
+    from backend import atlas_autosync
+    monkeypatch.setenv('STEWARD_ATLAS_REQUIRED', '1')
+    monkeypatch.setenv('STEWARD_ATLAS_GRAPH_MIRROR', '1')
+    monkeypatch.setenv('STEWARD_QUALIFICATION_ROOT', str(tmp_path))
+    monkeypatch.setattr(driver.providers, 'configuration', lambda: {})
+    monkeypatch.setattr(driver.providers, 'health', lambda: {'available': True, 'mode': 'live'})
+    monkeypatch.setattr(driver.sandbox, 'health', lambda: {'available': True})
+    observed = []
+    monkeypatch.setattr(driver.Qualification, 'setup', lambda self: observed.append(atlas_autosync.should_sync()))
+    monkeypatch.setattr(driver.Qualification, 'journey', lambda self: False)
+    monkeypatch.setattr(driver.Qualification, 'stop', lambda self: None)
+    driver.driver({'id': 'isolated', 'journey': 'bug-regression', 'language': 'python'})
+    assert observed == [False]
+    assert os.environ['STEWARD_ATLAS_REQUIRED'] == '1'
+    assert os.environ['STEWARD_ATLAS_GRAPH_MIRROR'] == '1'
+
 def test_unsafe_review_needs_concrete_valid_source_reference():
     wrong={'service.py':'def average(values):\n    return 0\n'}
     finding={'message':'The constant average is wrong for nonempty input','reference':{'path':'service.py','start_line':2,'end_line':2}}

@@ -1,0 +1,80 @@
+{
+  "checked_at": "2026-11-14T16:54:49.359856+00:00",
+  "evidence_kind": "live_delta_local_relay_atlas",
+  "source_table": "workspace.default.ducktape_global_revisions",
+  "direct_scheduled_publication": false,
+  "restored_revisions": 2,
+  "restored_entries": [
+    {
+      "canonical_id": "CVE-2024-35195",
+      "material_revision": 1,
+      "material_hash": "8f0db7efda7f87e272d3e87803653c55ccd057461be8e673be16768d63a079c9",
+      "retrieved_at": "2026-11-14T16:46:42.525693Z"
+    },
+    {
+      "canonical_id": "improvement:cpython-313-free-threading",
+      "material_revision": 1,
+      "material_hash": "5a2433607e6fed00dead6ffc6581670fc8a217f65a4485a9d9c2024bf8515530",
+      "retrieved_at": "2026-11-14T16:46:42.554970Z"
+    }
+  ],
+  "publication": {
+    "provider": "atlas",
+    "published": 2,
+    "failed": 0,
+    "results": [
+      {
+        "canonical_id": "CVE-2024-35195",
+        "material_revision": 1,
+        "status": "published",
+        "attempts": 1,
+        "detail": "Complete public revision stored."
+      },
+      {
+        "canonical_id": "improvement:cpython-313-free-threading",
+        "material_revision": 1,
+        "status": "published",
+        "attempts": 1,
+        "detail": "Complete public revision stored."
+      }
+    ]
+  },
+  "repeat_publication": {
+    "provider": "atlas",
+    "published": 2,
+    "failed": 0,
+    "results": [
+      {
+        "canonical_id": "CVE-2024-35195",
+        "material_revision": 1,
+        "status": "published",
+        "attempts": 1,
+        "detail": "Complete public revision stored."
+      },
+      {
+        "canonical_id": "improvement:cpython-313-free-threading",
+        "material_revision": 1,
+        "status": "published",
+        "attempts": 1,
+        "detail": "Complete public revision stored."
+      }
+    ]
+  },
+  "verified_queries": [
+    {
+      "ecosystem": "PyPI",
+      "package": "requests",
+      "canonical_ids": [
+        "CVE-2024-35195"
+      ]
+    },
+    {
+      "ecosystem": "CPython",
+      "package": "python",
+      "canonical_ids": [
+        "improvement:cpython-313-free-threading"
+      ]
+    }
+  ],
+  "result": "passed"
+}

@@ -1,0 +1,12 @@
+{
+  "canonical_id": "improvement:cpython-313-free-threading",
+  "title": "Evaluate Python 3.13's optional free-threaded build",
+  "summary": "Python 3.13 provides an experimental optional free-threaded build. CPU-bound threaded workloads may benefit, but compatibility and performance must be measured locally before adopting it.",
+  "source_url": "https://docs.python.org/3.13/whatsnew/3.13.html",
+  "published_at": "2024-10-07T00:00:00Z",
+  "affected": [{"ecosystem": "CPython", "package": "python", "versions": ["3.13"]}],
+  "conditions": ["Requires an optional free-threaded CPython build.", "Assess third-party extension compatibility and target platform support."],
+  "evidence": ["https://docs.python.org/3.13/whatsnew/3.13.html"],
+  "limitations": ["Experimental in Python 3.13; no performance gain has been measured by Duck Tape.", "The runtime version is not a PyPI dependency. Private repository runtime matching belongs to B.", "The curated summary is an interpretation of the attributed source, not an automatic recommendation."],
+  "source_quality": "unreviewed"
+}

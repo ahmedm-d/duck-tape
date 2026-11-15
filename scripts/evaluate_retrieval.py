@@ -22,6 +22,106 @@ def score_evidence(items, labels):
             'range_precision': useful / len(items) if items else 0}
 
 
+SOURCE_EXTRA = {
+    'ts/config.ts': 'export const TAX = 10;\n',
+    'ts/helper.ts': 'import { TAX } from "./config.js";\nexport function totalTS(value: number) { return value + TAX; }\n',
+    'ts/api.ts': 'import { totalTS } from "./helper.js";\nexport function quoteTS(value: number) { return totalTS(value); }\n',
+    'ts/api.test.ts': 'import { quoteTS } from "./api.js";\nexport const observed = quoteTS(100);\n'}
+TASKS = [
+    ('quote', [('app.py',4,5), ('pricing.py',1,3), ('config.py',1,2), ('tests/test_quote.py',4,8)]),
+    ('unique_labels', [('search.py',1,6), ('tests/test_search.py',4,6)]),
+    ('MAX_ITEMS', [('config.py',2,2), ('app.py',1,5), ('tests/test_quote.py',4,8)]),
+    ('quoteTS', [('ts/api.ts',1,2), ('ts/helper.ts',1,2), ('ts/config.ts',1,1), ('ts/api.test.ts',1,2)]),
+    ('quantity is ignored when calculating a quote', [('app.py',4,5), ('pricing.py',1,3), ('config.py',1,2), ('tests/test_quote.py',4,8)]),
+    ('reject orders with too many items', [('config.py',2,2), ('app.py',1,5), ('tests/test_quote.py',4,8)]),
+]
+
+
+def evaluate_atlas(output=None, limit=6, wait_seconds=90):
+    """Live, explicit: sync the fixed fixture to Atlas, then compare graph with graph + Atlas candidates.
+
+    Uses an isolated data directory so no evaluation repository appears in the workspace.
+    """
+    import time
+    from backend import data_platforms, snapshots
+    root = Path(__file__).resolve().parents[1]
+    fixture = root / 'data' / 'evaluation' / ('atlas-' + str(uuid.uuid4()))
+    source_dir = fixture / 'source'
+    for path, content in {**FILES, **SOURCE_EXTRA}.items():
+        destination = source_dir / path
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_text(content, encoding='utf-8')
+    db.DATA_DIR = fixture / 'store'
+    db.init()
+    repo_id = 'evaluation-atlas-' + fixture.name
+    snapshot = snapshots.capture(repo_id, source_dir, {})
+    index = index_repository(source_dir, repo_id=repo_id, source_snapshot_id=snapshot['id'])
+    db.put('repositories', {'id': repo_id, 'root': str(source_dir), 'source_snapshot_id': snapshot['id'], 'snapshot': index['snapshot'], 'index': index})
+    sync = data_platforms.atlas_sync(repo_id, snapshot['id'])
+    started, probe = time.monotonic(), []
+    while time.monotonic() - started < wait_seconds:
+        try:
+            probe = data_platforms.atlas_search(repo_id, snapshot['id'], TASKS[0][0], limit=1)['matches']
+        except data_platforms.DataPlatformError:
+            probe = []
+        if probe:
+            break
+        time.sleep(5)
+    rows = []
+    for query, relevant in TASKS:
+        for requested, atlas in [('graph', False), ('graph+atlas', True)]:
+            result = retrieve(repo_id, snapshot['id'], query, budget_tokens=10000, limit=limit, semantic=False, atlas=atlas)
+            rows.append({'query': query, 'requested_mode': requested, 'mode': result['mode'], 'status': 'measured',
+                         'expected_ranges': relevant, 'found_ranges': [(item['path'], item['start_line'], item['end_line']) for item in result['items']],
+                         **score_evidence(result['items'], relevant), 'latency_ms': result['latency_ms'],
+                         'atlas_notes': [item for item in result['missing'] if item.startswith('Atlas')]})
+    report = {'fixture': 'reviewed Python Parcel sample plus fixed TS module chain; labels defined independently of retrieval',
+              'live': True, 'provider': 'MongoDB Atlas vector search via data_platforms.atlas_search',
+              'embedding_model': providers.configuration()['embedding_model'], 'limit': limit,
+              'repo_id': repo_id, 'source_snapshot_id': snapshot['id'], 'sync': sync,
+              'searchable_after_seconds': round(time.monotonic() - started, 1) if probe else None, 'results': rows,
+              'warning': 'Small fixed tasks on one fixture measure retrieval only; no quality, task-success or latency improvement is claimed.'}
+    output = Path(output) if output else root / 'docs' / 'evidence' / 'retrieval-atlas-live.json'
+    output.write_text(json.dumps(report, indent=2), encoding='utf-8')
+    print(json.dumps(report, indent=2))
+    return report
+
+
+def evaluate_graph_engines(output=None, limits=(4, 6, 12)):
+    """Local, offline: built-in import/call graph versus built-in + Graphify EXTRACTED edges on the fixed tasks."""
+    from backend import graphify_graph, snapshots
+    root = Path(__file__).resolve().parents[1]
+    fixture = root / 'data' / 'evaluation' / ('graphify-' + str(uuid.uuid4()))
+    source_dir = fixture / 'source'
+    for path, content in {**FILES, **SOURCE_EXTRA}.items():
+        destination = source_dir / path
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_text(content, encoding='utf-8')
+    db.DATA_DIR = fixture / 'store'
+    db.init()
+    repo_id = 'evaluation-graphify-' + fixture.name
+    snapshot = snapshots.capture(repo_id, source_dir, {})
+    index = index_repository(source_dir, repo_id=repo_id, source_snapshot_id=snapshot['id'])
+    db.put('repositories', {'id': repo_id, 'root': str(source_dir), 'source_snapshot_id': snapshot['id'], 'snapshot': index['snapshot'], 'index': index})
+    built = graphify_graph.graphify(repo_id, snapshot['id'])
+    rows = []
+    for limit in limits:
+        for query, relevant in TASKS:
+            for requested in ('builtin', 'graphify'):
+                result = retrieve(repo_id, snapshot['id'], query, budget_tokens=10000, limit=limit, semantic=False, atlas=False, graph_engine=requested)
+                rows.append({'query': query, 'limit': limit, 'requested_mode': requested, 'mode': result['mode'], 'status': 'measured',
+                             'expected_ranges': relevant, 'found_ranges': [(item['path'], item['start_line'], item['end_line']) for item in result['items']],
+                             **score_evidence(result['items'], relevant), 'latency_ms': result['latency_ms'],
+                             'graph_notes': [item for item in result['missing'] if item.startswith('Graphify')]})
+    report = {'fixture': 'reviewed Python Parcel sample plus fixed TS module chain; labels defined independently of retrieval',
+              'live': False, 'engine': 'graphify', 'engine_version': built['engine_version'], 'graph_stats': built['stats'], 'graph_gaps': built['gaps'],
+              'repo_id': repo_id, 'source_snapshot_id': snapshot['id'], 'results': rows,
+              'warning': 'Small fixed tasks on one fixture measure retrieval only; no quality or task-success improvement is claimed.'}
+    output = Path(output) if output else root / 'docs' / 'evidence' / 'retrieval-graphify.json'
+    output.write_text(json.dumps(report, indent=2), encoding='utf-8')
+    return report
+
+
 def evaluate(output=None):
     root = Path(__file__).resolve().parents[1]
     fixture = root / 'data' / 'evaluation' / str(uuid.uuid4())
@@ -70,4 +170,11 @@ def evaluate(output=None):
 
 
 if __name__ == '__main__':
-    evaluate()
+    if '--graphify' in sys.argv[1:]:
+        evaluate_graph_engines()
+    elif '--atlas' in sys.argv[1:]:
+        from run import load_environment
+        load_environment()
+        evaluate_atlas()
+    else:
+        evaluate()

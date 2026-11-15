@@ -7,6 +7,8 @@ Settings can persist non-secret provider endpoint, protocol, model IDs, context 
 | Variable | Meaning |
 |---|---|
 | `STEWARD_DATA_DIR` | Persistent workspace; default `data/workspace/` |
+| `STEWARD_ATLAS_REQUIRED` | Defaults to `1`; `run.py` requires a TLS-verified private Atlas ping; use `0` only for isolated tests/demo controllers |
+| `STEWARD_ATLAS_ENABLED`, `STEWARD_ATLAS_URI`, `STEWARD_ATLAS_DIMENSIONS` | Required private Atlas enablement, secret connection URI and exact embedding dimensions; see the data-platform guide for roles/index setup |
 | `STEWARD_MODEL_PROVIDER` | `ollama`, `openai`, `adaption` or `huggingface` protocol |
 | `STEWARD_MODEL_ENDPOINT` | Base URL for the selected protocol; hosted defaults are documented in the inference guide |
 | `STEWARD_MODEL` | Default model ID |
@@ -73,4 +75,4 @@ Imports, refresh, scans and summary refresh return persistent operation records.
 
 ## Duck Tape internal services
 
-Hugging Face and Adaption run Duck Tape's models; MongoDB Atlas projects its evidence memory; Databricks evaluates its agent runs. These are operator/server settings, never additions to imported client repositories. See the [internal stack guide](integrations/README.md), [inference configuration](integrations/INFERENCE.md), and [Atlas/Databricks setup](integrations/DATA_PLATFORMS.md). The current cloud-memory and metrics paths use explicit operator commands, while inference is connected to the existing worker. Live cloud/model acceptance remains separate from configuration and offline tests.
+Hugging Face and Adaption run Duck Tape's models; MongoDB Atlas projects its evidence memory; Databricks curates public knowledge and evaluates agent runs. These are operator/server settings, never additions to imported client repositories. See the [internal stack guide](integrations/README.md), [inference configuration](integrations/INFERENCE.md), and [Atlas/Databricks setup](integrations/DATA_PLATFORMS.md). Required mode automatically projects private repository snapshots and approved knowledge; public catalogue reads use separate credentials. Metrics export remains explicit. Live cloud/model acceptance remains separate from configuration and offline tests.

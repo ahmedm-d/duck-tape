@@ -1,0 +1,37 @@
+{
+  "recorded_at": "2026-11-14T23:20:51.364963+00:00",
+  "kind": "live_required_atlas_integration",
+  "repository": "isolated bundled Parcel fixture; real Atlas and local embeddings",
+  "repo_id": "213e8c4c-6a6f-4cf5-b118-22f2935d4ec7",
+  "snapshot_id": "ac4b5897df2e3c50e1f5f698d3195eb3dc597f132eac82c168998471b9dad8bc",
+  "tls_verified_startup": "passed",
+  "atlas_sync": {
+    "status": "synced",
+    "snapshot_id": "ac4b5897df2e3c50e1f5f698d3195eb3dc597f132eac82c168998471b9dad8bc",
+    "knowledge_revision": 0,
+    "at": "2026-11-14T23:19:39.640874+00:00",
+    "nodes": 16,
+    "edges": 16,
+    "knowledge": 0,
+    "chunks": 14,
+    "errors": []
+  },
+  "atlas_context": {
+    "served": true,
+    "collections": [
+      "repo_nodes",
+      "repo_edges"
+    ],
+    "snapshot_id": "ac4b5897df2e3c50e1f5f698d3195eb3dc597f132eac82c168998471b9dad8bc",
+    "database": "ducktape"
+  },
+  "health": {
+    "status": "ok",
+    "workspace": "local",
+    "worker": "running",
+    "monitoring": "running"
+  },
+  "query": "quote total tax",
+  "search_mode": "keyword + semantic + atlas + graph",
+  "search_item_count": 6
+}

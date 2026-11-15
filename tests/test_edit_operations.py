@@ -21,6 +21,7 @@ def source(monkeypatch, tmp_path):
     (root/'large.txt').write_bytes(data)
     (root/'asset.bin').write_bytes(bytes(range(256)))
     (root/'run.sh').write_bytes(b'#!/bin/sh\necho okay\n')
+    (root/'run.sh').chmod(0o755)
     snapshot = snapshots.capture('repo', root, {'file_modes': {'run.sh': 0o755}})
     return snapshot, data, tmp_path
 

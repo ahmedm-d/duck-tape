@@ -25,7 +25,7 @@ test('knowledge map explores real relationships and opens source',async({page})=
   await page.getByRole('button',{name:'Reset graph view'}).click();
   await expect(page.locator('.graph-controls')).toContainText('100%');
   await page.getByRole('button',{name:'Open source',exact:true}).click();
-  await expect(page).toHaveURL(/\/codebase$/);
+  await expect(page).toHaveURL(/\/codebase\?tab=files$/);
   await expect(page.locator('.source-code')).toContainText('export const source = true');
   await page.getByRole('button',{name:'Project knowledge',exact:true}).click();
   await page.getByRole('button',{name:'Decisions',exact:true}).click();

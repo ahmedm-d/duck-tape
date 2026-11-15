@@ -1,0 +1,2 @@
+source,path,metric,step,value
+run_metadata,$.best_hyperparams.max_grad_norm,max_grad_norm,,1

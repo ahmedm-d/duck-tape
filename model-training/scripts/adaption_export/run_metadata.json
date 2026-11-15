@@ -1,0 +1,33 @@
+{
+  "id": "2f6c1852-ce21-49c9-abb2-43a1e44e3854",
+  "dataset_id": "fb96fc76-e48f-4bc5-9621-ffd31f384ce7",
+  "model": "google/gemma-4-31B-it-VLM",
+  "status": "succeeded",
+  "created_at": "2026-11-14T19:56:17.851Z",
+  "completed_at": "2026-11-15T01:17:51.786Z",
+  "iterations_completed": 3,
+  "max_iterations": 3,
+  "target_win_rate": 0.8,
+  "best_win_rate": 0.4958,
+  "training_method": "instruction",
+  "best_hyperparams": {
+    "lora_r": 8,
+    "n_epochs": 1,
+    "batch_size": "max",
+    "lora_alpha": 16,
+    "lora_dropout": 0.1,
+    "min_lr_ratio": 0.1,
+    "warmup_ratio": 0.1,
+    "weight_decay": 0.05,
+    "learning_rate": 2e-05,
+    "max_grad_norm": 1,
+    "train_on_inputs": false,
+    "lr_scheduler_type": "cosine",
+    "scheduler_num_cycles": 0.5,
+    "lora_trainable_modules": "q_proj,k_proj,v_proj,o_proj",
+    "training_type": "lora"
+  },
+  "column_mapping": null,
+  "download_available": true,
+  "error": null
+}

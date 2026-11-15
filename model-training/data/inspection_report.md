@@ -1,39 +1,24 @@
-# Duck Tape Pre-Flight Dataset Quality & Inspection Report (`MESSAGE_B_TO_A.md` Aligned)
+# Stage 4 Pre-Flight Data Audit Report
 
-Fast deterministic audit across `model-training/data/processed/*.jsonl` and `model-training/data/eval/*.jsonl`.
+Audited 12 datasets (`processed` + `eval`) in **21.08s** using `ProcessPoolExecutor(max_workers=8)`.
 
-## Verified Contracts
-- `focal_symbols`: includes `signature` (`<= 240` chars), `degree`, `high_degree`, and `community`.
-- `catalogue_matches`: includes `directly_imported` (`true`/`false`/`null`), `sink_reachable` (`true` or `null` ONLY — **0 `false` values**), `usage`, and `cwe`.
-- Real OSV demo record `CVE-2024-35195` (`PyPI/requests==2.31.0`, `requirements.txt:2`, `app.py:1` & `app.py:5`, `sink_reachable: null`) embedded in `security_reviewer_dpo.jsonl` & `security_reviewer_eval.jsonl`.
-- Security DPO contrast enforced across `called at <file>:<line>` vs `directly imported at <file>:<line>; call-site reachability not shown reachable` vs `not imported directly; transitive only`.
-- Zero forbidden output keys (`needs_decision_card`, `new_global_vuln_candidate`) and zero legacy `<steward_graph_context>`, `is_god_node`, `AMBIGUOUS`, `tenant_id`, or `non-exploitable` terms.
+| Dataset | Train Rows | Eval Rows | Schema Valid % | Graph Contract Check | Augmentation Needed for Stage 4 | Status (PASS/FIXED) |
+| --- | ---: | --- | ---: | --- | --- | --- |
+| `router` | 1200 | 200 | 100.00% | PASS (1400 blocks valid JSON) | None | PASS |
+| `ticket_parser` | 5000 | 200 | 100.00% | PASS (5200 blocks valid JSON) | None | PASS |
+| `implementer` | 5000 | 200 | 100.00% | PASS (5200 blocks: focal_sig/edges/blast OK) | None | FIXED (truncated oversized chat tool outputs (<45k est tokens)) |
+| `test_writer` | 5000 | 200 | 100.00% | PASS (5200 blocks: focal_sig/edges/blast OK) | None | PASS |
+| `security_reviewer_dpo` | 5000 | 200 | 100.00% | PASS (5200 blocks: sink_reachable!=false OK) | None | PASS |
+| `reviewer_dpo` | 5000 | 200 (reviewer_eval.jsonl:200) | 100.00% | PASS (5400 blocks valid JSON) | None | PASS |
+| `log_classifier` | 5000 | 200 | 100.00% | PASS (5200 blocks valid JSON) | None | PASS |
+| `commit_pr_writer` | 5000 | 200 | 100.00% | PASS (5200 blocks valid JSON) | None | PASS |
+| `db_migration` | 5000 | 200 | 100.00% | PASS (5200 blocks valid JSON) | None | PASS |
+| `iac` | 5000 | 200 | 100.00% | PASS (5200 blocks valid JSON) | None | PASS |
+| `frontend_ui` | 2500 | 100 | 100.00% | N/A (no graph blocks) | None | PASS |
+| `retriever_triplets` | 5000 | 300 (retriever_eval.jsonl:300) | 100.00% | N/A (no graph blocks) | None | PASS |
 
-| File | Rows | `CVE-2024-35195` Rows | `sink_reachable` Counts | `directly_imported` Counts |
-| --- | ---: | ---: | --- | --- |
-| `processed/commit_pr_writer.jsonl` | 5,000 | 0 | `N/A` | `N/A` |
-| `processed/db_migration.jsonl` | 5,000 | 0 | `N/A` | `N/A` |
-| `processed/frontend_ui.jsonl` | 2,500 | 0 | `N/A` | `N/A` |
-| `processed/iac.jsonl` | 5,000 | 0 | `N/A` | `N/A` |
-| `processed/implementer.jsonl` | 5,000 | 0 | `N/A` | `N/A` |
-| `processed/log_classifier.jsonl` | 5,000 | 0 | `N/A` | `N/A` |
-| `processed/retriever_triplets.jsonl` | 5,000 | 0 | `N/A` | `N/A` |
-| `processed/reviewer_dpo.jsonl` | 5,000 | 0 | `N/A` | `N/A` |
-| `processed/router.jsonl` | 1,200 | 0 | `N/A` | `N/A` |
-| `processed/security_reviewer_dpo.jsonl` | 5,000 | 250 | `{'True': 500, 'None': 4500}` | `{'True': 3500, 'False': 750, 'None': 750}` |
-| `processed/test_writer.jsonl` | 5,000 | 0 | `N/A` | `N/A` |
-| `processed/ticket_parser.jsonl` | 5,000 | 0 | `N/A` | `N/A` |
-| `eval/commit_pr_writer_eval.jsonl` | 200 | 0 | `N/A` | `N/A` |
-| `eval/db_migration_eval.jsonl` | 200 | 0 | `N/A` | `N/A` |
-| `eval/frontend_ui_eval.jsonl` | 100 | 0 | `N/A` | `N/A` |
-| `eval/iac_eval.jsonl` | 200 | 0 | `N/A` | `N/A` |
-| `eval/implementer_eval.jsonl` | 200 | 0 | `N/A` | `N/A` |
-| `eval/log_classifier_eval.jsonl` | 200 | 0 | `N/A` | `N/A` |
-| `eval/retriever_eval.jsonl` | 300 | 0 | `N/A` | `N/A` |
-| `eval/retriever_triplets_eval.jsonl` | 300 | 0 | `N/A` | `N/A` |
-| `eval/reviewer_dpo_eval.jsonl` | 200 | 0 | `N/A` | `N/A` |
-| `eval/reviewer_eval.jsonl` | 200 | 0 | `N/A` | `N/A` |
-| `eval/router_eval.jsonl` | 200 | 0 | `N/A` | `N/A` |
-| `eval/security_reviewer_eval.jsonl` | 200 | 10 | `{'True': 20, 'None': 180}` | `{'True': 140, 'False': 30, 'None': 30}` |
-| `eval/test_writer_eval.jsonl` | 200 | 0 | `N/A` | `N/A` |
-| `eval/ticket_parser_eval.jsonl` | 200 | 0 | `N/A` | `N/A` |
+## Sample Rows (< 300 chars)
+
+- **`ticket_parser`**: `{"prompt": "Parse this incoming software maintenance issue into structured JSON.\nSource: GitHub Issue (SWE-Gym)\nProject/Repository: pandas-dev/pandas\n\nIssue Text:\nBUG?: Series.any / Series.all behavior for pyarrow vs. non-pyarrow empty/all-NA\n### Pandas version checks\n\n- ...`
+- **`implementer`**: `{"chat": [{"role": "system", "content": "You are a helpful assistant that can interact with a computer to solve tasks."}, {"role": "user", "content": "<uploaded_files>\n/testbed\n</uploaded_files>\nI've uploaded a python code repository in the directory /testbed. Consider the fol...`
+- **`security_reviewer_dpo`**: `{"prompt": "Assess whether this dependency advisory and code context represent an actionable vulnerability in the repository.\nRules:\n1. A dependency version match establishes affected-version applicability, never automatic exploitability.\n2. Treat 'sink_reachable: null' in '<g...`

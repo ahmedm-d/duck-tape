@@ -67,12 +67,12 @@
       "dataset_id": "62fbdec9-1150-40d6-a979-62c7136857b0",
       "model": "google/gemma-4-31B-it",
       "training_method": "instruction",
-      "status": "running",
-      "iterations_completed": 2.0,
+      "status": "succeeded",
+      "iterations_completed": 3.0,
       "max_iterations": 3.0,
       "target_win_rate": 0.8,
       "best_win_rate": 0.6203,
-      "download_available": false,
+      "download_available": true,
       "error": null,
       "best_hyperparams": {
         "training_type": "lora",
@@ -101,8 +101,8 @@
       "processing_mode": "raw",
       "adopted_from_web_ui": false,
       "created_at": "2026-11-14T19:55:48.211000+00:00",
-      "completed_at": null,
-      "last_checked_at": "2026-11-15T02:08:10+00:00",
+      "completed_at": "2026-11-15T02:08:32.331000+00:00",
+      "last_checked_at": "2026-11-15T08:27:52+00:00",
       "notes": "Reused idempotent run from manifest"
     },
     {
@@ -150,7 +150,7 @@
       "adopted_from_web_ui": false,
       "created_at": "2026-11-14T19:55:48.285000+00:00",
       "completed_at": "2026-11-15T01:44:44.170000+00:00",
-      "last_checked_at": "2026-11-15T02:08:10+00:00",
+      "last_checked_at": "2026-11-15T08:27:52+00:00",
       "notes": "Reused idempotent run from manifest"
     },
     {
@@ -198,7 +198,7 @@
       "adopted_from_web_ui": false,
       "created_at": "2026-11-14T19:55:55.524000+00:00",
       "completed_at": "2026-11-15T01:58:53.975000+00:00",
-      "last_checked_at": "2026-11-15T02:08:10+00:00",
+      "last_checked_at": "2026-11-15T08:27:52+00:00",
       "notes": "Reused idempotent run from manifest"
     },
     {
@@ -246,7 +246,7 @@
       "adopted_from_web_ui": false,
       "created_at": "2026-11-14T19:55:55.998000+00:00",
       "completed_at": "2026-11-15T01:44:47.641000+00:00",
-      "last_checked_at": "2026-11-15T02:08:10+00:00",
+      "last_checked_at": "2026-11-15T08:27:52+00:00",
       "notes": "Reused idempotent run from manifest"
     },
     {
@@ -259,12 +259,12 @@
       "dataset_id": "923c03f6-d452-4e05-acbe-24da759a680e",
       "model": "Qwen/Qwen3.6-35B-A3B",
       "training_method": "alignment",
-      "status": "running",
-      "iterations_completed": 1.0,
+      "status": "succeeded",
+      "iterations_completed": 2.0,
       "max_iterations": 2.0,
       "target_win_rate": 0.9,
       "best_win_rate": 0.4758,
-      "download_available": false,
+      "download_available": true,
       "error": null,
       "best_hyperparams": {
         "training_type": "lora",
@@ -293,8 +293,8 @@
       "processing_mode": "raw",
       "adopted_from_web_ui": false,
       "created_at": "2026-11-14T19:55:59.577000+00:00",
-      "completed_at": null,
-      "last_checked_at": "2026-11-15T02:08:10+00:00",
+      "completed_at": "2026-11-15T02:58:35.427000+00:00",
+      "last_checked_at": "2026-11-15T08:27:52+00:00",
       "notes": "Reused idempotent run from manifest"
     },
     {
@@ -342,7 +342,7 @@
       "adopted_from_web_ui": false,
       "created_at": "2026-11-14T19:56:02.314000+00:00",
       "completed_at": "2026-11-15T01:54:33.828000+00:00",
-      "last_checked_at": "2026-11-15T02:08:10+00:00",
+      "last_checked_at": "2026-11-15T08:27:53+00:00",
       "notes": "Reused idempotent run from manifest"
     },
     {
@@ -390,7 +390,7 @@
       "adopted_from_web_ui": false,
       "created_at": "2026-11-14T19:56:09.083000+00:00",
       "completed_at": "2026-11-15T01:35:20.969000+00:00",
-      "last_checked_at": "2026-11-15T02:08:10+00:00",
+      "last_checked_at": "2026-11-15T08:27:53+00:00",
       "notes": "Reused idempotent run from manifest"
     },
     {
@@ -403,12 +403,12 @@
       "dataset_id": "aa78e89b-0e4e-421e-9ba2-1681cec404d3",
       "model": "Qwen/Qwen3.6-35B-A3B",
       "training_method": "alignment",
-      "status": "running",
-      "iterations_completed": 1.0,
+      "status": "succeeded",
+      "iterations_completed": 2.0,
       "max_iterations": 2.0,
       "target_win_rate": 0.9,
       "best_win_rate": 0.474,
-      "download_available": false,
+      "download_available": true,
       "error": null,
       "best_hyperparams": {
         "training_type": "lora",
@@ -437,8 +437,8 @@
       "processing_mode": "raw",
       "adopted_from_web_ui": false,
       "created_at": "2026-11-14T19:56:09.686000+00:00",
-      "completed_at": null,
-      "last_checked_at": "2026-11-15T02:08:10+00:00",
+      "completed_at": "2026-11-15T03:51:45.323000+00:00",
+      "last_checked_at": "2026-11-15T08:27:52+00:00",
       "notes": "Reused idempotent run from manifest"
     },
     {
@@ -486,7 +486,7 @@
       "adopted_from_web_ui": false,
       "created_at": "2026-11-14T19:56:17.851000+00:00",
       "completed_at": "2026-11-15T01:17:51.786000+00:00",
-      "last_checked_at": "2026-11-15T02:08:10+00:00",
+      "last_checked_at": "2026-11-15T08:27:52+00:00",
       "notes": "Reused idempotent run from manifest"
     },
     {
@@ -499,21 +499,21 @@
       "dataset_id": "07d506aa-9fd6-4419-a956-98ef590b7af0",
       "model": "Qwen/Qwen3.6-35B-A3B",
       "training_method": "instruction",
-      "status": "running",
-      "iterations_completed": 2.0,
+      "status": "succeeded",
+      "iterations_completed": 3.0,
       "max_iterations": 3.0,
       "target_win_rate": 0.8,
-      "best_win_rate": 0.5846,
-      "download_available": false,
+      "best_win_rate": 0.6308,
+      "download_available": true,
       "error": null,
       "best_hyperparams": {
         "training_type": "lora",
         "n_epochs": 3.0,
-        "learning_rate": 0.0002,
+        "learning_rate": 0.00025,
         "batch_size": "max",
-        "lora_r": 32.0,
-        "lora_alpha": 64.0,
-        "lora_dropout": 0.05,
+        "lora_r": 64.0,
+        "lora_alpha": 128.0,
+        "lora_dropout": 0.1,
         "lora_trainable_modules": "q_proj,k_proj,v_proj,o_proj",
         "lr_scheduler_type": "cosine",
         "min_lr_ratio": 0.1,
@@ -533,8 +533,8 @@
       "processing_mode": "raw",
       "adopted_from_web_ui": false,
       "created_at": "2026-11-14T19:57:10.955000+00:00",
-      "completed_at": null,
-      "last_checked_at": "2026-11-15T02:08:10+00:00",
+      "completed_at": "2026-11-15T03:27:38.788000+00:00",
+      "last_checked_at": "2026-11-15T08:27:53+00:00",
       "notes": "Reused idempotent run from manifest"
     },
     {
@@ -582,7 +582,7 @@
       "adopted_from_web_ui": false,
       "created_at": "2026-11-14T19:57:21.483000+00:00",
       "completed_at": "2026-11-15T01:53:33.505000+00:00",
-      "last_checked_at": "2026-11-15T02:08:10+00:00",
+      "last_checked_at": "2026-11-15T08:27:53+00:00",
       "notes": "Reused idempotent run from manifest"
     },
     {
@@ -595,28 +595,28 @@
       "dataset_id": "50ad20d3-ec07-4364-990a-d8a246763d74",
       "model": "Qwen/Qwen3.5-9B",
       "training_method": "instruction",
-      "status": "running",
-      "iterations_completed": 1.0,
+      "status": "succeeded",
+      "iterations_completed": 2.0,
       "max_iterations": 3.0,
       "target_win_rate": 0.7,
-      "best_win_rate": 0.4587,
-      "download_available": false,
+      "best_win_rate": 0.711,
+      "download_available": true,
       "error": null,
       "best_hyperparams": {
         "training_type": "lora",
-        "n_epochs": 1.0,
-        "learning_rate": 5e-05,
+        "n_epochs": 4.0,
+        "learning_rate": 0.0001,
         "batch_size": "max",
-        "lora_r": 16.0,
-        "lora_alpha": 32.0,
-        "lora_dropout": 0.0,
+        "lora_r": 32.0,
+        "lora_alpha": 64.0,
+        "lora_dropout": 0.05,
         "lora_trainable_modules": "k_proj,up_proj,o_proj,q_proj,down_proj,v_proj,gate_proj",
         "lr_scheduler_type": "cosine",
         "min_lr_ratio": 0.1,
         "scheduler_num_cycles": 0.5,
         "warmup_ratio": 0.03,
-        "max_grad_norm": 2.0,
-        "weight_decay": 0.0,
+        "max_grad_norm": 1.0,
+        "weight_decay": 0.01,
         "train_on_inputs": false,
         "dpo_beta": null,
         "dpo_normalize_logratios_by_length": null,
@@ -630,8 +630,8 @@
       "processing_mode": "raw",
       "adopted_from_web_ui": false,
       "created_at": "2026-11-15T01:17:57.485000+00:00",
-      "completed_at": null,
-      "last_checked_at": "2026-11-15T02:08:10+00:00",
+      "completed_at": "2026-11-15T02:36:29.257000+00:00",
+      "last_checked_at": "2026-11-15T08:27:53+00:00",
       "notes": "Account 5 hero presentation 9B run on raw 1,100-row <graph_context> v1 dataset"
     }
   ],
@@ -643,7 +643,7 @@
       "status": "succeeded",
       "row_count": 5000,
       "discovered_at": "2026-11-14T19:55:42+00:00",
-      "last_checked_at": "2026-11-15T02:08:11+00:00"
+      "last_checked_at": "2026-11-15T08:27:53+00:00"
     },
     "router": {
       "dataset_id": "62fbdec9-1150-40d6-a979-62c7136857b0",
@@ -868,7 +868,7 @@
       "authenticated": true
     }
   },
-  "updated_at": "2026-11-15T02:08:11+00:00",
+  "updated_at": "2026-11-15T08:27:53+00:00",
   "hero_security_triage": {
     "account_index": 5,
     "dataset_id": "50ad20d3-ec07-4364-990a-d8a246763d74",

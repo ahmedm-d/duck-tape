@@ -13,3 +13,6 @@ export_bundle/*/weights/
 !data/inspection_report.md
 !data/adaption_runs_manifest.json
 !data/dataset_licenses.json
+!data/EVALUATION_TABLES.md
+data/eval_outputs/*.jsonl
+mlruns/
